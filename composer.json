@@ -1,0 +1,38 @@
+{
+    "name": "rwsite/moonshine-activity-log",
+    "description": "Activity log integration with diff viewer, versioning and rollback for MoonShine admin panel",
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "php": "^8.2",
+        "spatie/laravel-activitylog": "^4.7",
+        "moonshine/moonshine": "^4.8"
+    },
+    "require-dev": {
+        "orchestra/testbench": "^9.0",
+        "pestphp/pest": "^3.0",
+        "phpstan/phpstan": "^2.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "MoonShine\\ActivityLog\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "MoonShine\\ActivityLog\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "MoonShine\\ActivityLog\\ActivityLogServiceProvider"
+            ]
+        }
+    },
+    "config": {
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
+    }
+}

@@ -1,0 +1,12 @@
+/vendor/
+/.phpunit.cache/
+.phpunit.result.cache
+/.php_cs.cache
+/.php-cs-fixer.cache
+/.pint.cache
+/coverage/
+/.idea/
+/.vscode/
+*.log
+.DS_Store
+Thumbs.db
