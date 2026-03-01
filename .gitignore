@@ -10,3 +10,9 @@
 *.log
 .DS_Store
 Thumbs.db
+/var/
+/.playwright-mcp/
+/.claude/
+.phpactor.json
+config.json
+*.png

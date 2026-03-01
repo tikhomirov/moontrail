@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "8de3311796f0c525445658e1d26ec974",
+    "content-hash": "8c110d1a452ce871d14e59645377a57a",
     "packages": [
         {
             "name": "brick/math",
@@ -2148,11 +2148,17 @@
         },
         {
             "name": "moonshine/moonshine",
-            "version": "4.x-dev",
+            "version": "4.8.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/moonshine-software/moonshine.git",
+                "reference": "456cf462fde6389ef6d0d300135430e87ee822d8"
+            },
             "dist": {
-                "type": "path",
-                "url": "../moonshine",
-                "reference": "2af454f625483589ad827f7a49d517b3346e89b3"
+                "type": "zip",
+                "url": "https://api.github.com/repos/moonshine-software/moonshine/zipball/456cf462fde6389ef6d0d300135430e87ee822d8",
+                "reference": "456cf462fde6389ef6d0d300135430e87ee822d8",
+                "shasum": ""
             },
             "require": {
                 "ext-json": "*",
@@ -2200,103 +2206,25 @@
                 }
             },
             "autoload": {
-                "psr-4": {
-                    "MoonShine\\": "src/",
-                    "MoonShine\\AssetManager\\": "src/AssetManager/src",
-                    "MoonShine\\ColorManager\\": "src/ColorManager/src",
-                    "MoonShine\\Contracts\\": "src/Contracts/src",
-                    "MoonShine\\Core\\": "src/Core/src",
-                    "MoonShine\\Crud\\": "src/Crud/src",
-                    "MoonShine\\Laravel\\": "src/Laravel/src",
-                    "MoonShine\\Laravel\\Database\\Factories\\": "src/Laravel/database/factories/",
-                    "MoonShine\\MenuManager\\": "src/MenuManager/src",
-                    "MoonShine\\Support\\": "src/Support/src",
-                    "MoonShine\\UI\\": "src/UI/src"
-                },
                 "files": [
                     "src/Laravel/src/helpers.php",
                     "src/Support/src/helpers.php"
-                ]
-            },
-            "autoload-dev": {
+                ],
                 "psr-4": {
-                    "App\\": "app/",
-                    "MoonShine\\Tests\\": "tests/"
+                    "MoonShine\\": "src/",
+                    "MoonShine\\UI\\": "src/UI/src",
+                    "MoonShine\\Core\\": "src/Core/src",
+                    "MoonShine\\Crud\\": "src/Crud/src",
+                    "MoonShine\\Laravel\\": "src/Laravel/src",
+                    "MoonShine\\Support\\": "src/Support/src",
+                    "MoonShine\\Contracts\\": "src/Contracts/src",
+                    "MoonShine\\MenuManager\\": "src/MenuManager/src",
+                    "MoonShine\\AssetManager\\": "src/AssetManager/src",
+                    "MoonShine\\ColorManager\\": "src/ColorManager/src",
+                    "MoonShine\\Laravel\\Database\\Factories\\": "src/Laravel/database/factories/"
                 }
             },
-            "scripts": {
-                "rector": [
-                    "vendor/bin/rector process --clear-cache"
-                ],
-                "rector:dry": [
-                    "vendor/bin/rector process --clear-cache --dry-run"
-                ],
-                "test": [
-                    "vendor/bin/pest"
-                ],
-                "test:bail": [
-                    "vendor/bin/pest --bail"
-                ],
-                "test:fresh": [
-                    "rm -rf vendor/orchestra",
-                    "composer install",
-                    "vendor/bin/pest --bail"
-                ],
-                "test:all": [
-                    "@rector",
-                    "@cs:fix",
-                    "@test:fresh",
-                    "@test:types",
-                    "@test:types:packages"
-                ],
-                "test:types": [
-                    "vendor/bin/phpstan analyse src --memory-limit=-1"
-                ],
-                "test:types:cm": [
-                    "vendor/bin/phpstan analyse src/ColorManager/src --memory-limit=-1 --level=max"
-                ],
-                "test:types:am": [
-                    "vendor/bin/phpstan analyse src/AssetManager/src --memory-limit=-1 --level=max"
-                ],
-                "test:types:c": [
-                    "vendor/bin/phpstan analyse src/Contracts/src --memory-limit=-1 --level=max"
-                ],
-                "test:types:core": [
-                    "vendor/bin/phpstan analyse src/Core/src --memory-limit=-1 --level=max"
-                ],
-                "test:types:s": [
-                    "vendor/bin/phpstan analyse src/Support/src --memory-limit=-1 --level=max"
-                ],
-                "test:types:mm": [
-                    "vendor/bin/phpstan analyse src/MenuManager/src --memory-limit=-1 --level=max"
-                ],
-                "test:types:crud": [
-                    "vendor/bin/phpstan analyse src/Crud/src --memory-limit=-1 --level=6"
-                ],
-                "test:types:ui": [
-                    "vendor/bin/phpstan analyse src/UI/src --memory-limit=-1 --level=6"
-                ],
-                "test:types:l": [
-                    "vendor/bin/phpstan analyse src/Laravel/src --memory-limit=-1 --level=5"
-                ],
-                "test:types:packages": [
-                    "@test:types:am",
-                    "@test:types:cm",
-                    "@test:types:c",
-                    "@test:types:mm",
-                    "@test:types:s",
-                    "@test:types:core",
-                    "@test:types:crud",
-                    "@test:types:ui",
-                    "@test:types:l"
-                ],
-                "cs:fix": [
-                    "vendor/bin/php-cs-fixer fix --allow-risky=yes"
-                ],
-                "monorepo:merge": [
-                    "vendor/bin/monorepo-builder merge"
-                ]
-            },
+            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
@@ -2321,13 +2249,11 @@
             },
             "funding": [
                 {
-                    "type": "boosty",
-                    "url": "https://boosty.to/cutcode"
+                    "url": "https://boosty.to/cutcode",
+                    "type": "boosty"
                 }
             ],
-            "transport-options": {
-                "relative": true
-            }
+            "time": "2026-02-11T09:38:28+00:00"
         },
         {
             "name": "nesbot/carbon",
@@ -6783,6 +6709,47 @@
             "time": "2025-04-30T06:54:44+00:00"
         },
         {
+            "name": "iamcal/sql-parser",
+            "version": "v0.7",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/iamcal/SQLParser.git",
+                "reference": "610392f38de49a44dab08dc1659960a29874c4b8"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/iamcal/SQLParser/zipball/610392f38de49a44dab08dc1659960a29874c4b8",
+                "reference": "610392f38de49a44dab08dc1659960a29874c4b8",
+                "shasum": ""
+            },
+            "require-dev": {
+                "php-coveralls/php-coveralls": "^1.0",
+                "phpunit/phpunit": "^5|^6|^7|^8|^9"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "iamcal\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Cal Henderson",
+                    "email": "cal@iamcal.com"
+                }
+            ],
+            "description": "MySQL schema parser",
+            "support": {
+                "issues": "https://github.com/iamcal/SQLParser/issues",
+                "source": "https://github.com/iamcal/SQLParser/tree/v0.7"
+            },
+            "time": "2026-01-28T22:20:33+00:00"
+        },
+        {
             "name": "jean85/pretty-package-versions",
             "version": "2.1.1",
             "source": {
@@ -6841,6 +6808,96 @@
                 "source": "https://github.com/Jean85/pretty-package-versions/tree/2.1.1"
             },
             "time": "2025-03-19T14:43:43+00:00"
+        },
+        {
+            "name": "larastan/larastan",
+            "version": "v3.9.3",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/larastan/larastan.git",
+                "reference": "64a52bcc5347c89fdf131cb59f96ebfbc8d1ad65"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/larastan/larastan/zipball/64a52bcc5347c89fdf131cb59f96ebfbc8d1ad65",
+                "reference": "64a52bcc5347c89fdf131cb59f96ebfbc8d1ad65",
+                "shasum": ""
+            },
+            "require": {
+                "ext-json": "*",
+                "iamcal/sql-parser": "^0.7.0",
+                "illuminate/console": "^11.44.2 || ^12.4.1 || ^13",
+                "illuminate/container": "^11.44.2 || ^12.4.1 || ^13",
+                "illuminate/contracts": "^11.44.2 || ^12.4.1 || ^13",
+                "illuminate/database": "^11.44.2 || ^12.4.1 || ^13",
+                "illuminate/http": "^11.44.2 || ^12.4.1 || ^13",
+                "illuminate/pipeline": "^11.44.2 || ^12.4.1 || ^13",
+                "illuminate/support": "^11.44.2 || ^12.4.1 || ^13",
+                "php": "^8.2",
+                "phpstan/phpstan": "^2.1.32"
+            },
+            "require-dev": {
+                "doctrine/coding-standard": "^13",
+                "laravel/framework": "^11.44.2 || ^12.7.2 || ^13",
+                "mockery/mockery": "^1.6.12",
+                "nikic/php-parser": "^5.4",
+                "orchestra/canvas": "^v9.2.2 || ^10.0.1 || ^11",
+                "orchestra/testbench-core": "^9.12.0 || ^10.1 || ^11",
+                "phpstan/phpstan-deprecation-rules": "^2.0.1",
+                "phpunit/phpunit": "^10.5.35 || ^11.5.15 || ^12.5.8"
+            },
+            "suggest": {
+                "orchestra/testbench": "Using Larastan for analysing a package needs Testbench",
+                "phpmyadmin/sql-parser": "Install to enable Larastan's optional phpMyAdmin-based SQL parser automatically"
+            },
+            "type": "phpstan-extension",
+            "extra": {
+                "phpstan": {
+                    "includes": [
+                        "extension.neon"
+                    ]
+                },
+                "branch-alias": {
+                    "dev-master": "3.0-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Larastan\\Larastan\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Can Vural",
+                    "email": "can9119@gmail.com"
+                }
+            ],
+            "description": "Larastan - Discover bugs in your code without running it. A phpstan/phpstan extension for Laravel",
+            "keywords": [
+                "PHPStan",
+                "code analyse",
+                "code analysis",
+                "larastan",
+                "laravel",
+                "package",
+                "php",
+                "static analysis"
+            ],
+            "support": {
+                "issues": "https://github.com/larastan/larastan/issues",
+                "source": "https://github.com/larastan/larastan/tree/v3.9.3"
+            },
+            "funding": [
+                {
+                    "url": "https://github.com/canvural",
+                    "type": "github"
+                }
+            ],
+            "time": "2026-02-20T12:07:12+00:00"
         },
         {
             "name": "laravel/pail",
@@ -6921,6 +6978,73 @@
                 "source": "https://github.com/laravel/pail"
             },
             "time": "2026-02-09T13:44:54+00:00"
+        },
+        {
+            "name": "laravel/pint",
+            "version": "v1.27.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/laravel/pint.git",
+                "reference": "54cca2de13790570c7b6f0f94f37896bee4abcb5"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/laravel/pint/zipball/54cca2de13790570c7b6f0f94f37896bee4abcb5",
+                "reference": "54cca2de13790570c7b6f0f94f37896bee4abcb5",
+                "shasum": ""
+            },
+            "require": {
+                "ext-json": "*",
+                "ext-mbstring": "*",
+                "ext-tokenizer": "*",
+                "ext-xml": "*",
+                "php": "^8.2.0"
+            },
+            "require-dev": {
+                "friendsofphp/php-cs-fixer": "^3.93.1",
+                "illuminate/view": "^12.51.0",
+                "larastan/larastan": "^3.9.2",
+                "laravel-zero/framework": "^12.0.5",
+                "mockery/mockery": "^1.6.12",
+                "nunomaduro/termwind": "^2.3.3",
+                "pestphp/pest": "^3.8.5"
+            },
+            "bin": [
+                "builds/pint"
+            ],
+            "type": "project",
+            "autoload": {
+                "psr-4": {
+                    "App\\": "app/",
+                    "Database\\Seeders\\": "database/seeders/",
+                    "Database\\Factories\\": "database/factories/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Nuno Maduro",
+                    "email": "enunomaduro@gmail.com"
+                }
+            ],
+            "description": "An opinionated code formatter for PHP.",
+            "homepage": "https://laravel.com",
+            "keywords": [
+                "dev",
+                "format",
+                "formatter",
+                "lint",
+                "linter",
+                "php"
+            ],
+            "support": {
+                "issues": "https://github.com/laravel/pint/issues",
+                "source": "https://github.com/laravel/pint"
+            },
+            "time": "2026-02-10T20:00:20+00:00"
         },
         {
             "name": "laravel/tinker",
@@ -8954,6 +9078,66 @@
             "time": "2026-02-11T15:05:28+00:00"
         },
         {
+            "name": "rector/rector",
+            "version": "2.3.8",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/rectorphp/rector.git",
+                "reference": "bbd37aedd8df749916cffa2a947cfc4714d1ba2c"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/rectorphp/rector/zipball/bbd37aedd8df749916cffa2a947cfc4714d1ba2c",
+                "reference": "bbd37aedd8df749916cffa2a947cfc4714d1ba2c",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^7.4|^8.0",
+                "phpstan/phpstan": "^2.1.38"
+            },
+            "conflict": {
+                "rector/rector-doctrine": "*",
+                "rector/rector-downgrade-php": "*",
+                "rector/rector-phpunit": "*",
+                "rector/rector-symfony": "*"
+            },
+            "suggest": {
+                "ext-dom": "To manipulate phpunit.xml via the custom-rule command"
+            },
+            "bin": [
+                "bin/rector"
+            ],
+            "type": "library",
+            "autoload": {
+                "files": [
+                    "bootstrap.php"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Instant Upgrade and Automated Refactoring of any PHP code",
+            "homepage": "https://getrector.com/",
+            "keywords": [
+                "automation",
+                "dev",
+                "migration",
+                "refactoring"
+            ],
+            "support": {
+                "issues": "https://github.com/rectorphp/rector/issues",
+                "source": "https://github.com/rectorphp/rector/tree/2.3.8"
+            },
+            "funding": [
+                {
+                    "url": "https://github.com/tomasvotruba",
+                    "type": "github"
+                }
+            ],
+            "time": "2026-02-22T09:45:50+00:00"
+        },
+        {
             "name": "sebastian/cli-parser",
             "version": "3.0.2",
             "source": {
@@ -10240,11 +10424,9 @@
         }
     ],
     "aliases": [],
-    "minimum-stability": "dev",
-    "stability-flags": {
-        "moonshine/moonshine": 20
-    },
-    "prefer-stable": true,
+    "minimum-stability": "stable",
+    "stability-flags": [],
+    "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
         "php": "^8.2"

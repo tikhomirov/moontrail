@@ -1,8 +1,13 @@
 {
-    "name": "rwsite/moonshine-activity-log",
-    "description": "Activity log integration with diff viewer, versioning and rollback for MoonShine admin panel",
+    "name": "tikhomirov/moontrail",
+    "description": "MoonShine Logs: advanced logging with visual diffs, model versioning, and transactional rollback",
+    "homepage": "https://github.com/tikhomirov/moontrail",
     "type": "library",
     "license": "MIT",
+    "support": {
+        "source": "https://github.com/tikhomirov/moontrail",
+        "issues": "https://github.com/tikhomirov/moontrail/issues"
+    },
     "require": {
         "php": "^8.2",
         "spatie/laravel-activitylog": "^4.7",
@@ -11,22 +16,25 @@
     "require-dev": {
         "orchestra/testbench": "^9.0",
         "pestphp/pest": "^3.0",
-        "phpstan/phpstan": "^2.0"
+        "phpstan/phpstan": "^2.0",
+        "larastan/larastan": "^3.0",
+        "laravel/pint": "^1.18",
+        "rector/rector": "^2.0"
     },
     "autoload": {
         "psr-4": {
-            "MoonShine\\ActivityLog\\": "src/"
+            "MoonShine\\MoonTrail\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "MoonShine\\ActivityLog\\Tests\\": "tests/"
+            "MoonShine\\MoonTrail\\Tests\\": "tests/"
         }
     },
     "extra": {
         "laravel": {
             "providers": [
-                "MoonShine\\ActivityLog\\ActivityLogServiceProvider"
+                "MoonShine\\MoonTrail\\MoonTrailServiceProvider"
             ]
         }
     },
@@ -34,5 +42,24 @@
         "allow-plugins": {
             "pestphp/pest-plugin": true
         }
+    },
+    "scripts": {
+        "test": "./vendor/bin/pest -c phpunit.xml.dist",
+        "test:coverage": "./vendor/bin/pest -c phpunit.xml.dist --coverage",
+        "test:types": "./vendor/bin/phpstan analyse --configuration=phpstan.neon.dist --memory-limit=512M",
+        "lint": "./vendor/bin/pint",
+        "lint:test": "./vendor/bin/pint --test",
+        "refactor": "./vendor/bin/rector process",
+        "refactor:test": "./vendor/bin/rector process --dry-run",
+        "ci": [
+            "@refactor:test",
+            "@lint:test",
+            "@test:types",
+            "@test"
+        ],
+        "ci:fix": [
+            "@refactor",
+            "@lint"
+        ]
     }
 }

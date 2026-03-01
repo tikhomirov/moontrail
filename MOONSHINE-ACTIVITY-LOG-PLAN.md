@@ -33,7 +33,7 @@
 
 ### Решение
 
-Пакет `moonshine/activity-log` поверх `spatie/laravel-activitylog`:
+Пакет `moonshine/moontrail` поверх `spatie/laravel-activitylog`:
 - Использует battle-tested движок Spatie (43M+ скачиваний)
 - Добавляет слой версионирования с полными снапшотами модели
 - Предоставляет визуальный diff-компонент с подсветкой
@@ -42,7 +42,7 @@
 
 ### Отличия от moonshine/changelog
 
-| Возможность | moonshine/changelog | moonshine/activity-log |
+| Возможность | moonshine/changelog | moonshine/moontrail |
 |-------------|--------------------|-----------------------|
 | Движок | Собственный observer | Spatie Activity Log |
 | Метаданные | user_id, states | event, batch_uuid, log_name, properties |
@@ -62,7 +62,7 @@
 ### 2.1 Структура директорий
 
 ```
-moonshine-activity-log/
+moontrail/
 ├── config/
 │   └── activity-log.php                    # Конфигурация пакета
 ├── database/
@@ -103,18 +103,18 @@ moonshine-activity-log/
 │   ├── Models/
 │   │   └── ModelVersion.php               # Версия модели (снапшот)
 │   ├── Pages/
-│   │   └── ActivityLogPage.php            # Standalone страница истории
+│   │   └── MoonTrailPage.php            # Standalone страница истории
 │   ├── Resources/
-│   │   └── ActivityLogResource.php        # MoonShine Resource для activity_log
+│   │   └── MoonTrailResource.php        # MoonShine Resource для activity_log
 │   ├── Traits/
-│   │   ├── HasActivityLog.php             # Trait для моделей
-│   │   └── WithActivityTab.php            # Trait для ресурсов
+│   │   ├── HasMoonTrail.php             # Trait для моделей
+│   │   └── WithMoonTrailTab.php            # Trait для ресурсов
 │   ├── Versioning/
 │   │   ├── VersionManager.php             # Логика версионирования
 │   │   └── RollbackService.php            # Сервис отката
 │   ├── Enums/
 │   │   └── ChangeType.php                 # created, updated, deleted, restored
-│   └── ActivityLogServiceProvider.php      # ServiceProvider
+│   └── MoonTrailServiceProvider.php      # ServiceProvider
 ├── tests/
 │   ├── Unit/
 │   │   ├── DiffComputerTest.php
@@ -124,7 +124,7 @@ moonshine-activity-log/
 │   │   ├── ActivityTrackingTest.php
 │   │   ├── RollbackControllerTest.php
 │   │   ├── ActivityTimelineComponentTest.php
-│   │   └── ActivityLogResourceTest.php
+│   │   └── MoonTrailResourceTest.php
 │   ├── Fixtures/
 │   │   └── TestPost.php                   # Тестовая модель
 │   └── TestCase.php
@@ -138,7 +138,7 @@ moonshine-activity-log/
 
 ```json
 {
-    "name": "moonshine/activity-log",
+    "name": "moonshine/moontrail",
     "description": "Activity log integration with diff viewer, versioning and rollback for MoonShine admin panel",
     "type": "library",
     "license": "MIT",
@@ -165,7 +165,7 @@ moonshine-activity-log/
     "extra": {
         "laravel": {
             "providers": [
-                "MoonShine\\ActivityLog\\ActivityLogServiceProvider"
+                "MoonShine\\ActivityLog\\MoonTrailServiceProvider"
             ]
         }
     }
@@ -179,21 +179,21 @@ moonshine-activity-log/
 
 declare(strict_types=1);
 
-namespace MoonShine\ActivityLog;
+namespace MoonShine\MoonTrail;
 
 use Illuminate\Support\ServiceProvider;
-use MoonShine\ActivityLog\Contracts\DiffRendererContract;
-use MoonShine\ActivityLog\Contracts\VersionManagerContract;
-use MoonShine\ActivityLog\Contracts\RollbackStrategyContract;
-use MoonShine\ActivityLog\Diff\HtmlDiffRenderer;
-use MoonShine\ActivityLog\Versioning\VersionManager;
-use MoonShine\ActivityLog\Versioning\RollbackService;
+use MoonShine\MoonTrail\Contracts\DiffRendererContract;
+use MoonShine\MoonTrail\Contracts\VersionManagerContract;
+use MoonShine\MoonTrail\Contracts\RollbackStrategyContract;
+use MoonShine\MoonTrail\Diff\HtmlDiffRenderer;
+use MoonShine\MoonTrail\Versioning\VersionManager;
+use MoonShine\MoonTrail\Versioning\RollbackService;
 
-final class ActivityLogServiceProvider extends ServiceProvider
+final class MoonTrailServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        $this->mergeConfigFrom(__DIR__ . '/../config/activity-log.php', 'moonshine-activity-log');
+        $this->mergeConfigFrom(__DIR__ . '/../config/moontrail.php', 'moontrail');
 
         $this->app->bind(DiffRendererContract::class, HtmlDiffRenderer::class);
         $this->app->bind(VersionManagerContract::class, VersionManager::class);
@@ -203,22 +203,22 @@ final class ActivityLogServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->loadMigrationsFrom(__DIR__ . '/../database/migrations');
-        $this->loadTranslationsFrom(__DIR__ . '/../lang', 'moonshine-activity-log');
-        $this->loadViewsFrom(__DIR__ . '/../resources/views', 'moonshine-activity-log');
-        $this->loadRoutesFrom(__DIR__ . '/../routes/activity-log.php');
+        $this->loadTranslationsFrom(__DIR__ . '/../lang', 'moontrail');
+        $this->loadViewsFrom(__DIR__ . '/../resources/views', 'moontrail');
+        $this->loadRoutesFrom(__DIR__ . '/../routes/moontrail.php');
 
         if ($this->app->runningInConsole()) {
             $this->publishes([
-                __DIR__ . '/../config/activity-log.php' => config_path('moonshine-activity-log.php'),
-            ], 'moonshine-activity-log-config');
+                __DIR__ . '/../config/moontrail.php' => config_path('moontrail.php'),
+            ], 'moontrail-config');
 
             $this->publishes([
-                __DIR__ . '/../resources/views' => resource_path('views/vendor/moonshine-activity-log'),
-            ], 'moonshine-activity-log-views');
+                __DIR__ . '/../resources/views' => resource_path('views/vendor/moontrail'),
+            ], 'moontrail-views');
 
             $this->publishes([
-                __DIR__ . '/../lang' => lang_path('vendor/moonshine-activity-log'),
-            ], 'moonshine-activity-log-lang');
+                __DIR__ . '/../lang' => lang_path('vendor/moontrail'),
+            ], 'moontrail-lang');
         }
     }
 }
@@ -228,7 +228,7 @@ final class ActivityLogServiceProvider extends ServiceProvider
 
 ```php
 <?php
-// config/activity-log.php
+// config/moontrail.php
 
 return [
     /*
@@ -292,7 +292,7 @@ return [
     */
     'resource' => [
         // Класс ресурса (можно заменить на кастомный)
-        'class' => \MoonShine\ActivityLog\Resources\ActivityLogResource::class,
+        'class' => \MoonShine\MoonTrail\Resources\MoonTrailResource::class,
 
         // Включить глобальную страницу Activity Log в меню
         'in_menu' => true,
@@ -415,7 +415,7 @@ return new class extends Migration
 
 ## 4. Трекинг изменений
 
-### 4.1 Trait для модели: `HasActivityLog`
+### 4.1 Trait для модели: `HasMoonTrail`
 
 Обёртка над Spatie `LogsActivity` с дополнительной логикой версионирования:
 
@@ -424,16 +424,16 @@ return new class extends Migration
 
 declare(strict_types=1);
 
-namespace MoonShine\ActivityLog\Traits;
+namespace MoonShine\MoonTrail\Traits;
 
 use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Activitylog\LogOptions;
-use MoonShine\ActivityLog\Models\ModelVersion;
+use MoonShine\MoonTrail\Models\ModelVersion;
 
 /**
  * @mixin \Illuminate\Database\Eloquent\Model
  */
-trait HasActivityLog
+trait HasMoonTrail
 {
     use LogsActivity;
 
@@ -507,11 +507,11 @@ trait HasActivityLog
 
 declare(strict_types=1);
 
-namespace MoonShine\ActivityLog;
+namespace MoonShine\MoonTrail;
 
-use MoonShine\ActivityLog\Contracts\VersionManagerContract;
+use MoonShine\MoonTrail\Contracts\VersionManagerContract;
 
-final class ActivityLogObserver
+final class MoonTrailObserver
 {
     public function __construct(
         private readonly VersionManagerContract $versionManager,
@@ -533,7 +533,7 @@ final class ActivityLogObserver
 
     private function shouldVersion(\Illuminate\Database\Eloquent\Model $model): bool
     {
-        return config('moonshine-activity-log.versioning.enabled', true)
+        return config('moontrail.versioning.enabled', true)
             && method_exists($model, 'versions');
     }
 }
@@ -541,7 +541,7 @@ final class ActivityLogObserver
 
 ### 4.3 Автоматическая регистрация Observer
 
-ServiceProvider регистрирует observer для всех моделей с `HasActivityLog`:
+ServiceProvider регистрирует observer для всех моделей с `HasMoonTrail`:
 
 ```php
 // В boot() ServiceProvider
@@ -551,18 +551,18 @@ public function boot(): void
 
     $this->app->afterResolving('events', function () {
         // Observer регистрируется через trait boot method
-        // HasActivityLog::bootHasActivityLog() вызывает
-        // static::observe(ActivityLogObserver::class)
+        // HasMoonTrail::bootHasMoonTrail() вызывает
+        // static::observe(MoonTrailObserver::class)
     });
 }
 ```
 
-Альтернативный подход — регистрация в `bootHasActivityLog()` внутри trait:
+Альтернативный подход — регистрация в `bootHasMoonTrail()` внутри trait:
 
 ```php
-protected static function bootHasActivityLog(): void
+protected static function bootHasMoonTrail(): void
 {
-    static::observe(app(ActivityLogObserver::class));
+    static::observe(app(MoonTrailObserver::class));
 }
 ```
 
@@ -579,7 +579,7 @@ protected static function bootHasActivityLog(): void
              │
              ▼
   ┌─────────────────────┐
-  │ ActivityLogObserver  │  ← Перехватывает created/updated события Eloquent
+  │ MoonTrailObserver  │  ← Перехватывает created/updated события Eloquent
   │                      │
   └──────────┬──────────┘
              │
@@ -607,11 +607,11 @@ protected static function bootHasActivityLog(): void
 
 declare(strict_types=1);
 
-namespace MoonShine\ActivityLog\Versioning;
+namespace MoonShine\MoonTrail\Versioning;
 
 use Illuminate\Database\Eloquent\Model;
-use MoonShine\ActivityLog\Contracts\VersionManagerContract;
-use MoonShine\ActivityLog\Models\ModelVersion;
+use MoonShine\MoonTrail\Contracts\VersionManagerContract;
+use MoonShine\MoonTrail\Models\ModelVersion;
 use Spatie\Activitylog\Models\Activity;
 
 final class VersionManager implements VersionManagerContract
@@ -658,13 +658,13 @@ final class VersionManager implements VersionManagerContract
 
 declare(strict_types=1);
 
-namespace MoonShine\ActivityLog\Versioning;
+namespace MoonShine\MoonTrail\Versioning;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
-use MoonShine\ActivityLog\Contracts\RollbackStrategyContract;
-use MoonShine\ActivityLog\Models\ModelVersion;
+use MoonShine\MoonTrail\Contracts\RollbackStrategyContract;
+use MoonShine\MoonTrail\Models\ModelVersion;
 
 final class RollbackService implements RollbackStrategyContract
 {
@@ -747,7 +747,7 @@ final class RollbackService implements RollbackStrategyContract
 
 declare(strict_types=1);
 
-namespace MoonShine\ActivityLog\Diff;
+namespace MoonShine\MoonTrail\Diff;
 
 final readonly class FieldChange
 {
@@ -809,7 +809,7 @@ final readonly class FieldChange
 
 declare(strict_types=1);
 
-namespace MoonShine\ActivityLog\Components;
+namespace MoonShine\MoonTrail\Components;
 
 use Closure;
 use MoonShine\Core\Traits\HasResource;
@@ -824,7 +824,7 @@ final class ActivityTimeline extends MoonShineComponent
     use HasResource;
     use WithLabel;
 
-    protected string $view = 'moonshine-activity-log::components.activity-timeline';
+    protected string $view = 'moontrail::components.activity-timeline';
 
     protected int $limit = 20;
     protected bool $showDiff = true;
@@ -865,10 +865,10 @@ final class ActivityTimeline extends MoonShineComponent
 
 declare(strict_types=1);
 
-namespace MoonShine\ActivityLog\Components;
+namespace MoonShine\MoonTrail\Components;
 
-use MoonShine\ActivityLog\Contracts\DiffRendererContract;
-use MoonShine\ActivityLog\Diff\FieldChange;
+use MoonShine\MoonTrail\Contracts\DiffRendererContract;
+use MoonShine\MoonTrail\Diff\FieldChange;
 use MoonShine\UI\Components\MoonShineComponent;
 
 /**
@@ -878,7 +878,7 @@ use MoonShine\UI\Components\MoonShineComponent;
  */
 final class DiffViewer extends MoonShineComponent
 {
-    protected string $view = 'moonshine-activity-log::components.diff-viewer';
+    protected string $view = 'moontrail::components.diff-viewer';
 
     public function __construct(
         /** @var array<string, FieldChange> */
@@ -911,7 +911,7 @@ final class DiffViewer extends MoonShineComponent
 
 declare(strict_types=1);
 
-namespace MoonShine\ActivityLog\Components;
+namespace MoonShine\MoonTrail\Components;
 
 use MoonShine\UI\Components\Tabs\Tab;
 
@@ -923,7 +923,7 @@ use MoonShine\UI\Components\Tabs\Tab;
  */
 final class ActivityTab extends MoonShineComponent
 {
-    protected string $view = 'moonshine-activity-log::components.activity-tab';
+    protected string $view = 'moontrail::components.activity-tab';
 
     public function __construct(
         protected ModelResource $resource,
@@ -937,7 +937,7 @@ final class ActivityTab extends MoonShineComponent
     protected function viewData(): array
     {
         $timeline = ActivityTimeline::make(
-            __('moonshine-activity-log::ui.history'),
+            __('moontrail::ui.history'),
             $this->resource,
         )->limit($this->limit);
 
@@ -952,14 +952,14 @@ final class ActivityTab extends MoonShineComponent
 }
 ```
 
-### 6.5 ActivityLogPage — standalone страница
+### 6.5 MoonTrailPage — standalone страница
 
 ```php
 <?php
 
 declare(strict_types=1);
 
-namespace MoonShine\ActivityLog\Pages;
+namespace MoonShine\MoonTrail\Pages;
 
 use MoonShine\Crud\Pages\Page;
 
@@ -967,11 +967,11 @@ use MoonShine\Crud\Pages\Page;
  * Глобальная страница Activity Log — показывает все действия в системе.
  * Регистрируется в меню через конфигурацию.
  */
-final class ActivityLogPage extends Page
+final class MoonTrailPage extends Page
 {
     public function getTitle(): string
     {
-        return __('moonshine-activity-log::ui.activity_log');
+        return __('moontrail::ui.activity_log');
     }
 
     // Фильтры: по пользователю, модели, событию, дате
@@ -981,14 +981,14 @@ final class ActivityLogPage extends Page
 }
 ```
 
-### 6.6 ActivityLogResource — MoonShine Resource
+### 6.6 MoonTrailResource — MoonShine Resource
 
 ```php
 <?php
 
 declare(strict_types=1);
 
-namespace MoonShine\ActivityLog\Resources;
+namespace MoonShine\MoonTrail\Resources;
 
 use MoonShine\CRUD\Resources\ModelResource;
 use Spatie\Activitylog\Models\Activity;
@@ -997,7 +997,7 @@ use Spatie\Activitylog\Models\Activity;
  * MoonShine Resource для просмотра глобального лога активности.
  * Используется как standalone страница или встраивается в меню.
  */
-final class ActivityLogResource extends ModelResource
+final class MoonTrailResource extends ModelResource
 {
     protected string $model = Activity::class;
     protected string $title = 'Activity Log';
@@ -1045,7 +1045,7 @@ final class ActivityLogResource extends ModelResource
 }
 ```
 
-### 6.7 Trait для Resource: `WithActivityTab`
+### 6.7 Trait для Resource: `WithMoonTrailTab`
 
 Упрощённое подключение к существующим ресурсам:
 
@@ -1054,9 +1054,9 @@ final class ActivityLogResource extends ModelResource
 
 declare(strict_types=1);
 
-namespace MoonShine\ActivityLog\Traits;
+namespace MoonShine\MoonTrail\Traits;
 
-use MoonShine\ActivityLog\Components\ActivityTab;
+use MoonShine\MoonTrail\Components\ActivityTab;
 use MoonShine\Contracts\UI\ComponentContract;
 use MoonShine\UI\Components\Tabs\Tab;
 
@@ -1067,14 +1067,14 @@ use MoonShine\UI\Components\Tabs\Tab;
  * Использование:
  *   class PostResource extends ModelResource
  *   {
- *       use WithActivityTab;
+ *       use WithMoonTrailTab;
  *   }
  */
-trait WithActivityTab
+trait WithMoonTrailTab
 {
     protected function activityTabLabel(): string
     {
-        return __('moonshine-activity-log::ui.history');
+        return __('moontrail::ui.history');
     }
 
     protected function activityTabLimit(): int
@@ -1113,12 +1113,12 @@ declare(strict_types=1);
 
 namespace App\MoonShine\Resources;
 
-use MoonShine\ActivityLog\Traits\WithActivityTab;
+use MoonShine\MoonTrail\Traits\WithMoonTrailTab;
 use MoonShine\CRUD\Resources\ModelResource;
 
 final class PostResource extends ModelResource
 {
-    use WithActivityTab;
+    use WithMoonTrailTab;
 
     // Вариант 1: Через bottomLayer на DetailPage
     protected function detailPageBottomLayer(): array
@@ -1151,11 +1151,11 @@ final class PostResource extends ModelResource
 
 declare(strict_types=1);
 
-namespace MoonShine\ActivityLog\Contracts;
+namespace MoonShine\MoonTrail\Contracts;
 
 use Illuminate\Database\Eloquent\Model;
-use MoonShine\ActivityLog\Diff\FieldChange;
-use MoonShine\ActivityLog\Models\ModelVersion;
+use MoonShine\MoonTrail\Diff\FieldChange;
+use MoonShine\MoonTrail\Models\ModelVersion;
 use Spatie\Activitylog\Models\Activity;
 
 interface VersionManagerContract
@@ -1179,12 +1179,12 @@ interface VersionManagerContract
 
 declare(strict_types=1);
 
-namespace MoonShine\ActivityLog\Contracts;
+namespace MoonShine\MoonTrail\Contracts;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Validation\ValidationException;
-use MoonShine\ActivityLog\Exceptions\RollbackConflictException;
-use MoonShine\ActivityLog\Exceptions\RollbackDeniedException;
+use MoonShine\MoonTrail\Exceptions\RollbackConflictException;
+use MoonShine\MoonTrail\Exceptions\RollbackDeniedException;
 
 interface RollbackStrategyContract
 {
@@ -1202,9 +1202,9 @@ interface RollbackStrategyContract
 
 declare(strict_types=1);
 
-namespace MoonShine\ActivityLog\Contracts;
+namespace MoonShine\MoonTrail\Contracts;
 
-use MoonShine\ActivityLog\Diff\FieldChange;
+use MoonShine\MoonTrail\Diff\FieldChange;
 
 interface DiffRendererContract
 {
@@ -1220,7 +1220,7 @@ interface DiffRendererContract
 
 declare(strict_types=1);
 
-namespace MoonShine\ActivityLog\Contracts;
+namespace MoonShine\MoonTrail\Contracts;
 
 use Spatie\Activitylog\Models\Activity;
 
@@ -1272,7 +1272,7 @@ final readonly class VersionCreated
 ### 7.3 Исключения
 
 ```php
-namespace MoonShine\ActivityLog\Exceptions;
+namespace MoonShine\MoonTrail\Exceptions;
 
 final class ModelVersionNotFoundException extends \RuntimeException {}
 final class RollbackDeniedException extends \RuntimeException {}
@@ -1290,9 +1290,9 @@ final class VersionLimitExceededException extends \RuntimeException {}
 | Поля в diff | Override `versionExcludedFields()` в модели |
 | LogOptions | Override `activityLogOptions()` в модели |
 | Разрешение rollback | Override `isRollbackAllowed()` в модели |
-| Лимит версий | `config('moonshine-activity-log.versioning.max_versions')` |
-| Кастомный Resource | `config('moonshine-activity-log.resource.class')` |
-| Blade-шаблоны | `php artisan vendor:publish --tag=moonshine-activity-log-views` |
+| Лимит версий | `config('moontrail.versioning.max_versions')` |
+| Кастомный Resource | `config('moontrail.resource.class')` |
+| Blade-шаблоны | `php artisan vendor:publish --tag=moontrail-views` |
 
 ---
 
@@ -1311,8 +1311,8 @@ final class VersionLimitExceededException extends \RuntimeException {}
 | **Feature** | `RollbackControllerTest.php` | HTTP-тесты rollback endpoint |
 | **Feature** | `ActivityTimelineComponentTest.php` | Рендер timeline-компонента |
 | **Feature** | `DiffViewerComponentTest.php` | Рендер diff-компонента |
-| **Feature** | `ActivityLogResourceTest.php` | Index, фильтрация, поиск |
-| **Feature** | `WithActivityTabTest.php` | Trait интеграция с ресурсом |
+| **Feature** | `MoonTrailResourceTest.php` | Index, фильтрация, поиск |
+| **Feature** | `WithMoonTrailTabTest.php` | Trait интеграция с ресурсом |
 
 ### 8.2 Примеры тестов
 
@@ -1320,8 +1320,8 @@ final class VersionLimitExceededException extends \RuntimeException {}
 <?php
 // tests/Unit/DiffComputerTest.php
 
-use MoonShine\ActivityLog\Diff\DiffComputer;
-use MoonShine\ActivityLog\Diff\FieldChange;
+use MoonShine\MoonTrail\Diff\DiffComputer;
+use MoonShine\MoonTrail\Diff\FieldChange;
 
 test('detects modified fields', function () {
     $old = ['name' => 'John', 'email' => 'john@example.com'];
@@ -1377,8 +1377,8 @@ test('returns empty for identical data', function () {
 <?php
 // tests/Unit/VersionManagerTest.php
 
-use MoonShine\ActivityLog\Versioning\VersionManager;
-use MoonShine\ActivityLog\Models\ModelVersion;
+use MoonShine\MoonTrail\Versioning\VersionManager;
+use MoonShine\MoonTrail\Models\ModelVersion;
 
 test('creates first version with number 1', function () {
     $post = createTestPost(['name' => 'Test']);
@@ -1404,7 +1404,7 @@ test('increments version number', function () {
 });
 
 test('enforces max version limit', function () {
-    config(['moonshine-activity-log.versioning.max_versions' => 3]);
+    config(['moontrail.versioning.max_versions' => 3]);
 
     $post = createTestPost(['name' => 'v1']);
     $manager = app(VersionManager::class);
@@ -1440,7 +1440,7 @@ test('computes diff between two versions', function () {
 <?php
 // tests/Feature/RollbackControllerTest.php
 
-use MoonShine\ActivityLog\Models\ModelVersion;
+use MoonShine\MoonTrail\Models\ModelVersion;
 
 test('rollback restores model to target version', function () {
     $post = createTestPost(['name' => 'Original', 'body' => 'Content']);
@@ -1449,7 +1449,7 @@ test('rollback restores model to target version', function () {
     // v2: updated
     $post->update(['name' => 'Modified', 'body' => 'New content']);
 
-    $this->post(route('moonshine.activity-log.rollback', [
+    $this->post(route('moonshine.moontrail.rollback', [
         'modelVersion' => $post->versions()->where('version', 1)->first()->id,
         'resourceItem' => $post->id,
     ]))->assertRedirect();
@@ -1463,7 +1463,7 @@ test('rollback creates new version with is_rollback flag', function () {
     $post = createTestPost(['name' => 'Original']);
     $post->update(['name' => 'Modified']);
 
-    $this->post(route('moonshine.activity-log.rollback', [
+    $this->post(route('moonshine.moontrail.rollback', [
         'modelVersion' => $post->versions()->where('version', 1)->first()->id,
         'resourceItem' => $post->id,
     ]));
@@ -1475,7 +1475,7 @@ test('rollback creates new version with is_rollback flag', function () {
 });
 
 test('rollback validates data when config enabled', function () {
-    config(['moonshine-activity-log.rollback.validate' => true]);
+    config(['moontrail.rollback.validate' => true]);
 
     $post = createTestPost(['name' => 'Valid', 'email' => 'valid@mail.com']);
     $post->update(['name' => '', 'email' => 'invalid']); // Bad data forced
@@ -1540,14 +1540,14 @@ test('timeline hides rollback button when configured', function () {
 <?php
 // tests/Fixtures/TestPost.php
 
-namespace MoonShine\ActivityLog\Tests\Fixtures;
+namespace MoonShine\MoonTrail\Tests\Fixtures;
 
 use Illuminate\Database\Eloquent\Model;
-use MoonShine\ActivityLog\Traits\HasActivityLog;
+use MoonShine\MoonTrail\Traits\HasMoonTrail;
 
 final class TestPost extends Model
 {
-    use HasActivityLog;
+    use HasMoonTrail;
 
     protected $table = 'test_posts';
     protected $fillable = ['name', 'body', 'email'];
@@ -1570,10 +1570,10 @@ final class TestPost extends Model
 <?php
 // tests/TestCase.php
 
-namespace MoonShine\ActivityLog\Tests;
+namespace MoonShine\MoonTrail\Tests;
 
 use Orchestra\Testbench\TestCase as BaseTestCase;
-use MoonShine\ActivityLog\ActivityLogServiceProvider;
+use MoonShine\MoonTrail\MoonTrailServiceProvider;
 use Spatie\Activitylog\ActivitylogServiceProvider;
 
 abstract class TestCase extends BaseTestCase
@@ -1582,7 +1582,7 @@ abstract class TestCase extends BaseTestCase
     {
         return [
             ActivitylogServiceProvider::class,
-            ActivityLogServiceProvider::class,
+            MoonTrailServiceProvider::class,
             // MoonShine providers...
         ];
     }
@@ -1601,10 +1601,10 @@ abstract class TestCase extends BaseTestCase
 
 ### 9.1 Packagist
 
-**Имя пакета:** `moonshine/activity-log`
+**Имя пакета:** `moonshine/moontrail`
 
 **Шаги публикации:**
-1. Создать GitHub-репозиторий `moonshine-software/activity-log`
+1. Создать GitHub-репозиторий `moonshine-software/moontrail`
 2. Настроить GitHub Actions (CI):
    - PHP 8.2, 8.3, 8.4
    - Laravel 10, 11, 12
@@ -1664,9 +1664,9 @@ README.md
 │   ├── Rollback
 │   └── UI
 ├── Usage
-│   ├── Model setup (HasActivityLog trait)
-│   ├── Resource integration (WithActivityTab trait)
-│   ├── Standalone page (ActivityLogResource)
+│   ├── Model setup (HasMoonTrail trait)
+│   ├── Resource integration (WithMoonTrailTab trait)
+│   ├── Standalone page (MoonTrailResource)
 │   ├── Custom diff renderer
 │   └── Programmatic rollback
 ├── Advanced
@@ -1690,29 +1690,29 @@ README.md
 ### 1. Установка
 
 ```bash
-composer require moonshine/activity-log
+composer require moonshine/moontrail
 php artisan migrate
 ```
 
 ### 2. Добавьте trait к модели
 
 ```php
-use MoonShine\ActivityLog\Traits\HasActivityLog;
+use MoonShine\MoonTrail\Traits\HasMoonTrail;
 
 class Post extends Model
 {
-    use HasActivityLog;
+    use HasMoonTrail;
 }
 ```
 
 ### 3. Добавьте trait к ресурсу
 
 ```php
-use MoonShine\ActivityLog\Traits\WithActivityTab;
+use MoonShine\MoonTrail\Traits\WithMoonTrailTab;
 
 class PostResource extends ModelResource
 {
-    use WithActivityTab;
+    use WithMoonTrailTab;
 
     protected function onLoad(): void
     {
@@ -1735,17 +1735,17 @@ class PostResource extends ModelResource
 ### Этап 1 — Фундамент (1–2 недели)
 
 **Задачи:**
-- [ ] Инициализация пакета: `composer.json`, ServiceProvider, конфигурация
-- [ ] Миграция `model_versions`
-- [ ] `HasActivityLog` trait (обёртка над Spatie `LogsActivity`)
-- [ ] `ModelVersion` Eloquent-модель
-- [ ] `VersionManager` — создание версий, нумерация, лимиты
-- [ ] `DiffComputer` — вычисление diff между двумя массивами
-- [ ] `FieldChange` DTO
-- [ ] Unit-тесты: DiffComputer, VersionManager
+- [x] Инициализация пакета: `composer.json`, ServiceProvider, конфигурация
+- [x] Миграция `model_versions`
+- [x] `HasMoonTrail` trait (обёртка над Spatie `LogsActivity`)
+- [x] `ModelVersion` Eloquent-модель
+- [x] `VersionManager` — создание версий, нумерация, лимиты
+- [x] `DiffComputer` — вычисление diff между двумя массивами
+- [x] `FieldChange` DTO
+- [x] Unit-тесты: DiffComputer, VersionManager
 
 **Критерии готовности:**
-- `HasActivityLog` trait корректно логирует в `activity_log` + создаёт записи в `model_versions`
+- `HasMoonTrail` trait корректно логирует в `activity_log` + создаёт записи в `model_versions`
 - `DiffComputer::compute()` возвращает корректный diff
 - Версии нумеруются инкрементально, лимит работает
 - Все unit-тесты проходят
@@ -1755,14 +1755,14 @@ class PostResource extends ModelResource
 ### Этап 2 — Rollback (1 неделя)
 
 **Задачи:**
-- [ ] `RollbackService` — логика отката с транзакцией
-- [ ] `RollbackController` — HTTP endpoint
-- [ ] Маршруты (`routes/activity-log.php`)
-- [ ] Валидация при откате
+- [x] `RollbackService` — логика отката с транзакцией
+- [x] `RollbackController` — HTTP endpoint
+- [x] Маршруты (`routes/moontrail.php`)
+- [x] Валидация при откате
 - [ ] Конфликт-детекция (unique constraints, deleted models)
 - [ ] Events: `ModelRollingBack`, `ModelRolledBack`
-- [ ] Exceptions: `ModelVersionNotFoundException`, `RollbackDeniedException`, `RollbackConflictException`
-- [ ] Feature-тесты: RollbackController, edge cases
+- [x] Exceptions: `ModelVersionNotFoundException`, `RollbackDeniedException`, `RollbackConflictException`
+- [x] Feature-тесты: RollbackController, edge cases
 
 **Критерии готовности:**
 - Rollback восстанавливает модель к целевой версии
@@ -1776,13 +1776,13 @@ class PostResource extends ModelResource
 ### Этап 3 — UI-компоненты (1–2 недели)
 
 **Задачи:**
-- [ ] `ActivityTimeline` — компонент timeline
-- [ ] `DiffViewer` — компонент визуального diff
-- [ ] `ActivityTab` — готовая вкладка для ресурса
-- [ ] `WithActivityTab` — trait для ресурса
-- [ ] Blade-шаблоны: timeline, diff-viewer, rollback-confirm, version-badge
-- [ ] Переводы: `en/ui.php`, `ru/ui.php`
-- [ ] Feature-тесты: рендер компонентов
+- [x] `ActivityTimeline` — компонент timeline
+- [x] `DiffViewer` — компонент визуального diff
+- [x] `ActivityTab` — готовая вкладка для ресурса
+- [x] `WithMoonTrailTab` — trait для ресурса
+- [x] Blade-шаблоны: timeline, diff-viewer, rollback-confirm, version-badge
+- [x] Переводы: `en/ui.php`, `ru/ui.php`
+- [x] Feature-тесты: рендер компонентов
 
 **Критерии готовности:**
 - Timeline корректно отображает историю изменений
@@ -1796,12 +1796,12 @@ class PostResource extends ModelResource
 ### Этап 4 — Resource и глобальная страница (1 неделя)
 
 **Задачи:**
-- [ ] `ActivityLogResource` — MoonShine Resource для `activity_log`
-- [ ] `ActivityLogPage` — standalone страница
-- [ ] Фильтры: по пользователю, типу события, модели, дате
-- [ ] Пагинация, поиск
-- [ ] Интеграция в меню MoonShine через конфигурацию
-- [ ] Feature-тесты: индекс, фильтрация, поиск
+- [x] `MoonTrailResource` — MoonShine Resource для `activity_log`
+- [x] `MoonTrailPage` — standalone страница
+- [x] Фильтры: по пользователю, типу события, модели, дате
+- [x] Пагинация, поиск
+- [x] Интеграция в меню MoonShine через конфигурацию
+- [x] Feature-тесты: индекс, фильтрация, поиск
 
 **Критерии готовности:**
 - Глобальная страница Activity Log доступна в меню
@@ -1814,13 +1814,13 @@ class PostResource extends ModelResource
 ### Этап 5 — Полировка и публикация (1 неделя)
 
 **Задачи:**
-- [ ] PHPStan на уровне 6+
-- [ ] PHP-CS-Fixer — единый стиль
+- [x] PHPStan на уровне 6+
+- [x] PHP-CS-Fixer — единый стиль (Laravel Pint)
 - [ ] README.md с полной документацией
-- [ ] CHANGELOG.md
-- [ ] LICENSE.md
+- [x] CHANGELOG.md
+- [x] LICENSE.md
 - [ ] GitHub Actions CI (матрица PHP × Laravel)
-- [ ] Финальный ревью всех контрактов
+- [x] Финальный ревью всех контрактов
 - [ ] Публикация на Packagist
 
 **Критерии готовности:**
@@ -1828,7 +1828,7 @@ class PostResource extends ModelResource
 - `composer test:types` — PHPStan без ошибок
 - README содержит Quick Start, Configuration, Advanced Usage, API Reference
 - CI зелёный на PHP 8.2/8.3/8.4 × Laravel 10/11/12
-- Пакет доступен через `composer require moonshine/activity-log`
+- Пакет доступен через `composer require moonshine/moontrail`
 
 ---
 
@@ -1851,10 +1851,10 @@ class PostResource extends ModelResource
 
 | Файл | Назначение | Этап |
 |------|------------|------|
-| `src/ActivityLogServiceProvider.php` | Регистрация сервисов, миграций, views | 1 |
-| `config/activity-log.php` | Конфигурация пакета | 1 |
+| `src/MoonTrailServiceProvider.php` | Регистрация сервисов, миграций, views | 1 |
+| `config/moontrail.php` | Конфигурация пакета | 1 |
 | `database/migrations/*_create_model_versions_table.php` | Миграция таблицы версий | 1 |
-| `src/Traits/HasActivityLog.php` | Trait для моделей | 1 |
+| `src/Traits/HasMoonTrail.php` | Trait для моделей | 1 |
 | `src/Models/ModelVersion.php` | Eloquent-модель версии | 1 |
 | `src/Versioning/VersionManager.php` | Управление версиями | 1 |
 | `src/Diff/DiffComputer.php` | Вычисление diff | 1 |
@@ -1862,14 +1862,14 @@ class PostResource extends ModelResource
 | `src/Diff/HtmlDiffRenderer.php` | HTML-рендер diff | 3 |
 | `src/Versioning/RollbackService.php` | Сервис отката | 2 |
 | `src/Http/Controllers/RollbackController.php` | HTTP endpoint отката | 2 |
-| `routes/activity-log.php` | Маршруты пакета | 2 |
+| `routes/moontrail.php` | Маршруты пакета | 2 |
 | `src/Enums/ChangeType.php` | Enum типов изменений | 1 |
 | `src/Components/ActivityTimeline.php` | Timeline-компонент | 3 |
 | `src/Components/DiffViewer.php` | Diff-компонент | 3 |
 | `src/Components/ActivityTab.php` | Tab-компонент | 3 |
-| `src/Traits/WithActivityTab.php` | Trait для ресурсов | 3 |
-| `src/Resources/ActivityLogResource.php` | MoonShine Resource | 4 |
-| `src/Pages/ActivityLogPage.php` | Standalone страница | 4 |
+| `src/Traits/WithMoonTrailTab.php` | Trait для ресурсов | 3 |
+| `src/Resources/MoonTrailResource.php` | MoonShine Resource | 4 |
+| `src/Pages/MoonTrailPage.php` | Standalone страница | 4 |
 | `src/Contracts/VersionManagerContract.php` | Интерфейс | 1 |
 | `src/Contracts/RollbackStrategyContract.php` | Интерфейс | 2 |
 | `src/Contracts/DiffRendererContract.php` | Интерфейс | 3 |

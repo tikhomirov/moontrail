@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 160" role="img" aria-labelledby="t2 d2">
+  <title id="t2">MoonTrail logo v2</title>
+  <desc id="d2">Minimal crescent moon with a dotted audit trail leading to a light source — transparency and accountability.</desc>
+  <defs>
+    <linearGradient id="night" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#060d1a"/>
+      <stop offset="100%" stop-color="#0c1a30"/>
+    </linearGradient>
+    <radialGradient id="moonGlow" cx="40%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#fff7d6"/>
+      <stop offset="60%" stop-color="#f0c84a"/>
+      <stop offset="100%" stop-color="#c89020"/>
+    </radialGradient>
+    <radialGradient id="sunGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="1"/>
+      <stop offset="40%" stop-color="#a8e6ff" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="#2196f3" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="soft" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="4"/>
+    </filter>
+    <filter id="crisp">
+      <feComposite/>
+    </filter>
+    <mask id="crescentMask">
+      <circle cx="68" cy="80" r="44" fill="white"/>
+      <circle cx="84" cy="70" r="39" fill="black"/>
+    </mask>
+  </defs>
+
+  <rect width="480" height="160" rx="16" fill="url(#night)"/>
+
+  <circle cx="68" cy="80" r="44" fill="#ffe28a" opacity="0.18" filter="url(#soft)"/>
+  <circle cx="68" cy="80" r="44" fill="url(#moonGlow)" mask="url(#crescentMask)"/>
+
+  <g stroke="#7ecfff" stroke-linecap="round">
+    <line x1="130" y1="80" x2="144" y2="80" stroke-width="2.5" opacity="0.6"/>
+    <line x1="155" y1="80" x2="169" y2="80" stroke-width="2.5" opacity="0.5"/>
+    <line x1="180" y1="80" x2="194" y2="80" stroke-width="2.5" opacity="0.45"/>
+    <line x1="205" y1="80" x2="219" y2="80" stroke-width="2.5" opacity="0.4"/>
+    <line x1="230" y1="80" x2="244" y2="80" stroke-width="2.5" opacity="0.35"/>
+    <line x1="255" y1="80" x2="280" y2="80" stroke-width="2.5" opacity="0.3"/>
+  </g>
+
+  <circle cx="308" cy="80" r="30" fill="#1a3a5c" opacity="0.5" filter="url(#soft)"/>
+  <circle cx="308" cy="80" r="22" fill="url(#sunGlow)" opacity="0.3" filter="url(#soft)"/>
+  <circle cx="308" cy="80" r="11" fill="#ceeeff"/>
+  <circle cx="308" cy="80" r="6"  fill="#ffffff"/>
+
+  <g stroke="#4ab8ff" stroke-width="1.8" stroke-linecap="round" opacity="0.55">
+    <line x1="308" y1="53" x2="308" y2="46"/>
+    <line x1="308" y1="107" x2="308" y2="114"/>
+    <line x1="281" y1="80" x2="274" y2="80"/>
+    <line x1="335" y1="80" x2="342" y2="80"/>
+    <line x1="289" y1="61" x2="284" y2="56"/>
+    <line x1="327" y1="99" x2="332" y2="104"/>
+    <line x1="327" y1="61" x2="332" y2="56"/>
+    <line x1="289" y1="99" x2="284" y2="104"/>
+  </g>
+
+  <g fill="#daeeff" font-family="'SF Mono','Fira Mono','Consolas',monospace" letter-spacing="3">
+    <text x="356" y="72" font-size="26" font-weight="700">MOON</text>
+    <text x="356" y="100" font-size="26" font-weight="300" opacity="0.75">TRAIL</text>
+  </g>
+
+  <line x1="356" y1="108" x2="468" y2="108" stroke="#4ab8ff" stroke-width="1" opacity="0.35"/>
+  <text x="356" y="124" font-size="10" fill="#4a7fa0" font-family="'Segoe UI',sans-serif" letter-spacing="1.5">SEE EVERY CHANGE</text>
+</svg>

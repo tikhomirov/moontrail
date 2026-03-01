@@ -1,0 +1,1167 @@
+/*
+ | MoonShine Logs — Namespaced CSS Layer v3
+ |
+ | Self-sufficient visual design layer for the ms-al-* namespace.
+ | Works without host Tailwind; complements Tailwind when present.
+ |
+ | Design tokens live in CSS custom properties (:root / .dark).
+ | All component styles reference only these tokens.
+ */
+
+/* ==========================================================================
+   1. DESIGN TOKENS
+   ========================================================================== */
+
+:root {
+    /* Surface */
+    --ms-al-bg-card:       #ffffff;
+    --ms-al-bg-header:     #f8fafc;
+    --ms-al-bg-hover:      #f9fafb;
+    --ms-al-bg-input:      #f9fafb;
+    --ms-al-border:        #e5e7eb;
+    --ms-al-border-sub:    #f3f4f6;
+    --ms-al-border-focus:  var(--ms-form-focus-border-color, #3b82f6);
+    --ms-al-shadow:        0 1px 2px 0 rgba(0,0,0,0.05);
+    --ms-al-shadow-md:     0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+    --ms-al-radius:        0.75rem;
+    --ms-al-radius-sm:     0.5rem;
+    --ms-al-radius-xs:     0.375rem;
+
+    /* Text */
+    --ms-al-text-primary:   #111827;
+    --ms-al-text-secondary: #374151;
+    --ms-al-text-muted:     #6b7280;
+    --ms-al-text-meta:      #9ca3af;
+
+    /* Event palette — Created (emerald) */
+    --ms-al-ev-c-bg:   #d1fae5;
+    --ms-al-ev-c-text: #065f46;
+    --ms-al-ev-c-dot:  #10b981;
+    --ms-al-ev-c-ring: #a7f3d0;
+
+    /* Event palette — Updated (blue) */
+    --ms-al-ev-u-bg:   #dbeafe;
+    --ms-al-ev-u-text: #1e40af;
+    --ms-al-ev-u-dot:  #3b82f6;
+    --ms-al-ev-u-ring: #bfdbfe;
+
+    /* Event palette — Deleted (red) */
+    --ms-al-ev-d-bg:   #fee2e2;
+    --ms-al-ev-d-text: #991b1b;
+    --ms-al-ev-d-dot:  #ef4444;
+    --ms-al-ev-d-ring: #fecaca;
+
+    /* Event palette — Restored (purple) */
+    --ms-al-ev-r-bg:   #ede9fe;
+    --ms-al-ev-r-text: #5b21b6;
+    --ms-al-ev-r-dot:  #8b5cf6;
+    --ms-al-ev-r-ring: #ddd6fe;
+
+    /* Event palette — Rolled-back (orange) */
+    --ms-al-ev-rb-bg:   #ffedd5;
+    --ms-al-ev-rb-text: #9a3412;
+    --ms-al-ev-rb-dot:  #f97316;
+    --ms-al-ev-rb-ring: #fed7aa;
+
+    /* Event palette — Unknown / gray */
+    --ms-al-ev-x-bg:   #f3f4f6;
+    --ms-al-ev-x-text: #374151;
+    --ms-al-ev-x-dot:  #9ca3af;
+    --ms-al-ev-x-ring: #e5e7eb;
+
+    /* Diff palette */
+    --ms-al-diff-added-border:       #10b981;
+    --ms-al-diff-added-old:          #6b7280;
+    --ms-al-diff-added-new:          #059669;
+    --ms-al-diff-added-status-bg:    #f0fdf4;
+    --ms-al-diff-added-status-text:  #065f46;
+
+    --ms-al-diff-removed-border:       #ef4444;
+    --ms-al-diff-removed-old:          #dc2626;
+    --ms-al-diff-removed-new:          #6b7280;
+    --ms-al-diff-removed-status-bg:    #fff5f5;
+    --ms-al-diff-removed-status-text:  #991b1b;
+
+    --ms-al-diff-modified-border:       #3b82f6;
+    --ms-al-diff-modified-old:          #dc2626;
+    --ms-al-diff-modified-new:          #059669;
+    --ms-al-diff-modified-status-bg:    #eff6ff;
+    --ms-al-diff-modified-status-text:  #1e40af;
+
+    --ms-al-diff-unchanged-border:       transparent;
+    --ms-al-diff-unchanged-old:          #374151;
+    --ms-al-diff-unchanged-new:          #374151;
+    --ms-al-diff-unchanged-status-bg:    #f9fafb;
+    --ms-al-diff-unchanged-status-text:  #374151;
+
+    /* JSON viewer */
+    --ms-al-json-bg:     #0d1117;
+    --ms-al-json-border: #1f2937;
+    --ms-al-json-text:   #e6edf3;
+}
+
+/* Dark mode token overrides */
+.dark {
+    --ms-al-bg-card:    #111827;
+    --ms-al-bg-header:  #1f2937;
+    --ms-al-bg-hover:   rgba(255,255,255,.03);
+    --ms-al-bg-input:   #1c2333;
+    --ms-al-border:     #374151;
+    --ms-al-border-sub: #1f2937;
+
+    --ms-al-text-primary:   #f9fafb;
+    --ms-al-text-secondary: #d1d5db;
+    --ms-al-text-muted:     #9ca3af;
+    --ms-al-text-meta:      #6b7280;
+
+    --ms-al-ev-c-bg:   rgba(6,78,59,.40);
+    --ms-al-ev-c-text: #6ee7b7;
+    --ms-al-ev-c-ring: rgba(16,185,129,.35);
+
+    --ms-al-ev-u-bg:   rgba(30,58,138,.40);
+    --ms-al-ev-u-text: #93c5fd;
+    --ms-al-ev-u-ring: rgba(59,130,246,.35);
+
+    --ms-al-ev-d-bg:   rgba(127,29,29,.40);
+    --ms-al-ev-d-text: #fca5a5;
+    --ms-al-ev-d-ring: rgba(239,68,68,.35);
+
+    --ms-al-ev-r-bg:   rgba(88,28,135,.40);
+    --ms-al-ev-r-text: #c4b5fd;
+    --ms-al-ev-r-ring: rgba(139,92,246,.35);
+
+    --ms-al-ev-rb-bg:   rgba(154,52,18,.35);
+    --ms-al-ev-rb-text: #fdba74;
+    --ms-al-ev-rb-ring: rgba(249,115,22,.35);
+
+    --ms-al-ev-x-bg:   #374151;
+    --ms-al-ev-x-text: #d1d5db;
+    --ms-al-ev-x-ring: rgba(107,114,128,.30);
+
+    --ms-al-diff-added-old:          #9ca3af;
+    --ms-al-diff-added-new:          #6ee7b7;
+    --ms-al-diff-added-status-bg:    rgba(6,78,59,.25);
+    --ms-al-diff-added-status-text:  #6ee7b7;
+
+    --ms-al-diff-removed-old:          #fca5a5;
+    --ms-al-diff-removed-new:          #9ca3af;
+    --ms-al-diff-removed-status-bg:    rgba(127,29,29,.25);
+    --ms-al-diff-removed-status-text:  #fca5a5;
+
+    --ms-al-diff-modified-old:          #fca5a5;
+    --ms-al-diff-modified-new:          #6ee7b7;
+    --ms-al-diff-modified-status-bg:    rgba(30,58,138,.25);
+    --ms-al-diff-modified-status-text:  #93c5fd;
+
+    --ms-al-diff-unchanged-old:          #9ca3af;
+    --ms-al-diff-unchanged-new:          #9ca3af;
+    --ms-al-diff-unchanged-status-bg:    rgba(255,255,255,.03);
+    --ms-al-diff-unchanged-status-text:  #9ca3af;
+}
+
+/* ==========================================================================
+   2. BASE LAYOUT COMPONENTS
+   ========================================================================== */
+
+.ms-al-card {
+    background-color: var(--ms-al-bg-card);
+    border: 1px solid var(--ms-al-border);
+    border-radius: var(--ms-al-radius);
+    box-shadow: var(--ms-al-shadow);
+    overflow: hidden;
+    margin-bottom: 1rem;
+}
+
+.ms-al-section-header {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    padding: 0.75rem 1rem;
+    background-color: var(--ms-al-bg-header);
+    border-bottom: 1px solid var(--ms-al-border);
+}
+
+.ms-al-section-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    flex-shrink: 0;
+    border-radius: var(--ms-al-radius-xs);
+    background-color: var(--ms-al-bg-card);
+    border: 1px solid var(--ms-al-border);
+    color: var(--ms-al-text-muted);
+}
+
+.ms-al-section-title {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--ms-al-text-secondary);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+.ms-al-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 0.625rem 0;
+    border-bottom: 1px solid var(--ms-al-border-sub);
+}
+
+.ms-al-row:last-child {
+    border-bottom: none;
+}
+
+.ms-al-row-label {
+    width: 7rem;
+    flex-shrink: 0;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    color: var(--ms-al-text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding-top: 0.125rem;
+}
+
+.ms-al-row-value {
+    font-size: 0.875rem;
+    color: var(--ms-al-text-primary);
+    line-height: 1.5;
+}
+
+/* ==========================================================================
+   3. EVENT BADGES
+   ========================================================================== */
+
+.ms-al-event-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.25rem 0.625rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.ms-al-event-created    { background-color: var(--ms-al-ev-c-bg);  color: var(--ms-al-ev-c-text);  box-shadow: inset 0 0 0 1px var(--ms-al-ev-c-ring);  }
+.ms-al-event-updated    { background-color: var(--ms-al-ev-u-bg);  color: var(--ms-al-ev-u-text);  box-shadow: inset 0 0 0 1px var(--ms-al-ev-u-ring);  }
+.ms-al-event-deleted    { background-color: var(--ms-al-ev-d-bg);  color: var(--ms-al-ev-d-text);  box-shadow: inset 0 0 0 1px var(--ms-al-ev-d-ring);  }
+.ms-al-event-restored   { background-color: var(--ms-al-ev-r-bg);  color: var(--ms-al-ev-r-text);  box-shadow: inset 0 0 0 1px var(--ms-al-ev-r-ring);  }
+.ms-al-event-rolled-back { background-color: var(--ms-al-ev-rb-bg); color: var(--ms-al-ev-rb-text); box-shadow: inset 0 0 0 1px var(--ms-al-ev-rb-ring); }
+.ms-al-event-unknown    { background-color: var(--ms-al-ev-x-bg);  color: var(--ms-al-ev-x-text);  box-shadow: inset 0 0 0 1px var(--ms-al-ev-x-ring);  }
+
+/* ==========================================================================
+   4. TIMELINE
+   ========================================================================== */
+
+.ms-al-tl-item {
+    position: relative;
+    display: flex;
+    gap: 1rem;
+    padding-bottom: 1.25rem;
+}
+
+.ms-al-tl-item:last-child {
+    padding-bottom: 0;
+}
+
+.ms-al-tl-dot {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 9999px;
+    flex-shrink: 0;
+    color: #ffffff;
+    position: relative;
+    z-index: 10;
+    margin-top: 0.125rem;
+    box-shadow: var(--ms-al-shadow);
+}
+
+.ms-al-tl-dot-created    { background-color: var(--ms-al-ev-c-dot);  box-shadow: var(--ms-al-shadow), 0 0 0 4px var(--ms-al-ev-c-bg);  }
+.ms-al-tl-dot-updated    { background-color: var(--ms-al-ev-u-dot);  box-shadow: var(--ms-al-shadow), 0 0 0 4px var(--ms-al-ev-u-bg);  }
+.ms-al-tl-dot-deleted    { background-color: var(--ms-al-ev-d-dot);  box-shadow: var(--ms-al-shadow), 0 0 0 4px var(--ms-al-ev-d-bg);  }
+.ms-al-tl-dot-restored   { background-color: var(--ms-al-ev-r-dot);  box-shadow: var(--ms-al-shadow), 0 0 0 4px var(--ms-al-ev-r-bg);  }
+.ms-al-tl-dot-rolled-back { background-color: var(--ms-al-ev-rb-dot); box-shadow: var(--ms-al-shadow), 0 0 0 4px var(--ms-al-ev-rb-bg); }
+.ms-al-tl-dot-unknown    { background-color: var(--ms-al-ev-x-dot);  box-shadow: var(--ms-al-shadow), 0 0 0 4px var(--ms-al-ev-x-bg);  }
+
+/* Latest version gets stronger shadow */
+.ms-al-tl-dot-latest {
+    box-shadow: var(--ms-al-shadow-md), 0 0 0 4px var(--ms-al-ev-c-bg);
+}
+
+.ms-al-tl-card {
+    flex: 1;
+    min-width: 0;
+    background-color: var(--ms-al-bg-card);
+    border: 1px solid var(--ms-al-border);
+    border-radius: var(--ms-al-radius);
+    box-shadow: var(--ms-al-shadow);
+    overflow: hidden;
+    transition: box-shadow .2s;
+}
+
+.ms-al-tl-card:hover {
+    box-shadow: var(--ms-al-shadow-md);
+}
+
+.ms-al-tl-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.625rem 1rem;
+    background-color: var(--ms-al-bg-header);
+    border-bottom: 1px solid var(--ms-al-border);
+}
+
+.ms-al-tl-body {
+    padding: 0.75rem 1rem;
+}
+
+.ms-al-time {
+    font-size: 0.75rem;
+    color: var(--ms-al-text-muted);
+    white-space: nowrap;
+    flex-shrink: 0;
+    font-variant-numeric: tabular-nums;
+}
+
+.ms-al-author {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    font-size: 0.75rem;
+    color: var(--ms-al-text-secondary);
+    margin-bottom: 0.75rem;
+}
+
+/* ==========================================================================
+   5. ACTION BUTTONS
+   ========================================================================== */
+
+.ms-al-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.375rem 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    border-radius: var(--ms-al-radius-xs);
+    border: 1px solid var(--ms-al-border);
+    background-color: var(--ms-al-bg-card);
+    color: var(--ms-al-text-secondary);
+    cursor: pointer;
+    transition: background-color .15s, border-color .15s;
+    white-space: nowrap;
+}
+
+.ms-al-btn:hover {
+    background-color: var(--ms-al-bg-hover);
+    border-color: var(--ms-al-text-meta);
+}
+
+.ms-al-btn-diff {
+    border-color: var(--ms-al-border);
+    background-color: var(--ms-al-bg-card);
+    color: var(--ms-al-text-secondary);
+}
+
+.ms-al-btn-rollback {
+    border-color: var(--ms-al-ev-rb-ring);
+    background-color: var(--ms-al-ev-rb-bg);
+    color: var(--ms-al-ev-rb-text);
+}
+
+.ms-al-btn-rollback:hover {
+    background-color: var(--ms-al-ev-rb-ring);
+    border-color: var(--ms-al-ev-rb-dot);
+}
+
+.ms-al-btn-open {
+    border-color: var(--ms-al-ev-u-ring);
+    background-color: var(--ms-al-ev-u-bg);
+    color: var(--ms-al-ev-u-text);
+}
+
+.ms-al-btn-open:hover {
+    background-color: var(--ms-al-ev-u-ring);
+    border-color: var(--ms-al-ev-u-dot);
+}
+
+.ms-al-btn-copy,
+.ms-al-btn-expand {
+    border-color: var(--ms-al-border);
+    background-color: var(--ms-al-bg-card);
+    color: var(--ms-al-text-muted);
+}
+
+.ms-al-btn-copy:hover,
+.ms-al-btn-expand:hover {
+    background-color: var(--ms-al-bg-hover);
+}
+
+.ms-al-btn-copy.ms-al-copied {
+    border-color: var(--ms-al-ev-c-ring);
+    background-color: var(--ms-al-ev-c-bg);
+    color: var(--ms-al-ev-c-text);
+}
+
+/* ==========================================================================
+   6. DIFF TABLE
+   ========================================================================== */
+
+.ms-al-diff-table-wrap {
+    overflow-x: auto;
+    border-radius: var(--ms-al-radius);
+    border: 1px solid var(--ms-al-border);
+    box-shadow: var(--ms-al-shadow);
+}
+
+.ms-al-diff-thead-row {
+    background-color: var(--ms-al-bg-header);
+    border-bottom: 1px solid var(--ms-al-border);
+}
+
+.ms-al-diff-tbody {
+    background-color: var(--ms-al-bg-card);
+}
+
+.ms-al-diff-tbody tr + tr {
+    border-top: 1px solid var(--ms-al-border);
+}
+
+.ms-activity-log-diff {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.ms-activity-log-diff th {
+    padding: 0.75rem 1rem;
+    text-align: left;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--ms-al-text-secondary);
+    background-color: var(--ms-al-bg-header);
+    border-bottom: 1px solid var(--ms-al-border);
+}
+
+.ms-activity-log-diff td {
+    padding: 0.75rem 1rem;
+    color: var(--ms-al-text-primary);
+    vertical-align: top;
+}
+
+/* Diff rows */
+.ms-al-diff-row {
+    border-left: 4px solid transparent;
+    transition: background-color .15s;
+    background-color: var(--ms-al-bg-card);
+}
+
+.ms-al-diff-row:hover {
+    background-color: var(--ms-al-bg-hover);
+}
+
+.ms-al-diff-added    { border-left-color: var(--ms-al-diff-added-border);    }
+.ms-al-diff-removed  { border-left-color: var(--ms-al-diff-removed-border);  }
+.ms-al-diff-modified { border-left-color: var(--ms-al-diff-modified-border); }
+.ms-al-diff-unchanged { border-left-color: var(--ms-al-diff-unchanged-border); }
+
+/* Old/new value coloring per row type */
+.ms-al-diff-added .ms-al-diff-old    { color: var(--ms-al-diff-added-old);    font-style: italic; }
+.ms-al-diff-added .ms-al-diff-new    { color: var(--ms-al-diff-added-new);    font-weight: 600; }
+
+.ms-al-diff-removed .ms-al-diff-old  { color: var(--ms-al-diff-removed-old);  text-decoration: line-through; text-decoration-thickness: 2px; }
+.ms-al-diff-removed .ms-al-diff-new  { color: var(--ms-al-diff-removed-new);  font-style: italic; }
+
+.ms-al-diff-modified .ms-al-diff-old { color: var(--ms-al-diff-modified-old); }
+.ms-al-diff-modified .ms-al-diff-new { color: var(--ms-al-diff-modified-new); font-weight: 600; }
+
+.ms-al-diff-unchanged .ms-al-diff-old,
+.ms-al-diff-unchanged .ms-al-diff-new { color: var(--ms-al-diff-unchanged-old); }
+
+/* Status badge in diff table */
+.ms-al-status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.25rem 0.625rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.ms-al-status-added    { background-color: var(--ms-al-diff-added-status-bg);    color: var(--ms-al-diff-added-status-text);    }
+.ms-al-status-removed  { background-color: var(--ms-al-diff-removed-status-bg);  color: var(--ms-al-diff-removed-status-text);  }
+.ms-al-status-modified { background-color: var(--ms-al-diff-modified-status-bg); color: var(--ms-al-diff-modified-status-text); }
+.ms-al-status-unchanged { background-color: var(--ms-al-diff-unchanged-status-bg); color: var(--ms-al-diff-unchanged-status-text); }
+
+.ms-al-status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 9999px;
+    flex-shrink: 0;
+    display: inline-block;
+}
+
+.ms-al-status-added    .ms-al-status-dot { background-color: var(--ms-al-diff-added-border);    }
+.ms-al-status-removed  .ms-al-status-dot { background-color: var(--ms-al-diff-removed-border);  }
+.ms-al-status-modified .ms-al-status-dot { background-color: var(--ms-al-diff-modified-border); }
+.ms-al-status-unchanged .ms-al-status-dot { background-color: var(--ms-al-ev-x-dot); }
+
+/* ==========================================================================
+   7. JSON VIEWER
+   ========================================================================== */
+
+.ms-al-json-viewer {
+    margin-top: 0.375rem;
+    padding: 0.75rem;
+    border-radius: var(--ms-al-radius-xs);
+    background-color: var(--ms-al-json-bg);
+    border: 1px solid var(--ms-al-json-border);
+    overflow-x: auto;
+    white-space: pre;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 0.75rem;
+    line-height: 1.6;
+    color: var(--ms-al-json-text);
+}
+
+/* ==========================================================================
+   8. STATE COMPONENTS (loading / error / empty)
+   ========================================================================== */
+
+.ms-al-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 1.5rem;
+    color: var(--ms-al-text-secondary);
+    font-size: 0.875rem;
+}
+
+.ms-al-error {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    border-radius: var(--ms-al-radius-sm);
+    background-color: var(--ms-al-ev-d-bg);
+    border: 1px solid var(--ms-al-ev-d-ring);
+    color: var(--ms-al-ev-d-text);
+    font-size: 0.875rem;
+}
+
+.ms-al-btn-retry {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    border-radius: var(--ms-al-radius-xs);
+    border: 1px solid var(--ms-al-ev-d-ring);
+    color: var(--ms-al-ev-d-text);
+    background-color: transparent;
+    cursor: pointer;
+    transition: background-color .15s;
+}
+
+.ms-al-btn-retry:hover {
+    background-color: var(--ms-al-ev-d-bg);
+}
+
+.ms-al-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 1rem;
+    gap: 0.75rem;
+    color: var(--ms-al-text-muted);
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+/* ==========================================================================
+   9. ROLLBACK MODAL
+   ========================================================================== */
+
+.ms-al-modal-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 9999px;
+    background-color: var(--ms-al-ev-rb-bg);
+    color: var(--ms-al-ev-rb-dot);
+    font-size: 1.25rem;
+    flex-shrink: 0;
+}
+
+.ms-al-modal-warning {
+    border-radius: var(--ms-al-radius-sm);
+    background-color: var(--ms-al-ev-rb-bg);
+    border: 1px solid var(--ms-al-ev-rb-ring);
+    padding: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.ms-al-modal-warning p {
+    font-size: 0.75rem;
+    color: var(--ms-al-ev-rb-text);
+    margin: 0;
+    padding: 0;
+}
+
+.ms-al-modal-warning p + p {
+    margin-top: 0.25rem;
+}
+
+.ms-al-btn-cancel {
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    border-radius: var(--ms-al-radius-sm);
+    border: 1px solid var(--ms-al-border);
+    background-color: var(--ms-al-bg-card);
+    color: var(--ms-al-text-secondary);
+    cursor: pointer;
+    transition: background-color .15s;
+}
+
+.ms-al-btn-cancel:hover {
+    background-color: var(--ms-al-bg-hover);
+}
+
+.ms-al-btn-confirm {
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    border-radius: var(--ms-al-radius-sm);
+    background-color: var(--color-error, #ea580c);
+    color: var(--color-error-text, #ffffff);
+    border: none;
+    cursor: pointer;
+    transition: background-color .15s;
+    box-shadow: var(--ms-al-shadow);
+}
+
+.ms-al-btn-confirm:hover {
+    opacity: 0.9;
+}
+
+/* ==========================================================================
+   10. RELATION ENTRY
+   ========================================================================== */
+
+.ms-al-index-link {
+    color: var(--color-primary);
+    text-decoration: none;
+    font-size: 0.875rem;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    transition: color .15s;
+}
+
+.ms-al-index-link:hover {
+    text-decoration: underline;
+    opacity: 0.85;
+}
+
+.ms-al-relation-system {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    font-size: 0.875rem;
+    color: var(--ms-al-text-secondary);
+}
+
+/* ==========================================================================
+   11. KPI STATS BLOCK (Index page top bar)
+   ========================================================================== */
+
+.ms-al-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+@media (min-width: 640px) {
+    .ms-al-kpi-grid { grid-template-columns: repeat(3, 1fr); }
+}
+
+@media (min-width: 900px) {
+    .ms-al-kpi-grid { grid-template-columns: repeat(5, 1fr); }
+}
+
+.ms-al-kpi-card {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.25rem;
+    border-radius: var(--ms-al-radius);
+    border: 1px solid var(--ms-al-border);
+    background-color: var(--ms-al-bg-card);
+    box-shadow: var(--ms-al-shadow);
+    transition: transform 0.2s, box-shadow 0.2s;
+    color: inherit;
+    text-decoration: none;
+}
+
+.ms-al-kpi-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--ms-al-shadow-md);
+    color: inherit;
+    text-decoration: none;
+}
+
+.ms-al-kpi-icon {
+    flex-shrink: 0;
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: var(--ms-al-radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Icon background tints and colors per event type */
+.ms-al-kpi-card--total .ms-al-kpi-icon   { background-color: var(--ms-al-ev-x-bg);  color: var(--ms-al-ev-x-dot);  }
+.ms-al-kpi-card--created .ms-al-kpi-icon { background-color: var(--ms-al-ev-c-bg);  color: var(--ms-al-ev-c-dot);  }
+.ms-al-kpi-card--updated .ms-al-kpi-icon { background-color: var(--ms-al-ev-u-bg);  color: var(--ms-al-ev-u-dot);  }
+.ms-al-kpi-card--deleted .ms-al-kpi-icon { background-color: var(--ms-al-ev-d-bg);  color: var(--ms-al-ev-d-dot);  }
+.ms-al-kpi-card--other .ms-al-kpi-icon   { background-color: var(--ms-al-ev-rb-bg); color: var(--ms-al-ev-rb-dot); }
+
+.ms-al-kpi-value {
+    font-size: 1.5rem;
+    font-weight: 800;
+    line-height: 1.1;
+    color: var(--ms-al-text-primary);
+}
+
+.ms-al-kpi-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--ms-al-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+    margin-top: 0.125rem;
+}
+
+/* ==========================================================================
+   12. DIFF VIEWER — Summary bar & toggle
+   ========================================================================== */
+
+.ms-al-diff-summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0 0.25rem 0.5rem;
+}
+
+.ms-al-diff-count {
+    font-size: 0.75rem;
+    color: var(--ms-al-text-muted);
+}
+
+.ms-al-diff-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.25rem 0.625rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    border-radius: var(--ms-al-radius-xs);
+    border: 1px solid var(--ms-al-border);
+    background-color: var(--ms-al-bg-card);
+    color: var(--ms-al-text-secondary);
+    cursor: pointer;
+    transition: background-color .15s, border-color .15s;
+}
+
+.ms-al-diff-toggle:hover {
+    background-color: var(--ms-al-bg-hover);
+}
+
+/* ==========================================================================
+   13. TIMELINE — CURRENT badge & relation fallback
+   ========================================================================== */
+
+.ms-al-current-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.125rem 0.5rem;
+    font-size: 0.625rem;
+    font-weight: 700;
+    letter-spacing: 0.075em;
+    text-transform: uppercase;
+    border-radius: 9999px;
+    background-color: var(--ms-al-ev-c-bg);
+    color: var(--ms-al-ev-c-text);
+    white-space: nowrap;
+}
+
+.ms-al-relation-no-resource {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.75rem;
+    font-style: italic;
+    color: var(--ms-al-text-meta);
+}
+
+.ms-al-mini-summary {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.125rem 0.5rem;
+    font-size: 0.6875rem;
+    font-weight: 500;
+    border-radius: 9999px;
+    background-color: var(--ms-al-ev-x-bg);
+    color: var(--ms-al-text-muted);
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+}
+
+.ms-al-loaded-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.125rem 0.5rem;
+    font-size: 0.6875rem;
+    font-weight: 500;
+    border-radius: 9999px;
+    background-color: var(--ms-al-ev-c-bg);
+    color: var(--ms-al-ev-c-text);
+    border: 1px solid var(--ms-al-ev-c-ring);
+    white-space: nowrap;
+}
+
+/* ==========================================================================
+   15. ACCESSIBILITY — Focus rings & reduced-motion
+   ========================================================================== */
+
+/* Shared focus ring for all interactive ms-al-* elements */
+.ms-al-btn:focus-visible,
+.ms-al-btn-diff:focus-visible,
+.ms-al-btn-rollback:focus-visible,
+.ms-al-btn-open:focus-visible,
+.ms-al-btn-copy:focus-visible,
+.ms-al-btn-expand:focus-visible,
+.ms-al-btn-retry:focus-visible,
+.ms-al-btn-cancel:focus-visible,
+.ms-al-btn-confirm:focus-visible,
+.ms-al-diff-toggle:focus-visible {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
+}
+
+/* Honour prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+    .ms-al-tl-card,
+    .ms-al-btn,
+    .ms-al-btn-diff,
+    .ms-al-btn-rollback,
+    .ms-al-btn-cancel,
+    .ms-al-btn-confirm,
+    .ms-al-diff-toggle,
+    .ms-al-filter-chip-remove,
+    .ms-al-filter-clear-all {
+        transition: none;
+    }
+}
+
+/* ==========================================================================
+   16. MOBILE RESPONSIVENESS
+   ========================================================================== */
+
+/* Timeline: collapse gap on small screens */
+@media (max-width: 639px) {
+    .ms-al-tl-item {
+        gap: 0.625rem;
+    }
+
+    .ms-al-tl-dot {
+        width: 1.75rem;
+        height: 1.75rem;
+    }
+
+    .ms-al-tl-head {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .ms-al-tl-body {
+        padding: 0.625rem 0.75rem;
+    }
+
+    .ms-al-tl-head {
+        padding: 0.5rem 0.75rem;
+    }
+
+    /* Stack head items vertically on xs */
+    .ms-al-tl-head > div {
+        min-width: 0;
+    }
+
+    /* Diff table: allow horizontal scroll on mobile */
+    .ms-activity-log-diff th,
+    .ms-activity-log-diff td {
+        padding: 0.5rem 0.625rem;
+    }
+
+    /* KPI: 2 columns on xs (already set, but reduce padding) */
+    .ms-al-kpi-card {
+        padding: 0.625rem 0.75rem;
+        gap: 0.5rem;
+    }
+
+    .ms-al-kpi-value {
+        font-size: 1.125rem;
+    }
+
+    /* Filter chips: reduce gap */
+    .ms-al-filter-chips {
+        gap: 0.375rem;
+    }
+
+    /* Row label: shorter on mobile */
+    .ms-al-row-label {
+        width: 5.5rem;
+        font-size: 0.625rem;
+    }
+}
+
+/* ==========================================================================
+   14. INLINE FILTERS (Filament style)
+   ========================================================================== */
+
+.ms-al-inline-filters {
+    background-color: var(--ms-al-bg-card);
+    border: 1px solid var(--ms-al-border);
+    border-radius: var(--ms-al-radius);
+    box-shadow: var(--ms-al-shadow);
+    padding: 1.25rem;
+    margin-bottom: 1.5rem;
+    transition: box-shadow 0.2s;
+}
+
+.ms-al-filter-grid {
+    display: grid;
+    grid-template-columns: minmax(8rem, 1fr) repeat(4, minmax(0, 9rem)) auto;
+    align-items: end;
+    gap: 0.75rem;
+}
+
+@media (max-width: 900px) {
+    .ms-al-filter-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+    .ms-al-filter-search {
+        grid-column: span 2;
+    }
+    .ms-al-filter-actions {
+        grid-column: span 2;
+    }
+}
+
+.ms-al-filter-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.ms-al-inline-filters label {
+    font-size: 0.625rem;
+    font-weight: 700;
+    color: var(--ms-al-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.375rem;
+    display: block;
+}
+
+.ms-al-inline-filters input[type="text"],
+.ms-al-inline-filters input[type="date"],
+.ms-al-inline-filters select {
+    height: var(--ms-form-default-min-height, 2.5rem);
+    padding: var(--ms-form-default-padding-y, 0) var(--ms-form-default-padding-x, 0.75rem);
+    font-size: var(--ms-form-default-font-size, 0.875rem);
+    border-radius: var(--ms-form-default-radius, 0.5rem);
+    border: var(--ms-form-default-border-width, 1px) solid var(--ms-form-default-border-color, var(--ms-al-border));
+    background-color: var(--ms-form-default-bg-color, var(--ms-al-bg-input));
+    color: var(--ms-form-default-color, var(--ms-al-text-primary));
+    width: 100%;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.ms-al-inline-filters select option {
+    color: var(--ms-al-text-primary);
+    background-color: var(--ms-al-bg-card);
+}
+
+.ms-al-inline-filters input:focus,
+.ms-al-inline-filters select:focus {
+    border-color: var(--ms-form-focus-border-color, var(--ms-al-border-focus));
+    box-shadow: 0 0 0 var(--ms-form-focus-ring-width, 1px) var(--ms-form-focus-ring-color, rgba(59,130,246,0.1));
+    outline: none;
+}
+
+.ms-al-inline-filters select {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236b7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.5rem center;
+    background-size: 1.25rem;
+    padding-right: 2rem;
+}
+
+.ms-al-search-input-wrap {
+    display: flex !important;
+    align-items: center;
+    gap: 0.5rem;
+    height: var(--ms-form-default-min-height, 2.5rem);
+    padding: 0 var(--ms-form-default-padding-x, 0.75rem);
+    border: var(--ms-form-default-border-width, 1px) solid var(--ms-form-default-border-color, var(--ms-al-border));
+    border-radius: var(--ms-form-default-radius, 0.5rem);
+    background-color: var(--ms-form-default-bg-color, var(--ms-al-bg-input));
+    overflow: hidden;
+}
+
+.ms-al-search-input-icon {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    flex-shrink: 0;
+    width: 1.125rem;
+    height: 1.125rem;
+}
+
+.ms-al-search-input-icon-svg {
+    width: 1.125rem !important;
+    height: 1.125rem !important;
+    min-width: 1.125rem !important;
+    min-height: 1.125rem !important;
+    max-width: 1.125rem !important;
+    max-height: 1.125rem !important;
+    flex-shrink: 0 !important;
+    display: block !important;
+}
+
+.ms-al-inline-filters .ms-al-search-input,
+.ms-al-search-input-wrap input,
+.ms-al-search-input-wrap input[type="text"] {
+    border: none !important;
+    background: transparent !important;
+    background-color: transparent !important;
+    box-shadow: none !important;
+    outline: none !important;
+    height: 100%;
+    width: 100%;
+    min-width: 0;
+    padding: 0 !important;
+    color: var(--ms-al-text-primary) !important;
+}
+
+.ms-al-search-input-icon-svg {
+    color: var(--ms-al-text-meta);
+}
+
+.ms-al-search-input-wrap:focus-within {    
+    border-color: var(--ms-form-focus-border-color, var(--ms-al-border-focus));
+    box-shadow: 0 0 0 3px oklch(68.8% 0.212 277 / 15%) !important;
+}
+
+.ms-al-btn-filter {
+    height: var(--ms-form-default-min-height, 2.5rem);
+    padding: 0 1.25rem;
+    font-size: var(--ms-form-default-font-size, 0.875rem);
+    font-weight: var(--font-weight-bold, 700);
+    border-radius: var(--ms-form-default-radius, 0.5rem);
+    background-color: var(--color-primary) !important;
+    color: var(--color-primary-text, #ffffff) !important;
+    border: none !important;
+    cursor: pointer;
+    transition: background-color 0.2s, transform 0.1s;
+}
+
+.ms-al-btn-filter:hover {
+    opacity: 0.9;
+}
+
+.ms-al-btn-filter:active {
+    transform: translateY(1px);
+}
+
+.ms-al-btn-reset {
+    height: 2.5rem;
+
+    width: 2.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--ms-al-radius-sm);
+    border: 1px solid var(--ms-al-border);
+    background-color: var(--ms-al-bg-card);
+    color: var(--ms-al-text-muted);
+    transition: all 0.2s;
+}
+
+.ms-al-btn-reset:hover {
+    background-color: var(--ms-al-bg-hover);
+    color: var(--ms-al-text-secondary);
+    border-color: var(--ms-al-text-meta);
+}
+
+.ms-al-filter-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.25rem 0.25rem 0.25rem 0.625rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    border-radius: 9999px;
+    white-space: nowrap;
+}
+
+.ms-al-filter-chip-remove {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1rem;
+    height: 1rem;
+    border-radius: 9999px;
+    transition: background-color 0.1s;
+    flex-shrink: 0;
+    text-decoration: none;
+}
+
+.ms-al-filter-clear-all {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    border-radius: 0.5rem;
+    text-decoration: none;
+    transition: background-color 0.15s, color 0.15s;
+}
