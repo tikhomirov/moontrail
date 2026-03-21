@@ -7,6 +7,8 @@ namespace MoonShine\MoonTrail\Console\Commands;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
+use MoonShine\Laravel\Models\MoonshineUser;
+use MoonShine\Laravel\Providers\MoonShineServiceProvider;
 use MoonShine\MoonTrail\Installer\ConfigUpdater;
 use MoonShine\MoonTrail\Installer\ModelScanner;
 use MoonShine\MoonTrail\Installer\ResourcePatcher;
@@ -86,7 +88,7 @@ final class InstallMoonTrailCommand extends Command
 
     private function resolveSafeMode(): bool
     {
-        if ((bool) $this->option('auto-patch')) {
+        if ($this->option('auto-patch')) {
             return false;
         }
 
@@ -113,7 +115,7 @@ final class InstallMoonTrailCommand extends Command
 
     private function checkMoonShineInstalled(): bool
     {
-        if (! class_exists(\MoonShine\Laravel\Providers\MoonShineServiceProvider::class)) {
+        if (! class_exists(MoonShineServiceProvider::class)) {
             $this->components->error('MoonShine package was not detected. Install moonshine/moonshine first.');
 
             return false;
@@ -398,7 +400,7 @@ final class InstallMoonTrailCommand extends Command
     {
         $defaults = (array) config('moontrail.installer.default_models', [
             'App\\Models\\User',
-            \MoonShine\Laravel\Models\MoonshineUser::class,
+            MoonshineUser::class,
             'App\\Models\\Role',
             'MoonShine\\Laravel\\Models\\Role',
         ]);

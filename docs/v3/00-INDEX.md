@@ -16,6 +16,7 @@
 | 04 | `04-COMPETITOR-ANALYSIS.md` | Competitive positioning vs Spatie/OwenIt/MoonShine Changelog | Canonical |
 | 05 | `05-PORTABILITY-ANALYSIS.md` | Portability strategy and go/no-go (Decision: Strategy A) | Canonical |
 | 06 | `06-RELEASE-READINESS-CHECKLIST.md` | Final release readiness gate — checklist and verdict | Canonical |
+| 07 | `07-UI-BOUNDARY-REFACTOR-PLAN.md` | UI boundary refactor plan: Blade extraction, renderer decoupling, query/presenter split | Canonical |
 
 ## Legacy documents
 

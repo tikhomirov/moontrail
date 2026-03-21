@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.0.0 - 2026-03-21
+
+### First public release
+
+- Declared the first stable public release of MoonTrail.
+- Finalized the v3 UI boundary refactor:
+  - query/filter orchestration moved to dedicated support classes
+  - activity detail rendering extracted to presentation helpers
+  - timeline change counting extracted to `ActivityTimelineDataBuilder`
+- Added new Blade presentation partials for reusable activity detail elements.
+- Expanded test coverage for filter parsing/URL building and timeline data preparation.
+- Confirmed release quality gates: full Pest suite and PHPStan pass.
+
 ## 0.4.0
 
 ### Rollback finalisation

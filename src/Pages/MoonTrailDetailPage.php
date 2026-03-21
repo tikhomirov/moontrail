@@ -57,6 +57,6 @@ final class MoonTrailDetailPage extends DetailPage
 
     private function resolveStylesheetAssetUrl(): string
     {
-        return (string) asset('vendor/moontrail/moontrail.css');
+        return asset('vendor/moontrail/moontrail.css');
     }
 }

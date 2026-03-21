@@ -7,8 +7,8 @@ namespace MoonShine\MoonTrail\Components;
 use Closure;
 use Illuminate\Database\Eloquent\Model;
 use MoonShine\Laravel\Resources\ModelResource;
-use MoonShine\MoonTrail\Diff\DiffComputer;
 use MoonShine\MoonTrail\Models\ModelVersion;
+use MoonShine\MoonTrail\Support\ActivityTimelineDataBuilder;
 use MoonShine\MoonTrail\Versioning\RollbackAuthorizationResolver;
 use MoonShine\UI\Components\MoonShineComponent;
 use MoonShine\UI\Traits\WithLabel;
@@ -81,6 +81,9 @@ final class ActivityTimeline extends MoonShineComponent
             ? min(array_map(static fn (ModelVersion $v): int => (int) $v->id, $versions))
             : null;
 
+        /** @var ActivityTimelineDataBuilder $dataBuilder */
+        $dataBuilder = app(ActivityTimelineDataBuilder::class);
+
         return [
             'label'            => $this->getLabel(),
             'versions'         => $versions,
@@ -89,41 +92,8 @@ final class ActivityTimeline extends MoonShineComponent
             'canRollback'      => $canRollback,
             'showRollbackHint' => $this->showRollback && ! $canRollback,
             'minVersionId'     => $minVersionId,
-            'changesCount'     => $this->computeChangesCount($versions),
+            'changesCount'     => $dataBuilder->computeChangesCount($versions),
         ];
-    }
-
-    /**
-     * Returns a map of version.id → number of changed fields (non-unchanged).
-     * Uses eager-loaded activity relation to avoid N+1.
-     *
-     * @param list<ModelVersion> $versions
-     * @return array<int, int>
-     */
-    private function computeChangesCount(array $versions): array
-    {
-        $result = [];
-
-        foreach ($versions as $version) {
-            $activity = $version->relationLoaded('activity') ? $version->activity : null;
-
-            if ($activity === null && $version->activity_id !== null) {
-                $activity = $version->activity()->first();
-            }
-
-            if ($activity === null) {
-                $result[$version->id] = 0;
-                continue;
-            }
-
-            $changes = DiffComputer::fromActivity($activity);
-            $result[$version->id] = count(array_filter(
-                $changes,
-                static fn (\MoonShine\MoonTrail\Diff\FieldChange $c): bool => $c->type->value !== 'unchanged',
-            ));
-        }
-
-        return $result;
     }
 
     /**

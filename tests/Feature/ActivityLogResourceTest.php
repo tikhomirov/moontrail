@@ -2,11 +2,16 @@
 
 declare(strict_types=1);
 
+use Illuminate\Support\Facades\View;
 use MoonShine\MoonTrail\Resources\MoonTrailResource;
 use MoonShine\MoonTrail\Tests\Fixtures\TestPost;
 use MoonShine\MoonTrail\Tests\Fixtures\TestPostResource;
 use MoonShine\Support\Enums\Ability;
 use Spatie\Activitylog\Models\Activity;
+
+beforeEach(function (): void {
+    View::replaceNamespace('moontrail', __DIR__ . '/../../resources/views');
+});
 
 // ---------------------------------------------------------------------------
 // Index fields
@@ -152,29 +157,16 @@ it('allows VIEW ability', function (): void {
 });
 
 it('shows System when causer_type is null', function (): void {
-    $resource = app(MoonTrailResource::class);
-
-    $activity = Activity::query()->create([
-        'log_name'     => 'default',
-        'description'  => 'system event',
-        'subject_type' => null,
-        'subject_id'   => null,
-        'causer_type'  => null,
-        'causer_id'    => null,
-        'event'        => 'updated',
-        'properties'   => ['old' => [], 'attributes' => []],
-    ]);
-
-    $method = new ReflectionMethod(MoonTrailResource::class, 'renderCauserLink');
-
-    $html = $method->invoke($resource, $activity);
+    $html = view('moontrail::components.entity-link', [
+        'morphType' => null,
+        'morphId' => null,
+        'model' => null,
+    ])->render();
 
     expect($html)->toContain(e((string) __('moontrail::ui.system')));
 });
 
 it('renders event badge with expected class and localized label', function (): void {
-    $resource = app(MoonTrailResource::class);
-
     $activity = Activity::query()->create([
         'log_name'     => 'default',
         'description'  => 'created event',
@@ -186,9 +178,9 @@ it('renders event badge with expected class and localized label', function (): v
         'properties'   => ['old' => [], 'attributes' => []],
     ]);
 
-    $method = new ReflectionMethod(MoonTrailResource::class, 'renderEventBadge');
-
-    $badgeHtml = $method->invoke($resource, $activity);
+    $badgeHtml = view('moontrail::components.event-badge', [
+        'activity' => $activity,
+    ])->render();
 
     expect($badgeHtml)
         ->toContain('bg-emerald-100')
@@ -198,14 +190,21 @@ it('renders event badge with expected class and localized label', function (): v
 it('renders Open button in relations only when matching resource is available', function (): void {
     moonshine()->resources([TestPostResource::class], true);
 
-    $resource = app(MoonTrailResource::class);
     $post = TestPost::query()->create(['name' => 'Open Me']);
     $openLabel = (string) __('moontrail::ui.open');
 
-    $method = new ReflectionMethod(MoonTrailResource::class, 'renderRelationEntry');
-
-    $withResource = $method->invoke($resource, TestPost::class, $post->getKey(), $post, $openLabel);
-    $withoutResource = $method->invoke($resource, 'App\\Models\\UnknownModel', 777, null, $openLabel);
+    $withResource = view('moontrail::components.relation-entry', [
+        'morphType' => TestPost::class,
+        'morphId' => $post->getKey(),
+        'model' => $post,
+        'openLabel' => $openLabel,
+    ])->render();
+    $withoutResource = view('moontrail::components.relation-entry', [
+        'morphType' => 'App\\Models\\UnknownModel',
+        'morphId' => 777,
+        'model' => null,
+        'openLabel' => $openLabel,
+    ])->render();
 
     expect($withResource)
         ->toContain($openLabel)

@@ -74,6 +74,15 @@ moontrail/
 │   ├── version-badge.blade.php       # Version number badge widget
 │   └── rollback-confirm.blade.php    # Confirmation modal before rollback
 │
+├── resources/views/pages/
+│   ├── index-filters.blade.php       # Inline filter form for global history index
+│   ├── filter-chips.blade.php        # Active filter chips bar
+│   ├── index-kpi.blade.php           # KPI cards grid (total / created / updated / deleted / other)
+│   ├── detail-general.blade.php      # Activity detail — General section
+│   ├── detail-relations.blade.php    # Activity detail — Relations section
+│   ├── detail-changes.blade.php      # Activity detail — Changes/diff section
+│   └── detail-history.blade.php      # Activity detail — Version history section
+│
 ├── routes/
 │   └── moontrail.php                 # Rollback POST + AJAX endpoints
 │
@@ -139,6 +148,11 @@ moontrail/
 │   │   └── MoonTrailResource.php  # MoonShine Resource for browsing activity_log
 │   │
 │   ├── Support/
+│   │   ├── ActivityDetailPresenter.php  # Rendering helpers for detail sections (event badges, entity links, section data)
+│   │   ├── ActivityLogFilterData.php    # Normalised filter values read from request (direct + nested params)
+│   │   ├── ActivityLogFilterOptions.php # Distinct option values for filter UI select boxes
+│   │   ├── ActivityLogQuery.php         # Applies ActivityLogFilterData to an Eloquent builder
+│   │   ├── ActivityTimelineDataBuilder.php # Computes changesCount for ActivityTimeline
 │   │   ├── MoonTrailMenuItem.php    # Dynamic menu item with model sub-items
 │   │   └── SvgIcons.php             # SVG icon rendering helpers
 │   │
@@ -204,6 +218,8 @@ moontrail/
 | `WithMoonTrailTab` (trait) | Resource-side: injects the diff/history tab into MoonShine CRUD pages |
 | `VersionManager` | Reads & writes `model_versions`; enforces `max_versions` limit |
 | `RollbackService` | Wraps `Model::fill()->save()` in a DB transaction, fires events |
+| `RollbackAuthorizationResolver` | Single source of truth for rollback authorization; checks guard, policy, model method |
+| `RollbackConflictClassifier` | Maps exceptions to `RollbackConflictException` with semantic `reason` |
 | `DiffComputer` | Pure function: `compute(array $before, array $after): FieldChange[]` |
 | `HtmlDiffRenderer` | Converts `FieldChange[]` to presentational HTML; swappable via contract |
 | `DefaultActivityFormatter` | Human-readable event labels; swappable via contract |
@@ -446,11 +462,44 @@ added/removed tokens, suitable for embedding in a Blade view.
 
 `RollbackService::rollback(Model $model, int $targetVersion, ?array $rules = null): Model`
 
-Execution flow:
+#### Authorization matrix (secure-by-default)
+
+`RollbackAuthorizationResolver` uses a matrix-based approach to determine rollback eligibility:
+
+1. **MoonShine guard not authenticated** → throw `AuthorizationException`
+2. **Laravel policy with `rollback` method exists** → delegate to policy (via `Gate::authorize()`)
+3. **No policy registered** → check model's `isRollbackAllowed()` method (if exists)
+4. **Model doesn't define `isRollbackAllowed()`** → throw `RollbackDeniedException`
+
+This ensures rollback is **denied by default** unless explicitly allowed by a policy or the model.
+
+Model example:
+```php
+class Post extends Model
+{
+    public function isRollbackAllowed(): bool
+    {
+        return auth()->guard('moonshine')->user()?->isSuperAdmin() ?? false;
+    }
+}
+```
+
+Policy example:
+```php
+class PostPolicy
+{
+    public function rollback(User $user, Post $post): bool
+    {
+        return $user->isSuperAdmin();
+    }
+}
+```
+
+#### Rollback execution
 
 1. Fetch the `ModelVersion` with the requested `$targetVersion` for this model.
 2. **Validate** the `snapshot` attributes against `$rules` (or the resource's `rules()`
-   method if `rollback.validate = true` in config).
+   method if `rollback.validate = true` in config). Throws `ValidationException` on failure.
 3. Open a **database transaction**.
 4. `$model->fill($snapshot)->save()` — restores all attributes from the snapshot.
 5. Call `VersionManager::createVersion()` with `event = 'rolled_back'` and
@@ -460,7 +509,17 @@ Execution flow:
 7. Commit the transaction.
 8. Return the freshly reloaded model.
 
-Any exception rolls back the transaction. The original data is never touched on failure.
+#### Error handling
+
+Any exception during the transaction rolls it back. Original data is never touched on failure.
+
+- `RollbackConflictException` is thrown with a semantic `reason` property (mapped by
+  `RollbackConflictClassifier`) to distinguish between conflict types:
+  - `db_constraint` — unique/foreign-key/not-null violation (SQLSTATE 23xxx)
+  - `model_missing` — record deleted or doesn't exist
+  - `unknown` — other database or unexpected errors
+- `RollbackCancelledException` is thrown if a listener calls `halt()` on the
+  `ModelRollingBack` event.
 
 ### 6.5 MoonShine UI integration
 
@@ -543,16 +602,34 @@ Listen to these in your app for custom workflows (e.g., notifications, audit).
 
 Custom exceptions for error handling:
 
-| Exception | Thrown when |
-|---|---|
-| `ModelVersionNotFoundException` | Target version doesn't exist |
-| `RollbackConflictException` | Data has changed since version was created |
-| `RollbackDeniedException` | Policy denies rollback for this model |
-| `VersionLimitExceededException` | Max versions reached with `overflow_strategy = prevent` |
+| Exception | Thrown when | Details |
+|---|---|---|
+| `ModelVersionNotFoundException` | Target version doesn't exist | — |
+| `RollbackConflictException` | Data has changed since version was created | Includes semantic `reason` property: `db_constraint` (unique/FK violation), `model_missing` (record deleted), or `unknown` |
+| `RollbackCancelledException` | A listener halts the `ModelRollingBack` event | Indicates user/custom code cancelled the rollback |
+| `RollbackDeniedException` | Authorization check fails (no policy, model doesn't allow it) | — |
+| `VersionLimitExceededException` | Max versions reached with `overflow_strategy = prevent` | — |
 
 ---
 
 ## 7. Rules for AI Agents
+
+### Layer architecture rules (enforce strictly)
+
+| Layer | Directories | Rules |
+|---|---|---|
+| **Domain / core** | `src/Diff/`, `src/Versioning/`, `src/Events/`, `src/Exceptions/`, `src/Models/` | No MoonShine UI component dependencies; no manual HTML assembly; no knowledge of page/resource layout |
+| **Application / delivery** | `src/Http/`, `src/Pages/`, `src/Resources/` | Orchestration only; minimal presentation logic; filter/query delegation to `src/Support/` objects |
+| **Presentation** | `src/Components/`, `resources/views/` | Receives prepared data; renders HTML; no complex domain/query logic |
+
+Key guardrails:
+- `src/Diff/HtmlDiffRenderer` **must** render via `view()` — never via `DiffViewer` or other MoonShine UI components.
+- `src/Diff/*` and `src/Versioning/*` **must not** import from `src/Components/`.
+- HTML markup **must** live in `resources/views/` Blade templates — not in PHP heredoc strings inside page or resource classes.
+- `src/Pages/*` and `src/Resources/*` **must not** build large HTML strings inline; they orchestrate data and call `view()->render()`.
+- Filter/query logic **must** live in `src/Support/ActivityLogFilterData`, `ActivityLogQuery`, `ActivityLogFilterOptions`.
+- Presentation helpers (event badges, entity links, section headers) **must** live in `src/Support/ActivityDetailPresenter`.
+- Changes count computation for the timeline **must** live in `src/Support/ActivityTimelineDataBuilder`.
 
 ### What you CAN freely change
 

@@ -30,6 +30,7 @@ final class ModelScanner
 
         /** @var SplFileInfo $file */
         foreach ($iterator as $file) {
+
             if (! $file->isFile()) {
                 continue;
             }

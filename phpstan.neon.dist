@@ -9,3 +9,7 @@ parameters:
     reportUnmatchedIgnoredErrors: false
     ignoreErrors:
         - identifier: trait.unused
+        # view() helper requires view-string type; Larastan cannot validate namespace-prefixed view names at analysis time
+        -
+            message: '#expects view\-string\|null, string given#'
+            identifier: argument.type

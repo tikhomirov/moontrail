@@ -589,6 +589,33 @@ composer refactor       # применить Rector
 composer ci             # полный CI: rector + pint + phpstan + tests
 ```
 
+## OpenCode
+
+Репозиторий уже подготовлен для работы с OpenCode.
+
+- `AGENTS.md` - основной файл с правилами проекта.
+- `opencode.json` добавляет общие ignore-паттерны для watcher и более безопасные подтверждения для `git commit`, `git push`, `git tag` и `rm`.
+- В `.opencode/commands/` добавлены `/ci`, `/test`, `/types`, `/lint`, `/fix` и `/review` для типовых сценариев работы с пакетом.
+- `.opencode/agents/package-reviewer.md` добавляет read-only reviewer-агента для проверки BC и release safety.
+
+Быстрый старт:
+
+```bash
+opencode
+```
+
+Полезные команды внутри OpenCode:
+
+- `/ci`
+- `/test`
+- `/test tests/Unit/DiffComputerTest.php`
+- `/types`
+- `/lint`
+- `/fix`
+- `/review`
+
+Личные хоткеи и UI-настройки лучше хранить в глобальном OpenCode-конфиге или в локальном некоммитимом `tui.json`.
+
 ### Troubleshooting
 
 1. **Не видны кнопки rollback**

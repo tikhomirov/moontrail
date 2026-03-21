@@ -13,6 +13,10 @@ Thumbs.db
 /var/
 /.playwright-mcp/
 /.claude/
+/.opencode/
 .phpactor.json
 config.json
+opencode.json
+tui.json
+tui.jsonc
 *.png

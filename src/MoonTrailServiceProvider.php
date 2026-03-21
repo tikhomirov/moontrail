@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace MoonShine\MoonTrail;
 
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\ServiceProvider;
 use MoonShine\Contracts\Core\DependencyInjection\CoreContract;
+use MoonShine\Contracts\Core\ResourceContract;
 use MoonShine\MoonTrail\Console\Commands\InstallMoonTrailCommand;
 use MoonShine\MoonTrail\Console\Commands\PruneMoonTrailCommand;
 use MoonShine\MoonTrail\Contracts\ActivityFormatterContract;
@@ -75,7 +77,7 @@ final class MoonTrailServiceProvider extends ServiceProvider
             return;
         }
 
-        /** @var class-string<\MoonShine\Contracts\Core\ResourceContract> $resourceClass */
+        /** @var class-string<ResourceContract> $resourceClass */
         $resourceClass = config('moontrail.resource.class', MoonTrailResource::class);
 
         $this->app->afterResolving(CoreContract::class, static function (CoreContract $core) use ($resourceClass): void {
@@ -103,7 +105,7 @@ final class MoonTrailServiceProvider extends ServiceProvider
                     continue;
                 }
 
-                if (! is_subclass_of($modelClass, \Illuminate\Database\Eloquent\Model::class)) {
+                if (! is_subclass_of($modelClass, Model::class)) {
                     continue;
                 }
 
