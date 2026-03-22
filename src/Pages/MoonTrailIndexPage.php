@@ -4,15 +4,18 @@ declare(strict_types=1);
 
 namespace MoonShine\MoonTrail\Pages;
 
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\Request;
+use MoonShine\Contracts\Core\DependencyInjection\CoreContract;
 use MoonShine\Contracts\UI\ComponentContract;
 use MoonShine\Laravel\Pages\Crud\IndexPage;
+use MoonShine\MoonTrail\Contracts\ActivityQueryContract;
 use MoonShine\MoonTrail\Enums\ActivityEvent;
 use MoonShine\MoonTrail\Support\ActivityLogFilterData;
 use MoonShine\MoonTrail\Support\ActivityLogFilterOptions;
 use MoonShine\MoonTrail\Support\ActivityLogFilterUrlBuilder;
 use MoonShine\MoonTrail\Support\SvgIcons;
 use MoonShine\UI\Components\FlexibleRender;
-use Spatie\Activitylog\Models\Activity;
 
 /**
  * Index page for the Activity Log resource.
@@ -23,6 +26,18 @@ use Spatie\Activitylog\Models\Activity;
  */
 final class MoonTrailIndexPage extends IndexPage
 {
+    /**
+     * @param ActivityQueryContract<Model> $activityQuery
+     */
+    public function __construct(
+        CoreContract $core,
+        private readonly Request $request,
+        private readonly ActivityLogFilterOptions $filterOptions,
+        private readonly ActivityQueryContract $activityQuery,
+    ) {
+        parent::__construct($core);
+    }
+
     /**
      * @return list<ComponentContract>
      */
@@ -60,8 +75,7 @@ final class MoonTrailIndexPage extends IndexPage
      */
     private function renderInlineFilters(): string
     {
-        $filterData = ActivityLogFilterData::fromRequest();
-        $filterOptions = new ActivityLogFilterOptions;
+        $filterData = ActivityLogFilterData::fromRequestStrict($this->request);
 
         $eventOptions = [];
 
@@ -70,7 +84,7 @@ final class MoonTrailIndexPage extends IndexPage
         }
 
         return view('moontrail::pages.index-filters', [
-            'logNameOptions'   => $filterOptions->logNames(),
+            'logNameOptions'   => $this->filterOptions->logNames(),
             'eventOptions'     => $eventOptions,
             'currentLogName'   => $filterData->logName ?? '',
             'currentEvent'     => $filterData->event ?? '',
@@ -85,9 +99,8 @@ final class MoonTrailIndexPage extends IndexPage
      */
     private function renderActiveFilterChips(): string
     {
-        $filterData = ActivityLogFilterData::fromRequest();
-        $baseUrl = request()->url();
-        $urlBuilder = new ActivityLogFilterUrlBuilder($baseUrl);
+        $filterData = ActivityLogFilterData::fromRequestStrict($this->request);
+        $urlBuilder = new ActivityLogFilterUrlBuilder($this->request->url(), $this->request);
 
         /** @var array<int, array{label: string, value: string, removeUrl: string}> $chips */
         $chips = [];
@@ -112,15 +125,15 @@ final class MoonTrailIndexPage extends IndexPage
 
     private function renderKpiBlock(): string
     {
-        $filterData = ActivityLogFilterData::fromRequest();
-        $baseUrl = request()->url();
-        $urlBuilder = new ActivityLogFilterUrlBuilder($baseUrl);
+        $filterData = ActivityLogFilterData::fromRequestStrict($this->request);
+        $urlBuilder = new ActivityLogFilterUrlBuilder($this->request->url(), $this->request);
 
-        $total = Activity::query()->count();
-        $created = Activity::query()->where('event', 'created')->count();
-        $updated = Activity::query()->where('event', 'updated')->count();
-        $deleted = Activity::query()->where('event', 'deleted')->count();
-        $other = max(0, $total - $created - $updated - $deleted);
+        $stats = $this->activityQuery->stats();
+        $created = $stats['created'];
+        $updated = $stats['updated'];
+        $deleted = $stats['deleted'];
+        $total = $stats['total'];
+        $other = $stats['other'];
 
         $currentEvent = $filterData->event ?? '';
 

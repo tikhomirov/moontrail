@@ -7,11 +7,10 @@ namespace MoonShine\MoonTrail\Contracts;
 use Illuminate\Database\Eloquent\Model;
 use MoonShine\MoonTrail\Diff\FieldChange;
 use MoonShine\MoonTrail\Models\ModelVersion;
-use Spatie\Activitylog\Models\Activity;
 
 interface VersionManagerContract
 {
-    public function createVersion(Model $model, string $event, ?Activity $activity = null): ModelVersion;
+    public function createVersion(Model $model, string $event, ?int $activityId = null): ModelVersion;
 
     public function getVersion(Model $model, int $version): ?ModelVersion;
 

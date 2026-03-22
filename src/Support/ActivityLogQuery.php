@@ -5,8 +5,9 @@ declare(strict_types=1);
 namespace MoonShine\MoonTrail\Support;
 
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
-use Spatie\Activitylog\Models\Activity;
+use Illuminate\Support\Facades\Schema;
 use Throwable;
 
 /**
@@ -15,8 +16,10 @@ use Throwable;
 final class ActivityLogQuery
 {
     /**
-     * @param Builder<Activity> $builder
-     * @return Builder<Activity>
+     * @template TModel of Model
+     *
+     * @param Builder<TModel> $builder
+     * @return Builder<TModel>
      */
     public function apply(Builder $builder, ActivityLogFilterData $filters): Builder
     {
@@ -29,11 +32,23 @@ final class ActivityLogQuery
         }
 
         if ($filters->subjectType !== null) {
-            $builder->where('subject_type', $filters->subjectType);
+            $builder->where(static function (Builder $query) use ($builder, $filters): void {
+                $query->where('subject_type', $filters->subjectType);
+
+                if (self::hasColumn($builder, 'model_type')) {
+                    $query->orWhere('model_type', $filters->subjectType);
+                }
+            });
         }
 
         if ($filters->subjectId !== null) {
-            $builder->where('subject_id', $filters->subjectId);
+            $builder->where(static function (Builder $query) use ($builder, $filters): void {
+                $query->where('subject_id', $filters->subjectId);
+
+                if (self::hasColumn($builder, 'model_id')) {
+                    $query->orWhere('model_id', $filters->subjectId);
+                }
+            });
         }
 
         if ($filters->causerType !== null) {
@@ -80,6 +95,18 @@ final class ActivityLogQuery
         }
 
         return $builder;
+    }
+
+    /**
+     * @template TModel of Model
+     *
+     * @param Builder<TModel> $builder
+     */
+    private static function hasColumn(Builder $builder, string $column): bool
+    {
+        $table = $builder->getModel()->getTable();
+
+        return Schema::hasColumn($table, $column);
     }
 
     private function parseDate(?string $raw): ?Carbon

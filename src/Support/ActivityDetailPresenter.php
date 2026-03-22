@@ -4,11 +4,12 @@ declare(strict_types=1);
 
 namespace MoonShine\MoonTrail\Support;
 
+use Illuminate\Database\Eloquent\Model;
 use MoonShine\MoonTrail\Components\ActivityTimeline;
 use MoonShine\MoonTrail\Contracts\ActivityFormatterContract;
+use MoonShine\MoonTrail\Contracts\ActivityRecordContract;
 use MoonShine\MoonTrail\Diff\DiffComputer;
 use MoonShine\MoonTrail\Models\ModelVersion;
-use Spatie\Activitylog\Models\Activity;
 
 /**
  * Prepares display data for Activity detail sections and provides
@@ -18,6 +19,7 @@ final readonly class ActivityDetailPresenter
 {
     public function __construct(
         private ActivityFormatterContract $formatter,
+        private ActivityRecordFactory $recordFactory,
     ) {}
 
     // -------------------------------------------------------------------------
@@ -25,47 +27,52 @@ final readonly class ActivityDetailPresenter
     // -------------------------------------------------------------------------
 
     /** @return array<string, mixed> */
-    public function generalData(Activity $activity): array
+    public function generalData(Model $activity): array
     {
         $dateFormat = is_string(config('moontrail.ui.date_format'))
             ? config('moontrail.ui.date_format')
             : 'd.m.Y H:i:s';
 
-        $rawKey = $activity->getKey();
+        $record = $this->recordFactory->fromModel($activity);
+        $rawKey = $record->getId();
 
         return [
-            'id'      => is_scalar($rawKey) ? (string) $rawKey : '0',
-            'logName' => $activity->log_name !== null && $activity->log_name !== ''
-                ? (string) $activity->log_name
+            'id'      => (string) $rawKey,
+            'logName' => is_scalar(data_get($activity, 'log_name')) && (string) data_get($activity, 'log_name') !== ''
+                ? (string) data_get($activity, 'log_name')
                 : null,
-            'activity'       => $activity,
-            'description'    => $this->formatDescription($activity),
-            'date'           => $activity->created_at?->format($dateFormat) ?? '—',
+            'activity'    => $activity,
+            'description' => $this->formatDescription($record),
+            'date'        => $record->getCreatedAt()->format($dateFormat),
         ];
     }
 
     /** @return array<string, mixed> */
-    public function relationsData(Activity $activity): array
+    public function relationsData(Model $activity): array
     {
+        $record = $this->recordFactory->fromModel($activity);
+
         return [
             'causer' => [
-                'morphType' => $activity->causer_type,
-                'morphId'   => $activity->causer_id,
-                'model'     => $activity->causer,
+                'morphType' => $record->getCauserType(),
+                'morphId'   => $record->getCauserId(),
+                'model'     => data_get($activity, 'causer'),
             ],
             'subject' => [
-                'morphType' => $activity->subject_type,
-                'morphId'   => $activity->subject_id,
-                'model'     => $activity->subject,
+                'morphType' => $record->getSubjectType(),
+                'morphId'   => $record->getSubjectId(),
+                'model'     => data_get($activity, 'subject'),
             ],
         ];
     }
 
     /** @return array<string, mixed> */
-    public function changesData(Activity $activity): array
+    public function changesData(Model $activity): array
     {
+        $record = $this->recordFactory->fromModel($activity);
+
         return [
-            'changes' => DiffComputer::fromActivity($activity),
+            'changes' => DiffComputer::fromActivity($record),
         ];
     }
 
@@ -74,9 +81,11 @@ final readonly class ActivityDetailPresenter
      *
      * @return array<string, mixed>
      */
-    public function historyData(Activity $activity): array
+    public function historyData(Model $activity): array
     {
-        if ($activity->subject_type === null || $activity->subject_id === null) {
+        $record = $this->recordFactory->fromModel($activity);
+
+        if ($record->getSubjectType() === null || $record->getSubjectId() === null) {
             return [];
         }
 
@@ -85,8 +94,8 @@ final readonly class ActivityDetailPresenter
             : 20;
 
         $versions = ModelVersion::query()
-            ->where('versionable_type', $activity->subject_type)
-            ->where('versionable_id', $activity->subject_id)
+            ->where('versionable_type', $record->getSubjectType())
+            ->where('versionable_id', $record->getSubjectId())
             ->with('author')
             ->latest('version')
             ->limit($perPage)
@@ -104,7 +113,7 @@ final readonly class ActivityDetailPresenter
         ];
     }
 
-    public function formatDescription(Activity $activity): string
+    public function formatDescription(ActivityRecordContract $activity): string
     {
         $formatted = $this->formatter->format($activity);
         $description = $formatted['description'];
@@ -113,6 +122,6 @@ final readonly class ActivityDetailPresenter
             return $description;
         }
 
-        return (string) ($activity->description ?: '—');
+        return $activity->getDescription() ?: '—';
     }
 }

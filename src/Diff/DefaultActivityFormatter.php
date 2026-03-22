@@ -5,14 +5,14 @@ declare(strict_types=1);
 namespace MoonShine\MoonTrail\Diff;
 
 use MoonShine\MoonTrail\Contracts\ActivityFormatterContract;
+use MoonShine\MoonTrail\Contracts\ActivityRecordContract;
 use MoonShine\MoonTrail\Enums\ActivityEvent;
-use Spatie\Activitylog\Models\Activity;
 
 final class DefaultActivityFormatter implements ActivityFormatterContract
 {
-    public function format(Activity $activity): array
+    public function format(ActivityRecordContract $activity): array
     {
-        $event = ActivityEvent::tryFrom((string) $activity->event);
+        $event = ActivityEvent::tryFrom($activity->getEvent());
 
         if ($event instanceof ActivityEvent) {
             return [
@@ -23,7 +23,7 @@ final class DefaultActivityFormatter implements ActivityFormatterContract
         }
 
         return [
-            'description' => (string) $activity->description,
+            'description' => $activity->getDescription() ?? '',
             'icon'        => 'info',
             'color'       => 'gray',
         ];

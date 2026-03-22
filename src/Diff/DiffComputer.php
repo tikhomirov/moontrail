@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace MoonShine\MoonTrail\Diff;
 
 use Illuminate\Support\Collection;
+use MoonShine\MoonTrail\Contracts\ActivityRecordContract;
 use MoonShine\MoonTrail\Enums\ChangeType;
-use Spatie\Activitylog\Models\Activity;
 
 final class DiffComputer
 {
@@ -34,7 +34,7 @@ final class DiffComputer
                     $type = ChangeType::Added;
                 } elseif ($oldExists && ! $newExists) {
                     $type = ChangeType::Removed;
-                } elseif ($oldValue != $newValue) {
+                } elseif ($oldValue !== $newValue) {
                     $type = ChangeType::Modified;
                 } else {
                     $type = ChangeType::Unchanged;
@@ -90,8 +90,8 @@ final class DiffComputer
     /**
      * @return array<string, FieldChange>
      */
-    public static function fromActivity(Activity $activity): array
+    public static function fromActivity(ActivityRecordContract $activity): array
     {
-        return self::fromActivityProperties($activity->properties);
+        return self::fromActivityProperties($activity->getProperties());
     }
 }

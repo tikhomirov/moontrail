@@ -39,10 +39,11 @@ exposes MoonShine UI components to browse, diff, and roll back that history.
 
 ### Service bindings (IoC)
 
-The `MoonTrailServiceProvider` binds three contracts to concrete implementations that
+The `MoonTrailServiceProvider` binds contracts to concrete implementations that
 can be swapped in the host application:
 
 ```
+ActivityLoggerContract       → ActivityLog\SpatieActivityLogger (default) or native database logger
 DiffRendererContract       → Diff\HtmlDiffRenderer
 VersionManagerContract     → Versioning\VersionManager
 RollbackStrategyContract   → Versioning\RollbackService
@@ -423,10 +424,33 @@ class Post extends Model
 }
 ```
 
-The trait wraps Spatie's `LogsActivity` and additionally calls `VersionManager` after
-each write event.
+The trait wraps Spatie's `LogsActivity` (when `activity_logger = 'spatie'` or `'auto'` with Spatie installed) 
+and additionally calls `VersionManager` after each write event.
 
-### 6.2 Versioning
+**Alternative without Spatie dependency:** Use `HasMoonTrailVersioning` trait instead of `HasMoonTrail` 
+if you don't need Spatie's `LogsActivity` trait. This enables versioning and rollback with the native 
+database logger (or any custom logger bound to `ActivityLoggerContract`).
+
+```php
+use MoonShine\MoonTrail\Traits\HasMoonTrailVersioning;
+
+class Post extends Model
+{
+    use HasMoonTrailVersioning;
+}
+```
+
+### 6.2 Versioning and activity logging backends
+
+MoonTrail supports multiple activity logging backends via the `activity_logger` config option:
+
+| Driver | Description |
+|---|---|
+| `auto` (default) | Uses Spatie if installed, otherwise falls back to native database logger |
+| `spatie` | Uses `spatie/laravel-activitylog` (must be installed via Composer) |
+| `database` | Uses MoonTrail's native `moontrail_activity_log` table — no Spatie dependency |
+| `none` | Disables activity logging entirely (versioning still works) |
+| `custom` | Resolves `ActivityLoggerContract` from the container — bind your own implementation |
 
 Every time a tracked model is saved, `VersionManager::createVersion()` writes a row to
 `model_versions` containing:
@@ -566,6 +590,8 @@ Configure logging behavior:
     'log_to_activity' => true,  // Also write to Spatie activity_log table
 ],
 ```
+
+**Silent failures:** Set `silent_failures` to `true` to suppress observer exceptions silently (default: `false`, exceptions are reported via `report()`).
 
 ### 6.7 Installer (CLI)
 

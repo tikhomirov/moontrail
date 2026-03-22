@@ -5,36 +5,100 @@ declare(strict_types=1);
 namespace MoonShine\MoonTrail\Resources;
 
 use Illuminate\Contracts\Database\Eloquent\Builder as BuilderContract;
-use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
+use Illuminate\Contracts\Pagination\CursorPaginator;
+use Illuminate\Contracts\Pagination\Paginator;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
+use Illuminate\Support\LazyCollection;
+use MoonShine\Contracts\Core\DependencyInjection\CoreContract;
+use MoonShine\Contracts\Core\TypeCasts\DataWrapperContract;
 use MoonShine\Laravel\Resources\ModelResource;
+use MoonShine\MoonTrail\Contracts\ActivityQueryContract;
+use MoonShine\MoonTrail\Contracts\ModelBackedActivityRecordContract;
 use MoonShine\MoonTrail\Pages\MoonTrailDetailPage;
 use MoonShine\MoonTrail\Pages\MoonTrailIndexPage;
 use MoonShine\MoonTrail\Support\ActivityDetailPresenter;
 use MoonShine\MoonTrail\Support\ActivityLogFilterData;
 use MoonShine\MoonTrail\Support\ActivityLogFilterOptions;
 use MoonShine\MoonTrail\Support\ActivityLogQuery;
+use MoonShine\MoonTrail\Support\ActivityModelResolver;
+use MoonShine\MoonTrail\Support\ActivityRecordFactory;
 use MoonShine\Support\Enums\Ability;
 use MoonShine\UI\Fields\Date;
 use MoonShine\UI\Fields\ID;
 use MoonShine\UI\Fields\Preview;
 use MoonShine\UI\Fields\Select;
 use MoonShine\UI\Fields\Text;
-use Spatie\Activitylog\Models\Activity;
+use RuntimeException;
 
 use function in_array;
 
 /**
- * @extends ModelResource<Activity>
+ * @extends ModelResource<Model>
  */
 final class MoonTrailResource extends ModelResource
 {
-    protected string $model = Activity::class;
+    protected string $model;
 
     protected string $column = 'id';
+
+    /**
+     * @param ActivityQueryContract<Model> $activityQuery
+     */
+    public function __construct(
+        CoreContract $core,
+        private readonly Request $request,
+        private readonly ActivityDetailPresenter $presenter,
+        private readonly ActivityRecordFactory $recordFactory,
+        private readonly ActivityLogFilterOptions $filterOptions,
+        private readonly ActivityModelResolver $activityModelResolver,
+        private readonly ActivityQueryContract $activityQuery,
+    ) {
+        $this->model = $this->activityModelResolver->resolveModelClass();
+
+        parent::__construct($core);
+    }
 
     public function getTitle(): string
     {
         return (string) __('moontrail::ui.activity_log');
+    }
+
+    /**
+     * @return iterable<Model>|Collection<array-key, Model>|LazyCollection<array-key, Model>|CursorPaginator<array-key, Model>|Paginator<array-key, Model>
+     */
+    public function getItems(): iterable|Collection|LazyCollection|CursorPaginator|Paginator
+    {
+        $filters = ActivityLogFilterData::fromRequestStrict($this->request)->toArray();
+
+        return $this->activityQuery->paginate($filters);
+    }
+
+    public function findItem(bool $orFail = false): ?DataWrapperContract
+    {
+        $record = $this->activityQuery->find((string) $this->getItemID());
+
+        if ($record instanceof ModelBackedActivityRecordContract) {
+            return $this->getCaster()->cast($record->model());
+        }
+
+        if ($record instanceof \MoonShine\MoonTrail\Contracts\ActivityRecordContract) {
+            throw new RuntimeException(
+                sprintf(
+                    'MoonTrail detail page requires %s from ActivityQueryContract::find(), got %s',
+                    ModelBackedActivityRecordContract::class,
+                    $record::class,
+                ),
+            );
+        }
+
+        if ($orFail) {
+            throw (new ModelNotFoundException)->setModel(Model::class, [(string) $this->getItemID()]);
+        }
+
+        return null;
     }
 
     /**
@@ -73,13 +137,17 @@ final class MoonTrailResource extends ModelResource
             Text::make(
                 (string) __('moontrail::ui.field_log'),
                 'log_name',
-                formatted: static fn (Activity $activity): string => (string) ($activity->log_name ?: '—'),
+                formatted: static function (Model $activity): string {
+                    $value = data_get($activity, 'log_name');
+
+                    return is_scalar($value) && (string) $value !== '' ? (string) $value : '—';
+                },
             ),
 
             Preview::make(
                 (string) __('moontrail::ui.field_event'),
                 'event',
-                formatted: static fn (Activity $activity): string => view('moontrail::components.event-badge', [
+                formatted: static fn (Model $activity): string => view('moontrail::components.event-badge', [
                     'activity' => $activity,
                 ])->render(),
             )->sortable(),
@@ -87,27 +155,29 @@ final class MoonTrailResource extends ModelResource
             Preview::make(
                 (string) __('moontrail::ui.field_subject'),
                 'subject_type',
-                formatted: static fn (Activity $activity): string => view('moontrail::components.entity-link', [
-                    'morphType' => $activity->subject_type,
-                    'morphId'   => $activity->subject_id,
-                    'model'     => $activity->subject,
+                formatted: static fn (Model $activity): string => view('moontrail::components.entity-link', [
+                    'morphType' => data_get($activity, 'subject_type'),
+                    'morphId'   => data_get($activity, 'subject_id'),
+                    'model'     => data_get($activity, 'subject'),
                 ])->render(),
             ),
 
             Preview::make(
                 (string) __('moontrail::ui.field_causer'),
                 'causer_type',
-                formatted: static fn (Activity $activity): string => view('moontrail::components.entity-link', [
-                    'morphType' => $activity->causer_type,
-                    'morphId'   => $activity->causer_id,
-                    'model'     => $activity->causer,
+                formatted: static fn (Model $activity): string => view('moontrail::components.entity-link', [
+                    'morphType' => data_get($activity, 'causer_type'),
+                    'morphId'   => data_get($activity, 'causer_id'),
+                    'model'     => data_get($activity, 'causer'),
                 ])->render(),
             ),
 
             Text::make(
                 (string) __('moontrail::ui.field_description'),
                 'description',
-                formatted: fn (Activity $activity): string => $this->presenter()->formatDescription($activity),
+                formatted: fn (Model $activity): string => $this->presenter->formatDescription(
+                    $this->recordFactory->fromModel($activity),
+                ),
             ),
 
             Date::make(
@@ -127,47 +197,47 @@ final class MoonTrailResource extends ModelResource
             Preview::make(
                 label: '',
                 column: 'id',
-                formatted: fn (Activity $activity): string => $this->renderGeneralSection($activity),
+                formatted: fn (Model $activity): string => $this->renderGeneralSection($activity),
             ),
 
             // Section 2: Relations
             Preview::make(
                 label: '',
                 column: 'subject_type',
-                formatted: fn (Activity $activity): string => $this->renderRelationsSection($activity),
+                formatted: fn (Model $activity): string => $this->renderRelationsSection($activity),
             ),
 
             // Section 3: Changes
             Preview::make(
                 label: '',
                 column: 'properties',
-                formatted: fn (Activity $activity): string => $this->renderChangesSection($activity),
+                formatted: fn (Model $activity): string => $this->renderChangesSection($activity),
             ),
 
             // Section 4: History
             Preview::make(
                 label: '',
                 column: 'causer_type',
-                formatted: fn (Activity $activity): string => $this->renderHistorySection($activity),
+                formatted: fn (Model $activity): string => $this->renderHistorySection($activity),
             ),
         ];
     }
 
     protected function modifyQueryBuilder(BuilderContract $builder): BuilderContract
     {
-        /** @var EloquentBuilder<Activity> $builder */
         $builder = parent::modifyQueryBuilder($builder)
             ->with(['subject', 'causer'])
             ->latest('id');
 
-        $filters = ActivityLogFilterData::fromRequest();
-
-        return (new ActivityLogQuery)->apply($builder, $filters);
+        return (new ActivityLogQuery)->apply(
+            $builder,
+            ActivityLogFilterData::fromRequestStrict($this->request),
+        );
     }
 
     protected function filters(): iterable
     {
-        $options = new ActivityLogFilterOptions;
+        $options = $this->filterOptions;
 
         return [
             Select::make((string) __('moontrail::ui.field_log'), 'log_name')
@@ -191,8 +261,7 @@ final class MoonTrailResource extends ModelResource
 
     protected function search(): array
     {
-        // Search is handled in modifyQueryBuilder() to support mixed queries
-        // like "product 46" (text + numeric IDs) without framework-level conflicts.
+        // Search is handled by ActivityQueryContract::paginate().
         return [];
     }
 
@@ -200,41 +269,29 @@ final class MoonTrailResource extends ModelResource
     // Detail section renderers (delegate to ActivityDetailPresenter + Blade)
     // -------------------------------------------------------------------------
 
-    private function renderGeneralSection(Activity $activity): string
+    private function renderGeneralSection(Model $activity): string
     {
-        return view('moontrail::pages.detail-general', $this->presenter()->generalData($activity))->render();
+        return view('moontrail::pages.detail-general', $this->presenter->generalData($activity))->render();
     }
 
-    private function renderRelationsSection(Activity $activity): string
+    private function renderRelationsSection(Model $activity): string
     {
-        return view('moontrail::pages.detail-relations', $this->presenter()->relationsData($activity))->render();
+        return view('moontrail::pages.detail-relations', $this->presenter->relationsData($activity))->render();
     }
 
-    private function renderChangesSection(Activity $activity): string
+    private function renderChangesSection(Model $activity): string
     {
-        return view('moontrail::pages.detail-changes', $this->presenter()->changesData($activity))->render();
+        return view('moontrail::pages.detail-changes', $this->presenter->changesData($activity))->render();
     }
 
-    private function renderHistorySection(Activity $activity): string
+    private function renderHistorySection(Model $activity): string
     {
-        $data = $this->presenter()->historyData($activity);
+        $data = $this->presenter->historyData($activity);
 
         if ($data === []) {
             return '';
         }
 
         return view('moontrail::pages.detail-history', $data)->render();
-    }
-
-    // -------------------------------------------------------------------------
-    // Helpers
-    // -------------------------------------------------------------------------
-
-    private function presenter(): ActivityDetailPresenter
-    {
-        /** @var ActivityDetailPresenter $presenter */
-        $presenter = app(ActivityDetailPresenter::class);
-
-        return $presenter;
     }
 }

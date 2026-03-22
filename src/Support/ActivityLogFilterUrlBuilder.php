@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace MoonShine\MoonTrail\Support;
 
+use Illuminate\Http\Request;
+
 /**
  * Builds filter-related URLs for activity log filtering UI.
  *
@@ -14,6 +16,7 @@ final readonly class ActivityLogFilterUrlBuilder
 {
     public function __construct(
         private string $baseUrl,
+        private Request $request,
     ) {}
 
     /**
@@ -21,7 +24,7 @@ final readonly class ActivityLogFilterUrlBuilder
      */
     public function removeFilterUrl(string $filterKey): string
     {
-        $query = request()->except([$filterKey, 'filters.' . $filterKey, 'page']);
+        $query = $this->request->except([$filterKey, 'filters.' . $filterKey, 'page']);
 
         if (isset($query['filters'][$filterKey])) {
             unset($query['filters'][$filterKey]);
@@ -39,7 +42,7 @@ final readonly class ActivityLogFilterUrlBuilder
      */
     public function clearAllFiltersUrl(array $filterKeys): string
     {
-        $query = request()->except([...$filterKeys, 'filters', 'page']);
+        $query = $this->request->except([...$filterKeys, 'filters', 'page']);
 
         $qs = http_build_query($query);
 
@@ -51,7 +54,7 @@ final readonly class ActivityLogFilterUrlBuilder
      */
     public function eventFilterUrl(?string $event): string
     {
-        $params = request()->except(['event', 'filters.event', 'page']);
+        $params = $this->request->except(['event', 'filters.event', 'page']);
 
         if (isset($params['filters']['event'])) {
             unset($params['filters']['event']);

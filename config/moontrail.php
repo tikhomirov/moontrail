@@ -5,6 +5,45 @@ declare(strict_types=1);
 return [
     /*
     |--------------------------------------------------------------------------
+    | Activity Logger
+    |--------------------------------------------------------------------------
+    |
+    | Controls which activity logging backend to use:
+    |
+    |  'auto'     — Use Spatie if installed, otherwise fall back to native database logger.
+    |  'spatie'   — Use spatie/laravel-activitylog (must be installed).
+    |  'database' — Use MoonTrail's native moontrail_activity_log table.
+    |  'none'     — Disable activity logging entirely (versioning still works).
+    |  'custom'   — Resolve ActivityLoggerContract from the container (bind your own).
+    |
+    */
+    'activity_logger' => env('MOONTRAIL_LOGGER', 'auto'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Activity Read Model (custom mode)
+    |--------------------------------------------------------------------------
+    |
+    | Used by UI/read-path components when activity_logger = custom.
+    | Must be an existing Eloquent model class (extends Illuminate\Database\Eloquent\Model)
+    | compatible with MoonTrail activity fields.
+    |
+    */
+    'activity_model' => \MoonShine\MoonTrail\Models\MoonTrailActivity::class,
+
+    /*
+    |--------------------------------------------------------------------------
+    | Silent Failures
+    |--------------------------------------------------------------------------
+    |
+    | When false (default), observer exceptions are reported via report().
+    | When true, exceptions in the observer are silently swallowed.
+    |
+    */
+    'silent_failures' => false,
+
+    /*
+    |--------------------------------------------------------------------------
     | Versioning
     |--------------------------------------------------------------------------
     */
@@ -35,6 +74,23 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Pruning
+    |--------------------------------------------------------------------------
+    |
+    | enabled: Whether scheduled pruning should run.
+    | retention_days: Default age threshold used by moontrail:prune when
+    |   --days is not provided.
+    | schedule: Suggested cadence for scheduler integration.
+    |
+    */
+    'pruning' => [
+        'enabled'        => true,
+        'retention_days' => 90,
+        'schedule'       => 'daily',
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | UI
     |--------------------------------------------------------------------------
     */
@@ -53,6 +109,43 @@ return [
 
         // Fields shown in diff as masked placeholders
         'masked_fields' => ['password', 'remember_token', 'two_factor_secret', 'api_key', 'secret', 'token'],
+
+        // Log warning when distinct-values filter options are queried on large tables
+        'warn_on_expensive_distinct_values' => true,
+
+        // Row threshold for distinct-values performance warning
+        'distinct_values_warn_threshold' => 50000,
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Filter Options
+    |--------------------------------------------------------------------------
+    |
+    | strategy:
+    |  - database_distinct: load options via distinct queries
+    |  - static: use static arrays below (no DB distinct queries)
+    |
+    | Deprecated fallback keys for database strategy:
+    |  - ui.warn_on_expensive_distinct_values
+    |  - ui.distinct_values_warn_threshold
+    |
+    */
+    'filter_options' => [
+        'strategy' => env('MOONTRAIL_FILTER_OPTIONS_STRATEGY', 'database_distinct'),
+
+        'static' => [
+            'log_names'     => [],
+            'events'        => [],
+            'subject_types' => [],
+            'causer_types'  => [],
+        ],
+
+        // When null, falls back to moontrail.ui.warn_on_expensive_distinct_values
+        'warn_on_expensive_distinct_values' => null,
+
+        // When null, falls back to moontrail.ui.distinct_values_warn_threshold
+        'distinct_values_warn_threshold' => null,
     ],
 
     /*

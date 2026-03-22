@@ -141,3 +141,39 @@ it('handles non-array properties gracefully', function (): void {
 
     expect($changes)->toBeEmpty();
 });
+
+it('uses strict comparison: 0 vs empty string are different', function (): void {
+    $changes = DiffComputer::compute(['val' => 0], ['val' => '']);
+
+    expect($changes['val']->type)->toBe(ChangeType::Modified);
+});
+
+it('uses strict comparison: null vs empty string are different', function (): void {
+    $changes = DiffComputer::compute(['val' => null], ['val' => '']);
+
+    expect($changes['val']->type)->toBe(ChangeType::Modified);
+});
+
+it('uses strict comparison: string "1" vs boolean true are different', function (): void {
+    $changes = DiffComputer::compute(['val' => '1'], ['val' => true]);
+
+    expect($changes['val']->type)->toBe(ChangeType::Modified);
+});
+
+it('uses strict comparison: integer 0 vs null are different', function (): void {
+    $changes = DiffComputer::compute(['val' => 0], ['val' => null]);
+
+    expect($changes['val']->type)->toBe(ChangeType::Modified);
+});
+
+it('uses strict comparison: integer 1 vs string "1" are different', function (): void {
+    $changes = DiffComputer::compute(['val' => 1], ['val' => '1']);
+
+    expect($changes['val']->type)->toBe(ChangeType::Modified);
+});
+
+it('uses strict comparison: false vs null are different', function (): void {
+    $changes = DiffComputer::compute(['val' => false], ['val' => null]);
+
+    expect($changes['val']->type)->toBe(ChangeType::Modified);
+});

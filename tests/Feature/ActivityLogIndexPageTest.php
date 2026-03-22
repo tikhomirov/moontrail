@@ -239,7 +239,9 @@ it('diff viewer table contains scope=col on th elements', function (): void {
         $this->markTestSkipped('Activity record not found');
     }
 
-    $changes = \MoonShine\MoonTrail\Diff\DiffComputer::fromActivity($activity);
+    $changes = \MoonShine\MoonTrail\Diff\DiffComputer::fromActivity(
+        app(\MoonShine\MoonTrail\Support\ActivityRecordFactory::class)->fromModel($activity),
+    );
     $html = (string) view('moontrail::components.diff-viewer', [
         'changes' => $changes,
         'compact' => false,

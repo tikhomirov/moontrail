@@ -12,12 +12,20 @@ use MoonShine\MoonTrail\Diff\FieldChange;
 use MoonShine\MoonTrail\Events\VersionCreated;
 use MoonShine\MoonTrail\Exceptions\VersionLimitExceededException;
 use MoonShine\MoonTrail\Models\ModelVersion;
-use Spatie\Activitylog\Models\Activity;
+use MoonShine\MoonTrail\Support\ActivityModelResolver;
+use MoonShine\MoonTrail\Support\MoonTrailLogger;
 
-final class VersionManager implements VersionManagerContract
+final readonly class VersionManager implements VersionManagerContract
 {
-    public function createVersion(Model $model, string $event, ?Activity $activity = null): ModelVersion
+    public function __construct(
+        private ActivityModelResolver $activityModelResolver,
+        private MoonTrailLogger $logger,
+    ) {}
+
+    public function createVersion(Model $model, string $event, ?int $activityId = null): ModelVersion
     {
+        $this->enforceLimit($model);
+
         $currentVersion = ModelVersion::query()
             ->where('versionable_type', $model->getMorphClass())
             ->where('versionable_id', $model->getKey())
@@ -30,7 +38,7 @@ final class VersionManager implements VersionManagerContract
             'versionable_id'      => $model->getKey(),
             'version'             => (is_numeric($currentVersion) ? (int) $currentVersion : 0) + 1,
             'snapshot'            => $this->snapshot($model),
-            'activity_id'         => $activity?->getKey() ?? $this->resolveActivityId($model),
+            'activity_id'         => $activityId ?? $this->resolveActivityId($model),
             'author_type'         => $author instanceof Model ? $author->getMorphClass() : null,
             'author_id'           => Auth::id(),
             'event'               => $event,
@@ -38,11 +46,14 @@ final class VersionManager implements VersionManagerContract
             'rollback_to_version' => null,
         ]);
 
-        $this->enforceLimit($model);
-
         event(new VersionCreated($model, $version));
 
         return $version;
+    }
+
+    public function enforceLimit(Model $model): void
+    {
+        $this->enforceLimitBeforeInsert($model);
     }
 
     public function getVersion(Model $model, int $version): ?ModelVersion
@@ -84,7 +95,7 @@ final class VersionManager implements VersionManagerContract
         );
     }
 
-    public function enforceLimit(Model $model): void
+    private function enforceLimitBeforeInsert(Model $model): void
     {
         $rawMax = config('moontrail.versioning.max_versions');
         $maxVersions = is_numeric($rawMax) ? (int) $rawMax : 0;
@@ -98,18 +109,37 @@ final class VersionManager implements VersionManagerContract
             ->where('versionable_id', $model->getKey());
         $count = (int) $query->count();
 
-        if ($count <= $maxVersions) {
+        if ($count < $maxVersions) {
             return;
         }
 
         $rawStrategy = config('moontrail.versioning.overflow_strategy');
         $overflowStrategy = is_string($rawStrategy) ? $rawStrategy : 'delete_oldest';
 
+        $rawModelKey = $model->getKey();
+        $modelKeyStr = is_int($rawModelKey) || is_string($rawModelKey) ? (string) $rawModelKey : '0';
+
         if ($overflowStrategy === 'prevent') {
-            throw new VersionLimitExceededException('Version limit exceeded.');
+            $this->logger->warning('version_limit_exceeded', [
+                'subject_type' => $model->getMorphClass(),
+                'subject_id'   => $rawModelKey,
+                'max_versions' => $maxVersions,
+                'count'        => $count,
+            ]);
+
+            throw new VersionLimitExceededException(
+                sprintf(
+                    'Version limit reached for %s#%s: count=%d, max_versions=%d, strategy=prevent.',
+                    $model->getMorphClass(),
+                    $modelKeyStr,
+                    $count,
+                    $maxVersions,
+                ),
+            );
         }
 
-        $toDelete = $count - $maxVersions;
+        // Pre-insert pruning must leave room for the next version row.
+        $toDelete = ($count - $maxVersions) + 1;
 
         ModelVersion::query()
             ->where('versionable_type', $model->getMorphClass())
@@ -117,6 +147,26 @@ final class VersionManager implements VersionManagerContract
             ->orderBy('version')
             ->limit($toDelete)
             ->delete();
+    }
+
+    /**
+     * Try to find the latest Spatie activity_id for this model.
+     * Returns null if Spatie is not installed.
+     */
+    private function resolveActivityId(Model $model): ?int
+    {
+        $activityModel = $this->activityModelResolver->resolveModelClass();
+
+        /** @var ?Model $activity */
+        $activity = $activityModel::query()
+            ->where('subject_type', $model->getMorphClass())
+            ->where('subject_id', $model->getKey())
+            ->latest('id')
+            ->first();
+
+        $key = $activity?->getKey();
+
+        return is_int($key) ? $key : null;
     }
 
     /**
@@ -136,19 +186,5 @@ final class VersionManager implements VersionManagerContract
         }
 
         return $attributes;
-    }
-
-    private function resolveActivityId(Model $model): ?int
-    {
-        /** @var ?Activity $activity */
-        $activity = Activity::query()
-            ->where('subject_type', $model->getMorphClass())
-            ->where('subject_id', $model->getKey())
-            ->latest('id')
-            ->first();
-
-        $key = $activity?->getKey();
-
-        return is_int($key) ? $key : null;
     }
 }

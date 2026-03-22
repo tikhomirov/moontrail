@@ -10,10 +10,13 @@
     },
     "require": {
         "php": "^8.2",
-        "spatie/laravel-activitylog": "^4.7",
         "moonshine/moonshine": "^4.8"
     },
+    "suggest": {
+        "spatie/laravel-activitylog": "Required when using the 'spatie' or 'auto' activity logger (^4.7)"
+    },
     "require-dev": {
+        "spatie/laravel-activitylog": "^4.7",
         "orchestra/testbench": "^9.0",
         "pestphp/pest": "^3.0",
         "phpstan/phpstan": "^2.0",

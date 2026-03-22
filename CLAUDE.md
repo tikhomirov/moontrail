@@ -51,7 +51,7 @@ Tests use **Orchestra Testbench** and the `testing` DB connection (SQLite in-mem
 
 ```
 config/                  # publishable config
-database/migrations/      # model_versions table
+database/migrations/      # model_versions + moontrail_activity_log tables
 lang/                     # translations (en/ru)
 resources/views/          # Blade components (diff/timeline/rollback)
 routes/moontrail.php   # HTTP endpoints (diff/rollback)
@@ -77,6 +77,7 @@ tests/                    # Pest + Testbench
 
 | Contract | Default implementation |
 |---|---|
+| `ActivityLoggerContract` | `Logging\\SpatieActivityLogger` (auto-resolved) |
 | `DiffRendererContract` | `Diff\\HtmlDiffRenderer` |
 | `VersionManagerContract` | `Versioning\\VersionManager` |
 | `RollbackStrategyContract` | `Versioning\\RollbackService` |

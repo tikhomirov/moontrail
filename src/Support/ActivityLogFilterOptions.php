@@ -4,20 +4,22 @@ declare(strict_types=1);
 
 namespace MoonShine\MoonTrail\Support;
 
-use Spatie\Activitylog\Models\Activity;
+use MoonShine\MoonTrail\Contracts\ActivityFilterOptionsContract;
 
 /**
- * Collects distinct filter option values from the activity_log table.
+ * Builds UI-ready filter options from configured provider strategy.
  */
-final class ActivityLogFilterOptions
+final readonly class ActivityLogFilterOptions
 {
+    public function __construct(private ActivityFilterOptionsContract $provider) {}
+
     /**
      * @return array<string, string>
      */
     public function logNames(): array
     {
         return $this->buildOptions(
-            Activity::query()->distinct()->whereNotNull('log_name')->pluck('log_name')->all(),
+            $this->provider->logNames(),
             false,
         );
     }
@@ -28,7 +30,7 @@ final class ActivityLogFilterOptions
     public function events(): array
     {
         return $this->buildOptions(
-            Activity::query()->distinct()->whereNotNull('event')->pluck('event')->all(),
+            $this->provider->events(),
             false,
         );
     }
@@ -39,7 +41,7 @@ final class ActivityLogFilterOptions
     public function subjectTypes(): array
     {
         return $this->buildOptions(
-            Activity::query()->distinct()->whereNotNull('subject_type')->pluck('subject_type')->all(),
+            $this->provider->subjectTypes(),
             true,
         );
     }
@@ -50,7 +52,7 @@ final class ActivityLogFilterOptions
     public function causerTypes(): array
     {
         return $this->buildOptions(
-            Activity::query()->distinct()->whereNotNull('causer_type')->pluck('causer_type')->all(),
+            $this->provider->causerTypes(),
             true,
         );
     }

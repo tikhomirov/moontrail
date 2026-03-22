@@ -11,8 +11,12 @@ use MoonShine\MoonTrail\Models\ModelVersion;
 /**
  * Builds computed display data for the ActivityTimeline component.
  */
-final class ActivityTimelineDataBuilder
+final readonly class ActivityTimelineDataBuilder
 {
+    public function __construct(
+        private ?ActivityRecordFactory $recordFactory = null,
+    ) {}
+
     /**
      * Returns a map of version.id → number of changed fields (non-unchanged).
      * Uses eager-loaded activity relation to avoid N+1.
@@ -37,7 +41,7 @@ final class ActivityTimelineDataBuilder
                 continue;
             }
 
-            $changes = DiffComputer::fromActivity($activity);
+            $changes = DiffComputer::fromActivity($this->factory()->fromModel($activity));
             $result[$version->id] = count(array_filter(
                 $changes,
                 static fn (FieldChange $c): bool => $c->type->value !== 'unchanged',
@@ -45,5 +49,17 @@ final class ActivityTimelineDataBuilder
         }
 
         return $result;
+    }
+
+    private function factory(): ActivityRecordFactory
+    {
+        if ($this->recordFactory instanceof ActivityRecordFactory) {
+            return $this->recordFactory;
+        }
+
+        /** @var ActivityRecordFactory $factory */
+        $factory = app(ActivityRecordFactory::class);
+
+        return $factory;
     }
 }

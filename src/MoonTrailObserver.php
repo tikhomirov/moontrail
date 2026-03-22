@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace MoonShine\MoonTrail;
 
 use Illuminate\Database\Eloquent\Model;
+use MoonShine\MoonTrail\Contracts\ActivityLoggerContract;
 use MoonShine\MoonTrail\Contracts\VersionManagerContract;
 use MoonShine\MoonTrail\Enums\ActivityEvent;
-use Spatie\Activitylog\Models\Activity;
-use Spatie\Activitylog\Traits\LogsActivity;
+use MoonShine\MoonTrail\Support\MoonTrailLogger;
 use Throwable;
 
 use function array_diff_key;
@@ -25,6 +25,8 @@ final class MoonTrailObserver
 
     public function __construct(
         private readonly VersionManagerContract $versionManager,
+        private readonly ActivityLoggerContract $activityLogger,
+        private readonly MoonTrailLogger $logger,
     ) {}
 
     public static function suspend(): void
@@ -48,13 +50,7 @@ final class MoonTrailObserver
             return;
         }
 
-        $activity = $this->shouldLogActivity($model)
-            ? $this->logActivity($model, ActivityEvent::Created, [], $model->getAttributes())
-            : null;
-
-        if ($this->canVersion($model)) {
-            $this->versionManager->createVersion($model, ActivityEvent::Created->value, $activity);
-        }
+        $this->handle($model, ActivityEvent::Created, [], $model->getAttributes());
     }
 
     public function updated(Model $model): void
@@ -66,13 +62,7 @@ final class MoonTrailObserver
         /** @var array<string, mixed> $original */
         $original = $model->getOriginal();
 
-        $activity = $this->shouldLogActivity($model)
-            ? $this->logActivity($model, ActivityEvent::Updated, $original, $model->getAttributes())
-            : null;
-
-        if ($this->canVersion($model)) {
-            $this->versionManager->createVersion($model, ActivityEvent::Updated->value, $activity);
-        }
+        $this->handle($model, ActivityEvent::Updated, $original, $model->getAttributes());
     }
 
     public function deleted(Model $model): void
@@ -84,13 +74,7 @@ final class MoonTrailObserver
         /** @var array<string, mixed> $original */
         $original = $model->getOriginal();
 
-        $activity = $this->shouldLogActivity($model)
-            ? $this->logActivity($model, ActivityEvent::Deleted, $original, [])
-            : null;
-
-        if ($this->canVersion($model)) {
-            $this->versionManager->createVersion($model, ActivityEvent::Deleted->value, $activity);
-        }
+        $this->handle($model, ActivityEvent::Deleted, $original, []);
     }
 
     public function restored(Model $model): void
@@ -99,12 +83,32 @@ final class MoonTrailObserver
             return;
         }
 
-        $activity = $this->shouldLogActivity($model)
-            ? $this->logActivity($model, ActivityEvent::Restored, [], $model->getAttributes())
-            : null;
+        $this->handle($model, ActivityEvent::Restored, [], $model->getAttributes());
+    }
+
+    /**
+     * @param array<string, mixed> $old
+     * @param array<string, mixed> $attributes
+     */
+    private function handle(Model $model, ActivityEvent $event, array $old, array $attributes): void
+    {
+        $activityId = null;
+
+        if ($this->shouldLogActivity($model)) {
+            $activityId = $this->logActivity($model, $event, $old, $attributes);
+        }
 
         if ($this->canVersion($model)) {
-            $this->versionManager->createVersion($model, ActivityEvent::Restored->value, $activity);
+            try {
+                $this->versionManager->createVersion($model, $event->value, $activityId);
+            } catch (Throwable $e) {
+                $this->handleException(
+                    exception: $e,
+                    operation: 'version_create_failed',
+                    model: $model,
+                    event: $event,
+                );
+            }
         }
     }
 
@@ -117,7 +121,7 @@ final class MoonTrailObserver
         ActivityEvent $event,
         array $old,
         array $attributes,
-    ): ?Activity {
+    ): ?int {
         if (! config('moontrail.auto_track.log_to_activity', true)) {
             return null;
         }
@@ -129,25 +133,20 @@ final class MoonTrailObserver
         $filteredNew = array_diff_key($attributes, array_flip($hiddenFields));
 
         try {
-            $builder = activity()
-                ->performedOn($model)
-                ->event($event->value)
-                ->withProperties([
-                    'old'        => $filteredOld,
-                    'attributes' => $filteredNew,
-                ]);
+            return $this->activityLogger->log($model, $event->value, [
+                'old'         => $filteredOld,
+                'attributes'  => $filteredNew,
+                'description' => class_basename($model) . ' was ' . $event->value,
+                'causer'      => $this->resolveCauser(),
+            ]);
+        } catch (Throwable $e) {
+            $this->handleException(
+                exception: $e,
+                operation: 'activity_log_write_failed',
+                model: $model,
+                event: $event,
+            );
 
-            $causer = $this->resolveCauser();
-
-            if ($causer instanceof Model) {
-                $builder->causedBy($causer);
-            }
-
-            /** @var Activity $activity */
-            $activity = $builder->log(class_basename($model) . ' was ' . $event->value);
-
-            return $activity;
-        } catch (Throwable) {
             return null;
         }
     }
@@ -159,7 +158,7 @@ final class MoonTrailObserver
      */
     private function shouldLogActivity(Model $model): bool
     {
-        return ! in_array(LogsActivity::class, class_uses_recursive($model), true);
+        return ! in_array(\Spatie\Activitylog\Traits\LogsActivity::class, class_uses_recursive($model), true);
     }
 
     /**
@@ -192,6 +191,19 @@ final class MoonTrailObserver
             return $defaultUser instanceof Model ? $defaultUser : null;
         } catch (Throwable) {
             return null;
+        }
+    }
+
+    private function handleException(Throwable $exception, string $operation, Model $model, ActivityEvent $event): void
+    {
+        $this->logger->error($operation, $this->logger->withException($exception, [
+            'subject_type' => $model->getMorphClass(),
+            'subject_id'   => $model->getKey(),
+            'event'        => $event->value,
+        ]));
+
+        if (! config('moontrail.silent_failures', false)) {
+            report($exception);
         }
     }
 }

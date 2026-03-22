@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Illuminate\Support\Facades\Log;
 use MoonShine\MoonTrail\Models\ModelVersion;
 use MoonShine\MoonTrail\Tests\Fixtures\TestPost;
 use MoonShine\MoonTrail\Versioning\VersionManager;
@@ -87,4 +88,35 @@ it('does not prune versions for a different model class when --model is given', 
     ]);
 
     expect(ModelVersion::query()->count())->toBe(1);
+});
+
+it('fails fast when mutually exclusive prune flags are provided', function (): void {
+    expect(fn () => $this->artisan('moontrail:prune', [
+        '--versions-only' => true,
+        '--activity-only' => true,
+    ]))->toThrow(\RuntimeException::class, 'mutually exclusive');
+});
+
+it('fails fast when --days is zero or negative', function (): void {
+    expect(fn () => $this->artisan('moontrail:prune', [
+        '--days'          => 0,
+        '--versions-only' => true,
+    ]))->toThrow(\RuntimeException::class, '--days must be a positive integer');
+
+    expect(fn () => $this->artisan('moontrail:prune', [
+        '--days'          => -5,
+        '--versions-only' => true,
+    ]))->toThrow(\RuntimeException::class, '--days must be a positive integer');
+});
+
+it('writes structured prune summary log', function (): void {
+    Log::spy();
+
+    $this->artisan('moontrail:prune', ['--days' => 30, '--versions-only' => true])
+        ->assertSuccessful();
+
+    Log::shouldHaveReceived('info')->withArgs(
+        static fn (string $message, array $context): bool => $message === 'MoonTrail: prune_summary'
+            && isset($context['days'], $context['versions_only'], $context['activity_only']),
+    );
 });

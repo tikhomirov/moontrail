@@ -16,23 +16,69 @@ Package: `tikhomirov/moontrail`
 
 **Short description:** Advanced logging for MoonShine with change history, visual diff, model versioning, and safe rollback.
 
-**Full description:** MoonTrail is a complete logging and audit layer for MoonShine admin panels. It extends `spatie/laravel-activitylog` with structured activity history, side-by-side field diff, snapshot-based model versioning, and transactional rollback with audit traceability.
+**Full description:** MoonTrail is a complete logging and audit layer for MoonShine admin panels. It provides structured activity history, side-by-side field diff, snapshot-based model versioning, and transactional rollback with audit traceability. Supports hybrid logging: Spatie Activity Log, native database logger, or a custom implementation via contract.
 
 > This release uses **strict breaking rename**:
 > use only `MoonShine\\MoonTrail\\*`, `moontrail` config key/file, and `moontrail:*` commands.
 
 ---
 
-## Why This Package?
+## Quick Start
 
-MoonShine provides a powerful admin interface, and Spatie Activity Log tracks model events.
-**This package bridges the gap** — giving administrators a visual, interactive history of every change with the ability to compare versions and roll back mistakes.
+1. Install package and migrate:
 
-For teams and corporate environments, this means:
-- Full **audit trail** with visual diffs for compliance and accountability
-- **One-click rollback** with confirmation dialog and transaction safety
-- **Timeline UI** embedded directly in MoonShine resource detail pages
-- **Zero-configuration tracking** — add a trait, and everything works
+```bash
+composer require tikhomirov/moontrail
+php artisan migrate
+```
+
+2. Add trait to model:
+
+```php
+use MoonShine\MoonTrail\Traits\HasMoonTrail;
+```
+
+3. Add history tab to resource:
+
+```php
+use MoonShine\MoonTrail\Traits\WithMoonTrailTab;
+```
+
+4. Optional installer:
+
+```bash
+php artisan moontrail:install
+```
+
+See the full step-by-step section in [Quick Start (Expanded)](#quick-start-expanded).
+
+---
+
+## Detailed Setup
+
+1. Install:
+
+```bash
+composer require tikhomirov/moontrail
+php artisan migrate
+```
+
+2. Choose trait:
+
+- `HasMoonTrail` (requires Spatie)
+- `HasMoonTrailVersioning` (Spatie not required)
+
+3. Add history tab to your MoonShine resource:
+
+```php
+use MoonShine\MoonTrail\Traits\WithMoonTrailTab;
+```
+
+4. Optional setup wizard:
+
+```bash
+php artisan moontrail:install
+```
 
 ---
 
@@ -56,12 +102,122 @@ For teams and corporate environments, this means:
 
 ---
 
+## When NOT to Use MoonTrail
+
+Do not use MoonTrail when:
+- you only need basic CRUD history and do not need snapshot versioning/rollback;
+- you cannot guarantee Eloquent model consistency (custom storage without model-level invariants);
+- rollback operations must be domain-orchestrated through business workflows only;
+- strict audit retention is forbidden by policy and no pruning window is allowed.
+
+MoonTrail is optimized for admin auditability with explicit version snapshots and rollback safety checks.
+
+---
+
+## Driver Decision Guide
+
+Choose backend by operational needs:
+
+- `spatie`:
+  - best when you already use `spatie/laravel-activitylog`;
+  - rich ecosystem compatibility;
+  - default choice for most Laravel apps.
+
+- `database`:
+  - no Spatie dependency;
+  - predictable schema under MoonTrail control;
+  - good for minimal deployments and package portability.
+
+- `custom`:
+  - use when your read/write path must integrate with existing enterprise audit storage;
+  - required minimal bindings: `ActivityLoggerContract`, `ActivityQueryContract`;
+  - optional legacy compatibility bindings remain available but are deprecated.
+
+- `none`:
+  - disables activity log writes;
+  - keeps versioning/rollback paths where applicable.
+
+- `auto`:
+  - resolves to `spatie` when installed, otherwise `database`;
+  - boot log makes the final resolution explicit.
+
+---
+
+## Environment Behavior Matrix
+
+| Context | Behavior |
+|---|---|
+| HTTP | rollback/prune failures are explicit exceptions (no silent no-op), conflict and validation are mapped to HTTP status codes |
+| CLI | `moontrail:prune` is fail-fast (`--days > 0`, no conflicting flags), exits with failure on invalid input |
+| Queue/Jobs | service-level exceptions propagate from VersionManager/RollbackService unless caught by job code |
+| Local | runtime resolution and lifecycle logs are emitted with structured context for debugging |
+| Production | same fail-fast rules; logs remain structured and concise (runtime/observer/rollback/prune lifecycle) |
+
+---
+
+## Filter Options Strategy
+
+`config/moontrail.php` now includes `filter_options.strategy`:
+
+- `database_distinct` (default): options are loaded via distinct queries;
+- `static`: options are loaded from static arrays, and no distinct query is executed.
+
+Static values config:
+
+```php
+'filter_options' => [
+    'strategy' => 'static',
+    'static' => [
+        'log_names' => ['default', 'security'],
+        'events' => ['created', 'updated', 'deleted'],
+        'subject_types' => [App\\Models\\Post::class],
+        'causer_types' => [App\\Models\\User::class],
+    ],
+],
+```
+
+Deprecated warning keys remain as fallback for database strategy:
+- `ui.warn_on_expensive_distinct_values`
+- `ui.distinct_values_warn_threshold`
+
+---
+
+## Custom Mode (Minimal Required Bindings)
+
+For `activity_logger=custom`, MoonTrail requires only:
+- `ActivityLoggerContract`
+- `ActivityQueryContract`
+
+Legacy compatibility contracts:
+- `ActivityQueryUiContract`
+- `ModelBackedActivityQueryContract`
+
+These are deprecated compatibility layers and are no longer required by package boot validation.
+
+---
+
+## Behavior Guarantees and Breaking Semantics
+
+Current guarantees:
+- `overflow_strategy=prevent` checks limit **before insert** and throws `VersionLimitExceededException`;
+- rollback with empty effective payload throws `NoChangesToRollbackException` (no fake success);
+- prune is strict fail-fast on invalid input;
+- runtime backend resolution is logged with configured/resolved driver and activity model;
+- `activity_model` runtime metadata is the source of truth for resource/prune/model-version activity resolution.
+
+Breaking behavior changes to account for:
+- custom mode no longer requires deprecated UI/model-backed query bindings;
+- prevent strategy now throws instead of warning-and-continue;
+- guarded/no-fillable rollback now fails explicitly instead of silently doing nothing.
+
+---
+
 ## Requirements
 
 - **PHP** 8.2+
 - **Laravel** 11+
 - **MoonShine** 4.8+
-- **spatie/laravel-activitylog** 4.7+ (installed automatically)
+- **spatie/laravel-activitylog** 4.7+ (optional; used by default when installed)
 - **Tailwind CSS** configured in the host app (required for package UI styles)
 - **Alpine.js** in the host app (required for rollback modal and JSON expand/copy controls)
 
@@ -104,7 +260,7 @@ If you are upgrading from the original `tikhomirov/moon-trail` coordinates:
 - Use namespace `MoonShine\\MoonTrail\\...`;
 - Use config file/key `moontrail`.
 
-See detailed checklist in `docs/v2/UPGRADE-GUIDE-REBRANDING.md`.
+See the CHANGELOG for migration details.
 
 ### Installation Wizard (recommended)
 
@@ -170,7 +326,7 @@ php artisan vendor:publish --tag=moontrail-assets
 
 ---
 
-## Quick Start
+## Quick Start (Expanded)
 
 ### Step 1: Add Trait to Your Model
 
@@ -186,9 +342,21 @@ class Post extends Model
 ```
 
 This enables:
-- Automatic activity logging via Spatie
+- Automatic activity logging (via Spatie or native logger)
 - Version snapshots on every model event
 - Rollback support (disabled by default — see [Enabling Rollback](#enabling-rollback))
+
+**Without Spatie dependency:** use `HasMoonTrailVersioning` instead of `HasMoonTrail`.
+`HasMoonTrailActivity` requires `spatie/laravel-activitylog` and will throw if Spatie is not installed.
+
+```php
+use MoonShine\MoonTrail\Traits\HasMoonTrailVersioning;
+
+class Post extends Model
+{
+    use HasMoonTrailVersioning;
+}
+```
 
 ### Step 2: Add History Tab to Your MoonShine Resource
 
@@ -368,6 +536,8 @@ return [
         'warn_if_tailwind_missing' => true,
         'hidden_fields'            => ['password', 'remember_token', 'two_factor_secret'],
         'masked_fields'            => ['password', 'remember_token', 'two_factor_secret', 'api_key', 'secret', 'token'],
+        'warn_on_expensive_distinct_values' => true,
+        'distinct_values_warn_threshold' => 50000,
     ],
 
     'resource' => [
@@ -382,6 +552,74 @@ return [
     ],
 ];
 ```
+
+### Choosing Activity Logger
+
+MoonTrail supports multiple logging backends. Set the `activity_logger` option in `config/moontrail.php`:
+
+```php
+'activity_logger' => env('MOONTRAIL_LOGGER', 'auto'),
+```
+
+### Logging Modes
+
+| Driver | Description |
+|---|---|
+| `spatie` | Spatie-backed logging (default when Spatie is installed) |
+| `database` | MoonTrail native table (`moontrail_activity_log`) |
+| `custom` | Bring your own logger/query implementations |
+| `none` | Disable activity logging (versioning still works) |
+| `auto` | Runtime switch: `spatie` if available, otherwise `database` |
+
+### Decision Guide
+
+- Choose `auto` if you want default behavior and can install/use Spatie.
+- Choose `spatie` if your project already standardizes on `spatie/laravel-activitylog`.
+- Choose `database` if you need MoonTrail without Spatie dependency.
+- Choose `custom` if logs live in external storage or custom schema and you provide all required contracts.
+- Choose `none` if you need only versioning/rollback and want zero activity writes.
+
+> ⚠️ If using `custom` mode, you MUST bind:
+> - `ActivityLoggerContract`
+> - `ActivityQueryContract`
+> - `ActivityQueryUiContract`
+> - `ModelBackedActivityQueryContract`
+
+**Using `database` mode:**
+
+```bash
+php artisan migrate
+```
+
+Then set `MOONTRAIL_LOGGER=database` in `.env` or update config. MoonTrail UI/Resource/Diff read from `moontrail_activity_log` in this mode.
+
+⚠️ Database logger requires MoonTrail activity resource support (v2+).
+
+**Custom mode (`custom`):**
+
+```php
+// In your ServiceProvider
+$this->app->bind(ActivityLoggerContract::class, MyCustomLogger::class);
+$this->app->bind(ActivityQueryContract::class, MyCustomActivityQuery::class);
+$this->app->bind(ActivityQueryUiContract::class, MyCustomActivityQuery::class);
+$this->app->bind(ModelBackedActivityQueryContract::class, MyCustomActivityQuery::class);
+```
+
+Set `activity_logger` to `custom`. If bindings are missing, MoonTrail now throws a clear runtime exception instead of recursive container resolution.
+
+Read-path note: query implementations intentionally keep direct Eloquent access inside `ActivityQueryContract` implementations (`SpatieActivityQuery`, `DatabaseActivityQuery`, custom implementations). UI and pages consume only the contract.
+
+### Silent Failures
+
+By default, observer exceptions are reported via `report()`. Set `silent_failures` to `true` to swallow exceptions silently:
+
+```php
+'silent_failures' => false, // default: report errors
+```
+
+### Rollback and $fillable
+
+Rollback restores only fields listed in the model's `$fillable` array. If `$fillable` is empty (fully guarded model), rollback will succeed but no fields will be restored. Make sure your model declares the appropriate `$fillable` fields for rollback to work correctly.
 
 ### Key Options
 
@@ -529,7 +767,7 @@ event(ModelRolledBack)    ← fired AFTER commit; guaranteed data in payload
 ## Artisan Commands
 
 ```bash
-# Prune records older than 90 days (default)
+# Prune records older than config('moontrail.pruning.retention_days')
 php artisan moontrail:prune
 
 # Custom retention period
@@ -549,8 +787,20 @@ php artisan moontrail:install
 Schedule in `routes/console.php`:
 
 ```php
-Schedule::command('moontrail:prune --days=90')->daily();
+Schedule::command('moontrail:prune')->daily();
 ```
+
+Pruning config:
+
+```php
+'pruning' => [
+    'enabled' => true,
+    'retention_days' => 30,
+    'schedule' => 'daily',
+],
+```
+
+CLI `--days` always overrides configured retention for one-off runs.
 
 ---
 
@@ -560,6 +810,7 @@ Every core service is bound via an interface and can be swapped:
 
 | Contract | Default | Purpose |
 |---|---|---|
+| `ActivityLoggerContract` | `SpatieActivityLogger` | Writes activity log entries (swappable backend) |
 | `DiffRendererContract` | `HtmlDiffRenderer` | Renders `FieldChange[]` → HTML |
 | `VersionManagerContract` | `VersionManager` | Creates / retrieves / compares versions |
 | `RollbackStrategyContract` | `RollbackService` | Executes transactional rollback |
@@ -595,33 +846,6 @@ composer refactor       # apply Rector
 composer ci             # full CI: rector + pint + phpstan + tests
 ```
 
-## OpenCode
-
-This repository is ready to use with OpenCode out of the box.
-
-- `AGENTS.md` is the primary project rules file.
-- `opencode.json` adds shared watcher ignores and safer approval prompts for `git commit`, `git push`, `git tag`, and `rm`.
-- `.opencode/commands/` includes `/ci`, `/test`, `/types`, `/lint`, `/fix`, and `/review` for the common package workflows.
-- `.opencode/agents/package-reviewer.md` adds a read-only reviewer focused on package BC and release safety.
-
-Quick start:
-
-```bash
-opencode
-```
-
-Useful commands inside OpenCode:
-
-- `/ci`
-- `/test`
-- `/test tests/Unit/DiffComputerTest.php`
-- `/types`
-- `/lint`
-- `/fix`
-- `/review`
-
-Use your personal global OpenCode config or a local uncommitted `tui.json` for private keybinds and UI preferences.
-
 ### Troubleshooting
 
 1. **Rollback buttons not visible**
@@ -641,27 +865,14 @@ Use your personal global OpenCode config or a local uncommitted `tui.json` for p
 php -d pcov.enabled=1 ./vendor/bin/pest -c phpunit.xml.dist --coverage --min=80
 ```
 
----
-
-## Why "MoonTrail"?
-
-> *"The moon is the sun of the dead, its trail leads where there are no shadows."*
-
-No, this is not a fortune cookie. This is a sacred cosmological concept from the Nenets people — one of the indigenous nations of the Russian Arctic.
-
-In Nenets mythology the universe has three layers: the Upper (light), the Middle (ours), and the Lower world of shadows — *Khyly*. The worlds are mirrors: when the Sun (*Khaer*) shines here, darkness reigns below. When night falls and the Moon (*Iri*) rises for us, it becomes the blazing sun for the spirits of the dead. What we see as a dim glow, they experience as blinding light. And in a world flooded by its own "sun", there are no secondary shadows — the spirits themselves *are* the shadows, and the moonlight makes everything visible.
-
-The author is deeply fascinated by the North and its epics — Nenets, Selkup, Nganasan mythology — and this concept resonated perfectly with an audit log package. **MoonTrail** sees everything: deleted records, overwritten fields, rolled-back changes. Nothing hides from the moon's trail.
-
-And yes — *MoonShine* literally means "moonlight", but it also means homemade liquor. So if MoonShine is the good stuff you brew in your admin panel, **MoonTrail** is the morning-after evidence trail that tells you exactly what happened and who did it. 🥃
-
-The visual identity is built on the [Polaris theme for MoonShine](https://github.com/tikhomirov/moonshine-polaris-theme) — a cold, northern palette inspired by the same arctic aesthetics.
-
----
-
 ## Changelog
 
 See [CHANGELOG.md](CHANGELOG.md).
+
+## Additional Docs
+
+- [CONTRIBUTING.md](CONTRIBUTING.md)
+- [ABOUT.md](ABOUT.md)
 
 ## License
 

@@ -3,7 +3,6 @@
 declare(strict_types=1);
 
 use MoonShine\MoonTrail\Enums\ChangeType;
-use MoonShine\MoonTrail\Exceptions\VersionLimitExceededException;
 use MoonShine\MoonTrail\Tests\Fixtures\TestPost;
 use MoonShine\MoonTrail\Versioning\VersionManager;
 
@@ -100,7 +99,7 @@ it('enforces max_versions by deleting oldest', function (): void {
     expect($remaining)->toBeLessThanOrEqual(3);
 });
 
-it('throws VersionLimitExceededException when strategy is prevent', function (): void {
+it('throws when strategy is prevent and limit is reached', function (): void {
     config()->set('moontrail.versioning.max_versions', 1);
     config()->set('moontrail.versioning.overflow_strategy', 'prevent');
 
@@ -109,8 +108,10 @@ it('throws VersionLimitExceededException when strategy is prevent', function ():
 
     $manager->createVersion($post, 'created');
 
-    expect(fn () => $manager->createVersion($post, 'updated'))
-        ->toThrow(VersionLimitExceededException::class);
+    expect(static fn () => $manager->createVersion($post, 'updated'))
+        ->toThrow(\MoonShine\MoonTrail\Exceptions\VersionLimitExceededException::class);
+
+    expect($post->versions()->count())->toBe(1);
 });
 
 it('stores is_rollback flag as false by default', function (): void {

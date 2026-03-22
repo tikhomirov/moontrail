@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace MoonShine\MoonTrail\Models;
 
+use Closure;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
-use Spatie\Activitylog\Models\Activity;
 
 /**
  * @property int $id
@@ -52,6 +52,19 @@ final class ModelVersion extends Model
         'rollback_to_version' => 'integer',
     ];
 
+    /**
+     * @var (Closure(): class-string<Model>)|null
+     */
+    private static ?Closure $activityModelResolver = null;
+
+    /**
+     * @param Closure(): class-string<Model> $resolver
+     */
+    public static function resolveActivityModelUsing(Closure $resolver): void
+    {
+        self::$activityModelResolver = $resolver;
+    }
+
     /** @return MorphTo<Model, $this> */
     public function versionable(): MorphTo
     {
@@ -64,10 +77,15 @@ final class ModelVersion extends Model
         return $this->morphTo();
     }
 
-    /** @return BelongsTo<Activity, $this> */
+    /** @return BelongsTo<Model, $this> */
     public function activity(): BelongsTo
     {
-        return $this->belongsTo(Activity::class, 'activity_id');
+        /** @var class-string<Model> $activityModel */
+        $activityModel = self::$activityModelResolver instanceof Closure
+            ? (self::$activityModelResolver)()
+            : MoonTrailActivity::class;
+
+        return $this->belongsTo($activityModel, 'activity_id');
     }
 
     /**

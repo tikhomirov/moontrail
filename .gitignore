@@ -20,3 +20,4 @@ opencode.json
 tui.json
 tui.jsonc
 *.png
+/docs/

@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 use MoonShine\MoonTrail\Contracts\RollbackStrategyContract;
 use MoonShine\MoonTrail\Exceptions\ModelVersionNotFoundException;
+use MoonShine\MoonTrail\Exceptions\NoChangesToRollbackException;
 use MoonShine\MoonTrail\Exceptions\RollbackCancelledException;
 use MoonShine\MoonTrail\Exceptions\RollbackConflictException;
 use MoonShine\MoonTrail\Exceptions\RollbackDeniedException;
@@ -72,7 +73,7 @@ final readonly class RollbackController
             );
 
             abort(403, (string) __('moontrail::ui.rollback_error_forbidden'));
-        } catch (ValidationException|ModelVersionNotFoundException|RollbackCancelledException $e) {
+        } catch (ValidationException|ModelVersionNotFoundException|RollbackCancelledException|NoChangesToRollbackException $e) {
             $message = $e instanceof RollbackCancelledException
                 ? (string) __('moontrail::ui.rollback_error_cancelled')
                 : (string) __('moontrail::ui.rollback_error_validation');

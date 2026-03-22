@@ -1,5 +1,25 @@
 # Changelog
 
+## 1.1.0 - 2026-03-22
+
+### Multiple Activity Logging Backends
+
+- **ActivityLoggerContract** — new contract for swappable activity logging backends. Default implementation `SpatieActivityLogger` wraps Spatie, with fallback to native database logger when Spatie is not installed.
+- **Config option `activity_logger`** — choose from:
+  - `auto` (default) — uses Spatie if available, otherwise native database logger
+  - `spatie` — requires `spatie/laravel-activitylog` via Composer
+  - `database` — uses native `moontrail_activity_log` table, no Spatie dependency
+  - `none` — disables activity logging (versioning still works)
+  - `custom` — resolves `ActivityLoggerContract` from container for custom implementations
+- **HasMoonTrailVersioning trait** — lightweight alternative to `HasMoonTrail` for users who don't need Spatie's `LogsActivity` trait. Enables versioning and rollback with native database logger.
+- **Silent failures config** — new `silent_failures` option to suppress observer exceptions (default: `false`, exceptions reported via `report()`).
+
+### Documentation
+
+- Updated README with comprehensive logging backend configuration section.
+- Added guidance for `$fillable` requirement during rollback.
+- Synced Russian README translation with all new features.
+
 ## 1.0.0 - 2026-03-21
 
 ### First public release

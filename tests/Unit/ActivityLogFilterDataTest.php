@@ -18,7 +18,7 @@ it('reads direct query params from request', function (): void {
     ]);
     app()->instance('request', $request);
 
-    $data = ActivityLogFilterData::fromRequest();
+    $data = ActivityLogFilterData::fromRequestStrict(request());
 
     expect($data->logName)->toBe('default')
         ->and($data->event)->toBe('created')
@@ -41,7 +41,7 @@ it('reads nested filters.* params from request', function (): void {
     ]);
     app()->instance('request', $request);
 
-    $data = ActivityLogFilterData::fromRequest();
+    $data = ActivityLogFilterData::fromRequestStrict(request());
 
     expect($data->logName)->toBe('custom')
         ->and($data->event)->toBe('updated')
@@ -52,7 +52,7 @@ it('returns null for absent params', function (): void {
     $request = request()->replace([]);
     app()->instance('request', $request);
 
-    $data = ActivityLogFilterData::fromRequest();
+    $data = ActivityLogFilterData::fromRequestStrict(request());
 
     expect($data->logName)->toBeNull()
         ->and($data->event)->toBeNull()
@@ -63,7 +63,7 @@ it('reads search from query param as fallback', function (): void {
     $request = request()->replace(['query' => 'find me']);
     app()->instance('request', $request);
 
-    $data = ActivityLogFilterData::fromRequest();
+    $data = ActivityLogFilterData::fromRequestStrict(request());
 
     expect($data->search)->toBe('find me');
 });
@@ -75,7 +75,7 @@ it('prefers direct param over nested param', function (): void {
     ]);
     app()->instance('request', $request);
 
-    $data = ActivityLogFilterData::fromRequest();
+    $data = ActivityLogFilterData::fromRequestStrict(request());
 
     expect($data->event)->toBe('created');
 });
@@ -95,23 +95,28 @@ it('returns predefined filter request keys', function (): void {
 
 it('builds active filter chips with translated event value', function (): void {
     $request = request()->replace([
-        'event' => 'created',
+        'event'    => 'created',
         'log_name' => 'default',
     ]);
     app()->instance('request', $request);
 
-    $data = ActivityLogFilterData::fromRequest();
+    $data = ActivityLogFilterData::fromRequestStrict(request());
     $chips = $data->activeFilterChips();
 
     expect($chips)->toHaveCount(2)
         ->and($chips[0])->toMatchArray([
             'requestKey' => 'log_name',
-            'label' => (string) __('moontrail::ui.field_log'),
-            'value' => 'default',
+            'label'      => (string) __('moontrail::ui.field_log'),
+            'value'      => 'default',
         ])
         ->and($chips[1])->toMatchArray([
             'requestKey' => 'event',
-            'label' => (string) __('moontrail::ui.field_event'),
-            'value' => (string) __('moontrail::ui.event_created'),
+            'label'      => (string) __('moontrail::ui.field_event'),
+            'value'      => (string) __('moontrail::ui.event_created'),
         ]);
+});
+
+it('throws when fromRequest is called without explicit request', function (): void {
+    expect(static fn (): ActivityLogFilterData => ActivityLogFilterData::fromRequest())
+        ->toThrow(InvalidArgumentException::class);
 });

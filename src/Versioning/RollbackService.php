@@ -17,16 +17,19 @@ use MoonShine\MoonTrail\Enums\ActivityEvent;
 use MoonShine\MoonTrail\Events\ModelRolledBack;
 use MoonShine\MoonTrail\Events\ModelRollingBack;
 use MoonShine\MoonTrail\Exceptions\ModelVersionNotFoundException;
+use MoonShine\MoonTrail\Exceptions\NoChangesToRollbackException;
 use MoonShine\MoonTrail\Exceptions\RollbackCancelledException;
 use MoonShine\MoonTrail\Exceptions\RollbackConflictException;
 use MoonShine\MoonTrail\Models\ModelVersion;
 use MoonShine\MoonTrail\MoonTrailObserver;
+use MoonShine\MoonTrail\Support\MoonTrailLogger;
 use Throwable;
 
 final readonly class RollbackService implements RollbackStrategyContract
 {
     public function __construct(
         private VersionManagerContract $versionManager,
+        private MoonTrailLogger $logger,
     ) {}
 
     /**
@@ -46,22 +49,60 @@ final readonly class RollbackService implements RollbackStrategyContract
      */
     public function rollback(Model $model, int $targetVersion, ?array $rules = null): Model
     {
+        $this->logger->info('rollback_start', [
+            'subject_type'   => $model->getMorphClass(),
+            'subject_id'     => $model->getKey(),
+            'target_version' => $targetVersion,
+        ]);
+
         $version = $this->versionManager->getVersion($model, $targetVersion);
 
         if (! $version instanceof ModelVersion) {
-            throw new ModelVersionNotFoundException("Version {$targetVersion} not found for model.");
+            $exception = new ModelVersionNotFoundException("Version {$targetVersion} not found for model.");
+            $this->logger->warning('rollback_failed', $this->logger->withException($exception, [
+                'subject_type'   => $model->getMorphClass(),
+                'subject_id'     => $model->getKey(),
+                'target_version' => $targetVersion,
+                'reason'         => 'version_not_found',
+            ]));
+
+            throw $exception;
         }
 
         // Pre-event: cancellable — Event::until() stops at the first listener
         // that returns false and itself returns false. A null return means all
         // listeners ran without cancelling.
         if (Event::until(new ModelRollingBack($model, $targetVersion, $version)) === false) {
-            throw new RollbackCancelledException(
+            $exception = new RollbackCancelledException(
                 "Rollback to version {$targetVersion} was cancelled by a listener.",
             );
+
+            $this->logger->warning('rollback_failed', $this->logger->withException($exception, [
+                'subject_type'   => $model->getMorphClass(),
+                'subject_id'     => $model->getKey(),
+                'target_version' => $targetVersion,
+                'reason'         => 'cancelled',
+            ]));
+
+            throw $exception;
         }
 
         $payload = $this->filterSnapshot($model, $version->snapshot);
+
+        if ($payload === []) {
+            $modelClass = $model::class;
+            $exception = new NoChangesToRollbackException(
+                "Rollback to version {$targetVersion} produced an empty payload for model {$modelClass}.",
+            );
+
+            $this->logger->warning('rollback_noop', $this->logger->withException($exception, [
+                'subject_type'   => $model->getMorphClass(),
+                'subject_id'     => $model->getKey(),
+                'target_version' => $targetVersion,
+            ]));
+
+            throw $exception;
+        }
 
         if ($this->shouldValidate($rules)) {
             /** @var array<string, mixed> $validRules */
@@ -118,9 +159,21 @@ final readonly class RollbackService implements RollbackStrategyContract
                 },
             );
         } catch (ValidationException|ModelVersionNotFoundException|RollbackCancelledException $e) {
+            $this->logger->warning('rollback_failed', $this->logger->withException($e, [
+                'subject_type'   => $model->getMorphClass(),
+                'subject_id'     => $model->getKey(),
+                'target_version' => $targetVersion,
+            ]));
+
             // Let domain exceptions propagate as-is.
             throw $e;
         } catch (Throwable $e) {
+            $this->logger->error('rollback_conflict', $this->logger->withException($e, [
+                'subject_type'   => $model->getMorphClass(),
+                'subject_id'     => $model->getKey(),
+                'target_version' => $targetVersion,
+            ]));
+
             throw RollbackConflictClassifier::classify($e);
         } finally {
             MoonTrailObserver::resume();
@@ -136,6 +189,15 @@ final readonly class RollbackService implements RollbackStrategyContract
             toVersion: $to,
             newVersion: $rollbackVersion,
         ));
+
+        $this->logger->info('rollback_success', [
+            'subject_type'        => $freshModel->getMorphClass(),
+            'subject_id'          => $freshModel->getKey(),
+            'from_version'        => $from,
+            'target_version'      => $to,
+            'new_version'         => $rollbackVersion->version,
+            'rollback_to_version' => $rollbackVersion->rollback_to_version,
+        ]);
 
         return $freshModel;
     }

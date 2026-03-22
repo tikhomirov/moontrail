@@ -1,7 +1,7 @@
 @php
 /** @var string $id */
 /** @var string|null $logName */
-/** @var \Spatie\Activitylog\Models\Activity $activity */
+/** @var \Illuminate\Database\Eloquent\Model $activity */
 /** @var string $description */
 /** @var string $date */
 @endphp

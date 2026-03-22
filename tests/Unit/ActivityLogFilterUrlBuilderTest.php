@@ -14,7 +14,7 @@ it('removeFilterUrl removes specific filter from query string', function (): voi
     app()->instance('request', $request);
 
     $baseUrl = 'http://localhost/admin/moontrail';
-    $builder = new ActivityLogFilterUrlBuilder($baseUrl);
+    $builder = new ActivityLogFilterUrlBuilder($baseUrl, $request);
 
     $url = $builder->removeFilterUrl('event');
 
@@ -32,7 +32,7 @@ it('removeFilterUrl preserves other params', function (): void {
     app()->instance('request', $request);
 
     $baseUrl = 'http://localhost/admin/moontrail';
-    $builder = new ActivityLogFilterUrlBuilder($baseUrl);
+    $builder = new ActivityLogFilterUrlBuilder($baseUrl, $request);
 
     $url = $builder->removeFilterUrl('event');
 
@@ -52,7 +52,7 @@ it('clearAllFiltersUrl removes all filter keys', function (): void {
     app()->instance('request', $request);
 
     $baseUrl = 'http://localhost/admin/moontrail';
-    $builder = new ActivityLogFilterUrlBuilder($baseUrl);
+    $builder = new ActivityLogFilterUrlBuilder($baseUrl, $request);
 
     $filterKeys = ['event', 'log_name', 'subject_type', 'subject_id', 'causer_type', 'causer_id', 'date_from', 'date_until'];
     $url = $builder->clearAllFiltersUrl($filterKeys);
@@ -71,7 +71,7 @@ it('eventFilterUrl sets event filter when provided', function (): void {
     app()->instance('request', $request);
 
     $baseUrl = 'http://localhost/admin/moontrail';
-    $builder = new ActivityLogFilterUrlBuilder($baseUrl);
+    $builder = new ActivityLogFilterUrlBuilder($baseUrl, $request);
 
     $url = $builder->eventFilterUrl('created');
 
@@ -87,7 +87,7 @@ it('eventFilterUrl removes event filter when null provided', function (): void {
     app()->instance('request', $request);
 
     $baseUrl = 'http://localhost/admin/moontrail';
-    $builder = new ActivityLogFilterUrlBuilder($baseUrl);
+    $builder = new ActivityLogFilterUrlBuilder($baseUrl, $request);
 
     $url = $builder->eventFilterUrl(null);
 
@@ -98,13 +98,13 @@ it('eventFilterUrl removes event filter when null provided', function (): void {
 it('eventFilterUrl removes nested filters event and keeps other nested filters', function (): void {
     $request = request()->create('http://localhost/admin/moontrail', 'GET', [
         'filters' => [
-            'event' => 'deleted',
+            'event'        => 'deleted',
             'subject_type' => 'App\\Post',
         ],
     ]);
     app()->instance('request', $request);
 
-    $builder = new ActivityLogFilterUrlBuilder('http://localhost/admin/moontrail');
+    $builder = new ActivityLogFilterUrlBuilder('http://localhost/admin/moontrail', $request);
 
     $url = $builder->eventFilterUrl('created');
 
