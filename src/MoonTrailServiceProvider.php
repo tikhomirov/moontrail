@@ -120,7 +120,7 @@ final class MoonTrailServiceProvider extends ServiceProvider
                 'spatie'   => new SpatieActivityLogger,
                 'database' => new DatabaseActivityLogger,
                 'none'     => new NullActivityLogger,
-                default    => throw new RuntimeException('Unsupported moontrail.activity.driver: ' . $runtime->resolvedDriver),
+                default    => throw new RuntimeException('Unsupported moontrail.activity_logger: ' . $runtime->resolvedDriver),
             };
         });
     }
@@ -141,7 +141,7 @@ final class MoonTrailServiceProvider extends ServiceProvider
                 'spatie'   => new SpatieActivityQuery,
                 'database' => new DatabaseActivityQuery,
                 'none'     => new NullActivityQuery,
-                default    => throw new RuntimeException('Unsupported moontrail.activity.driver: ' . $runtime->resolvedDriver),
+                default    => throw new RuntimeException('Unsupported moontrail.activity_logger: ' . $runtime->resolvedDriver),
             };
         });
     }

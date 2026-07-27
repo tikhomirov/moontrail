@@ -8,7 +8,7 @@ use MoonShine\MoonTrail\Models\MoonTrailActivity;
 use MoonShine\MoonTrail\Support\ActivityLogFilterOptions;
 
 it('loads filter options from database when strategy is database_distinct', function (): void {
-    config()->set('moontrail.filters.source', 'database_distinct');
+    config()->set('moontrail.filter_options.strategy', 'database_distinct');
 
     MoonTrailActivity::query()->create(['log_name' => 'alpha', 'event' => 'created', 'model_type' => 'Test', 'model_id' => 1]);
     MoonTrailActivity::query()->create(['log_name' => 'beta', 'event' => 'updated', 'model_type' => 'Test', 'model_id' => 2]);
@@ -61,9 +61,9 @@ it('loads filter options from database when strategy is database_distinct', func
 });
 
 it('uses static filter options without running distinct query', function (): void {
-    config()->set('moontrail.filters.source', 'static');
-    config()->set('moontrail.filters.static.log_names', ['static-log']);
-    config()->set('moontrail.filters.static.events', ['created', 'updated']);
+    config()->set('moontrail.filter_options.strategy', 'static');
+    config()->set('moontrail.filter_options.static.log_names', ['static-log']);
+    config()->set('moontrail.filter_options.static.events', ['created', 'updated']);
 
     $query = new class implements ActivityQueryContract
     {

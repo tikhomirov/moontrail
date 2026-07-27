@@ -7,7 +7,7 @@ use MoonShine\MoonTrail\Support\ActivityRuntimeResolver;
 use Spatie\Activitylog\Models\Activity;
 
 it('resolves auto driver to spatie when spatie is installed', function (): void {
-    config()->set('moontrail.activity.driver', 'auto');
+    config()->set('moontrail.activity_logger', 'auto');
 
     $runtime = app(ActivityRuntimeResolver::class)->resolve(spatieInstalled: true);
 
@@ -19,7 +19,7 @@ it('resolves auto driver to spatie when spatie is installed', function (): void 
 });
 
 it('resolves auto driver to database when spatie is not installed', function (): void {
-    config()->set('moontrail.activity.driver', 'auto');
+    config()->set('moontrail.activity_logger', 'auto');
 
     $runtime = app(ActivityRuntimeResolver::class)->resolve(spatieInstalled: false);
 
@@ -31,7 +31,7 @@ it('resolves auto driver to database when spatie is not installed', function ():
 });
 
 it('resolves custom driver and uses MoonTrailActivity as placeholder', function (): void {
-    config()->set('moontrail.activity.driver', 'custom');
+    config()->set('moontrail.activity_logger', 'custom');
 
     $runtime = app(ActivityRuntimeResolver::class)->resolve();
 
@@ -43,8 +43,8 @@ it('resolves custom driver and uses MoonTrailActivity as placeholder', function 
 });
 
 it('throws for invalid activity logger driver', function (): void {
-    config()->set('moontrail.activity.driver', 'weird-driver');
+    config()->set('moontrail.activity_logger', 'weird-driver');
 
     expect(static fn () => app(ActivityRuntimeResolver::class)->resolve())
-        ->toThrow(RuntimeException::class, 'Unsupported moontrail.activity.driver: weird-driver');
+        ->toThrow(RuntimeException::class, 'Unsupported moontrail.activity_logger: weird-driver');
 });

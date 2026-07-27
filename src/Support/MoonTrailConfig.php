@@ -12,6 +12,13 @@ use function is_numeric;
 use function is_string;
 use function max;
 
+/**
+ * Typed accessor for the moontrail configuration file.
+ *
+ * This class only wraps config() calls to provide defaults, type narrowing
+ * and a single place to look up documented keys. It does not invent new
+ * configuration values or restructure the published config.
+ */
 final class MoonTrailConfig
 {
     // -------------------------------------------------------------------------
@@ -20,7 +27,7 @@ final class MoonTrailConfig
 
     public static function activityDriver(): string
     {
-        $driver = config('moontrail.activity.driver', 'auto');
+        $driver = config('moontrail.activity_logger', 'auto');
 
         return is_string($driver) && $driver !== '' ? $driver : 'auto';
     }
@@ -31,19 +38,19 @@ final class MoonTrailConfig
 
     public static function versioningEnabled(): bool
     {
-        return (bool) config('moontrail.tracking.versions.enabled', true);
+        return (bool) config('moontrail.versioning.enabled', true);
     }
 
     public static function versionLimit(): int
     {
-        $raw = config('moontrail.tracking.versions.limit');
+        $raw = config('moontrail.versioning.max_versions');
 
         return is_numeric($raw) ? (int) $raw : 50;
     }
 
     public static function versionOnLimit(): string
     {
-        $raw = config('moontrail.tracking.versions.on_limit');
+        $raw = config('moontrail.versioning.overflow_strategy');
 
         return is_string($raw) && $raw !== '' ? $raw : 'delete_oldest';
     }
@@ -58,7 +65,7 @@ final class MoonTrailConfig
     public static function autoTrackModels(): array
     {
         /** @var array<int, class-string>|mixed $models */
-        $models = config('moontrail.tracking.auto.models', []);
+        $models = config('moontrail.auto_track_models', []);
 
         $values = is_array($models) ? array_values($models) : [];
 
@@ -68,14 +75,12 @@ final class MoonTrailConfig
 
     public static function autoTrackWriteActivity(): bool
     {
-        return (bool) config('moontrail.tracking.auto.write_activity', true);
+        return (bool) config('moontrail.auto_track.log_to_activity', true);
     }
 
     public static function autoTrackOnError(): string
     {
-        $raw = config('moontrail.tracking.auto.on_error');
-
-        return is_string($raw) && $raw !== '' ? $raw : 'report';
+        return (bool) config('moontrail.silent_failures', false) ? 'ignore' : 'report';
     }
 
     // -------------------------------------------------------------------------
@@ -88,7 +93,7 @@ final class MoonTrailConfig
     public static function sensitiveHide(): array
     {
         /** @var array<int, string>|mixed $raw */
-        $raw = config('moontrail.tracking.sensitive.hide', []);
+        $raw = config('moontrail.ui.hidden_fields', []);
 
         $values = is_array($raw) ? array_values($raw) : [];
 
@@ -102,7 +107,7 @@ final class MoonTrailConfig
     public static function sensitiveMask(): array
     {
         /** @var array<int, string>|mixed $raw */
-        $raw = config('moontrail.tracking.sensitive.mask', []);
+        $raw = config('moontrail.ui.masked_fields', []);
 
         $values = is_array($raw) ? array_values($raw) : [];
 
@@ -119,10 +124,12 @@ final class MoonTrailConfig
      */
     public static function rollbackValidation(): string
     {
-        $raw = config('moontrail.rollback.validation', 'if_rules_provided');
+        if (! (bool) config('moontrail.rollback.validate', true)) {
+            return 'none';
+        }
 
-        if (is_string($raw) && in_array($raw, ['none', 'if_rules_provided', 'required'], true)) {
-            return $raw;
+        if ((bool) config('moontrail.rollback.require_rules', false)) {
+            return 'required';
         }
 
         return 'if_rules_provided';
@@ -134,7 +141,7 @@ final class MoonTrailConfig
 
     public static function filterSource(): string
     {
-        $raw = config('moontrail.filters.source', 'database_distinct');
+        $raw = config('moontrail.filter_options.strategy', 'database_distinct');
 
         return is_string($raw) && $raw !== '' ? $raw : 'database_distinct';
     }
@@ -145,7 +152,7 @@ final class MoonTrailConfig
     public static function filterStatic(): array
     {
         /** @var array<string, list<string>>|mixed $raw */
-        $raw = config('moontrail.filters.static', []);
+        $raw = config('moontrail.filter_options.static', []);
 
         /** @var array<string, list<string>> $value */
         $value = is_array($raw) ? $raw : [];
@@ -159,7 +166,7 @@ final class MoonTrailConfig
     public static function filterStaticValues(string $key): array
     {
         /** @var array<int, string>|mixed $raw */
-        $raw = config("moontrail.filters.static.{$key}", []);
+        $raw = config("moontrail.filter_options.static.{$key}", []);
 
         $values = is_array($raw) ? array_values($raw) : [];
 
@@ -169,26 +176,38 @@ final class MoonTrailConfig
 
     public static function filterCacheEnabled(): bool
     {
-        return (bool) config('moontrail.filters.cache.enabled', false);
+        return (bool) config('moontrail.filter_options.cache.enabled', false);
     }
 
     public static function filterCacheTtl(): int
     {
-        $raw = config('moontrail.filters.cache.ttl', 60);
+        $raw = config('moontrail.filter_options.cache.ttl', 60);
 
         return is_numeric($raw) ? max(1, (int) $raw) : 60;
     }
 
     public static function filterWarnOnExpensiveQueries(): bool
     {
-        return (bool) config('moontrail.filters.performance.warn_on_expensive_queries', true);
+        $raw = config('moontrail.filter_options.warn_on_expensive_distinct_values');
+
+        if ($raw !== null) {
+            return (bool) $raw;
+        }
+
+        return (bool) config('moontrail.ui.warn_on_expensive_distinct_values', true);
     }
 
     public static function filterWarnThreshold(): int
     {
-        $raw = config('moontrail.filters.performance.warn_threshold', 50000);
+        $raw = config('moontrail.filter_options.distinct_values_warn_threshold');
 
-        return is_numeric($raw) ? (int) $raw : 50000;
+        if (is_numeric($raw)) {
+            return (int) $raw;
+        }
+
+        $fallback = config('moontrail.ui.distinct_values_warn_threshold', 50000);
+
+        return is_numeric($fallback) ? (int) $fallback : 50000;
     }
 
     // -------------------------------------------------------------------------
@@ -232,12 +251,12 @@ final class MoonTrailConfig
 
     public static function menuShowAll(): bool
     {
-        return (bool) config('moontrail.menu.show_all', true);
+        return (bool) config('moontrail.menu.show_all_item', true);
     }
 
     public static function menuGroupModels(): bool
     {
-        return (bool) config('moontrail.menu.group_models', true);
+        return (bool) config('moontrail.menu.show_children', true);
     }
 
     /**
@@ -246,7 +265,7 @@ final class MoonTrailConfig
     public static function menuModels(): array
     {
         /** @var array<int, class-string>|mixed $raw */
-        $raw = config('moontrail.menu.models', []);
+        $raw = config('moontrail.tracked_models', []);
 
         $values = is_array($raw) ? array_values($raw) : [];
 
@@ -260,7 +279,7 @@ final class MoonTrailConfig
     public static function menuExclude(): array
     {
         /** @var array<int, class-string>|mixed $raw */
-        $raw = config('moontrail.menu.exclude', []);
+        $raw = config('moontrail.menu.exclude_models', []);
 
         $values = is_array($raw) ? array_values($raw) : [];
 
@@ -288,7 +307,7 @@ final class MoonTrailConfig
 
     public static function resourceRegister(): bool
     {
-        return (bool) config('moontrail.resource.register', true);
+        return (bool) config('moontrail.resource.in_menu', true);
     }
 
     public static function resourceMenuIcon(): string
@@ -309,7 +328,7 @@ final class MoonTrailConfig
 
     public static function pruningDays(): int
     {
-        $raw = config('moontrail.pruning.days', 90);
+        $raw = config('moontrail.pruning.retention_days', 90);
 
         return is_numeric($raw) ? max(1, (int) $raw) : 90;
     }
@@ -320,7 +339,7 @@ final class MoonTrailConfig
 
     public static function installerDefaultSafeMode(): bool
     {
-        return (bool) config('moontrail.installer.default_safe_mode', true);
+        return (bool) config('moontrail.installer.safe_mode_default', true);
     }
 
     /**
@@ -329,7 +348,7 @@ final class MoonTrailConfig
     public static function installerSuggestedModels(): array
     {
         /** @var array<int, string>|mixed $raw */
-        $raw = config('moontrail.installer.suggested_models', []);
+        $raw = config('moontrail.installer.default_models', []);
 
         $values = is_array($raw) ? array_values($raw) : [];
 

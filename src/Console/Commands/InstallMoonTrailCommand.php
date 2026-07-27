@@ -253,7 +253,7 @@ final class InstallMoonTrailCommand extends Command
         }
 
         if ($this->configUpdater->updateTrackedModels($configPath, $this->selectedModels)) {
-            $this->components->info('Updated tracking.auto.models and menu.models in config.');
+            $this->components->info('Updated auto_track_models and tracked_models in config.');
 
             return;
         }

@@ -7,9 +7,9 @@ use MoonShine\MoonTrail\Tests\Fixtures\TestPost;
 use MoonShine\MoonTrail\Versioning\VersionManager;
 
 it('overflow prevent throws before insert and keeps versions count unchanged', function (): void {
-    config()->set('moontrail.tracking.versions.enabled', false);
-    config()->set('moontrail.tracking.versions.limit', 1);
-    config()->set('moontrail.tracking.versions.on_limit', 'prevent');
+    config()->set('moontrail.versioning.enabled', false);
+    config()->set('moontrail.versioning.max_versions', 1);
+    config()->set('moontrail.versioning.overflow_strategy', 'prevent');
 
     $post = TestPost::query()->create(['name' => 'Original']);
     $manager = app(VersionManager::class);

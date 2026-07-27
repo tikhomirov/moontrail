@@ -7,8 +7,8 @@ use MoonShine\MoonTrail\Tests\Fixtures\TestPost;
 use MoonShine\MoonTrail\Versioning\VersionManager;
 
 beforeEach(function (): void {
-    config()->set('moontrail.tracking.versions.enabled', false);
-    config()->set('moontrail.tracking.sensitive.hide', []);
+    config()->set('moontrail.versioning.enabled', false);
+    config()->set('moontrail.ui.hidden_fields', []);
 });
 
 it('creates first version with number 1', function (): void {
@@ -83,8 +83,8 @@ it('diffWithCurrent compares version snapshot to current model', function (): vo
 });
 
 it('enforces max_versions by deleting oldest', function (): void {
-    config()->set('moontrail.tracking.versions.limit', 3);
-    config()->set('moontrail.tracking.versions.on_limit', 'delete_oldest');
+    config()->set('moontrail.versioning.max_versions', 3);
+    config()->set('moontrail.versioning.overflow_strategy', 'delete_oldest');
 
     $post = TestPost::query()->create(['name' => 'v0']);
     $manager = app(VersionManager::class);
@@ -100,8 +100,8 @@ it('enforces max_versions by deleting oldest', function (): void {
 });
 
 it('throws when strategy is prevent and limit is reached', function (): void {
-    config()->set('moontrail.tracking.versions.limit', 1);
-    config()->set('moontrail.tracking.versions.on_limit', 'prevent');
+    config()->set('moontrail.versioning.max_versions', 1);
+    config()->set('moontrail.versioning.overflow_strategy', 'prevent');
 
     $post = TestPost::query()->create(['name' => 'v1']);
     $manager = app(VersionManager::class);

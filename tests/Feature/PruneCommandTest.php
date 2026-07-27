@@ -9,7 +9,7 @@ use MoonShine\MoonTrail\Versioning\VersionManager;
 use Spatie\Activitylog\Models\Activity;
 
 beforeEach(function (): void {
-    config()->set('moontrail.tracking.versions.enabled', false);
+    config()->set('moontrail.versioning.enabled', false);
 });
 
 it('prunes model versions older than given days', function (): void {

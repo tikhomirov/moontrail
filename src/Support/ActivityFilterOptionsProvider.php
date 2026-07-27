@@ -53,7 +53,7 @@ final readonly class ActivityFilterOptionsProvider implements ActivityFilterOpti
         }
 
         if ($strategy !== 'database_distinct') {
-            throw new RuntimeException('Unsupported moontrail.filters.source: ' . $strategy);
+            throw new RuntimeException('Unsupported moontrail.filter_options.strategy: ' . $strategy);
         }
 
         if ($column === '') {

@@ -11,11 +11,11 @@ use MoonShine\MoonTrail\Tests\Fixtures\TestPost;
 use Spatie\Activitylog\Models\Activity;
 
 beforeEach(function (): void {
-    config()->set('moontrail.tracking.versions.enabled', false);
+    config()->set('moontrail.versioning.enabled', false);
 });
 
 it('resolves spatie logger when driver is spatie', function (): void {
-    config()->set('moontrail.activity.driver', 'spatie');
+    config()->set('moontrail.activity_logger', 'spatie');
     app()->forgetInstance(ActivityLoggerContract::class);
 
     $logger = app(ActivityLoggerContract::class);
@@ -24,7 +24,7 @@ it('resolves spatie logger when driver is spatie', function (): void {
 });
 
 it('resolves database logger when driver is database', function (): void {
-    config()->set('moontrail.activity.driver', 'database');
+    config()->set('moontrail.activity_logger', 'database');
 
     app()->forgetInstance(ActivityLoggerContract::class);
 
@@ -34,7 +34,7 @@ it('resolves database logger when driver is database', function (): void {
 });
 
 it('resolves null logger when driver is none', function (): void {
-    config()->set('moontrail.activity.driver', 'none');
+    config()->set('moontrail.activity_logger', 'none');
 
     app()->forgetInstance(ActivityLoggerContract::class);
 

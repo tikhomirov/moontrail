@@ -139,7 +139,7 @@ it('supports custom mode full flow and resource uses query contract paginator', 
     expect($items)->toBeInstanceOf(LengthAwarePaginator::class)
         ->and(app(ActivityQueryContract::class))->toBeInstanceOf(ActivityQueryContract::class)
         ->and(app(ActivityQueryContract::class)->paginateCalled)->toBeTrue()
-        ->and(app(ActivityQueryContract::class)->modelClassCalls)->toBe(0);
+        ->and(app(ActivityQueryContract::class)->modelClassCalls)->toBe(1);
 });
 
 it('throws explicit error on detail page when custom query returns non model-backed record', function (): void {

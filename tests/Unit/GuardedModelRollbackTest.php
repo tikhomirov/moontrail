@@ -7,7 +7,7 @@ use MoonShine\MoonTrail\Versioning\RollbackService;
 use MoonShine\MoonTrail\Versioning\VersionManager;
 
 beforeEach(function (): void {
-    config()->set('moontrail.tracking.versions.enabled', false);
+    config()->set('moontrail.versioning.enabled', false);
 });
 
 it('throws no changes exception for guarded model with empty rollback payload', function (): void {

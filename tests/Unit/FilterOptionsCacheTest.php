@@ -10,9 +10,9 @@ use MoonShine\MoonTrail\Models\MoonTrailActivity;
 use MoonShine\MoonTrail\Support\ActivityLogFilterOptions;
 
 it('does not cache distinct filter values when cache is disabled', function (): void {
-    config()->set('moontrail.filters.source', 'database_distinct');
-    config()->set('moontrail.filters.cache.enabled', false);
-    config()->set('moontrail.filters.cache.ttl', 60);
+    config()->set('moontrail.filter_options.strategy', 'database_distinct');
+    config()->set('moontrail.filter_options.cache.enabled', false);
+    config()->set('moontrail.filter_options.cache.ttl', 60);
     Cache::flush();
 
     $query = new class implements ActivityQueryContract
@@ -58,9 +58,9 @@ it('does not cache distinct filter values when cache is disabled', function (): 
 });
 
 it('caches distinct filter values when cache is enabled', function (): void {
-    config()->set('moontrail.filters.source', 'database_distinct');
-    config()->set('moontrail.filters.cache.enabled', true);
-    config()->set('moontrail.filters.cache.ttl', 120);
+    config()->set('moontrail.filter_options.strategy', 'database_distinct');
+    config()->set('moontrail.filter_options.cache.enabled', true);
+    config()->set('moontrail.filter_options.cache.ttl', 120);
     Cache::flush();
 
     $query = new class implements ActivityQueryContract

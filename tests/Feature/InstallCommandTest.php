@@ -47,8 +47,8 @@ final class UserResource
 PHP
     );
 
-    config()->set('moontrail.installer.suggested_models', ['App\\Models\\User']);
-    config()->set('moontrail.installer.default_safe_mode', true);
+    config()->set('moontrail.installer.default_models', ['App\\Models\\User']);
+    config()->set('moontrail.installer.safe_mode_default', true);
 
     $this->artisan('moontrail:install', ['--no-interaction' => true])
         ->expectsOutputToContain('Manual steps for App\\MoonShine\\Resources\\UserResource:')

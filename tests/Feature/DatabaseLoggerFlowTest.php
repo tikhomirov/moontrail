@@ -9,7 +9,7 @@ use MoonShine\MoonTrail\Resources\MoonTrailResource;
 use MoonShine\MoonTrail\Tests\Fixtures\TestPost;
 
 beforeEach(function (): void {
-    config()->set('moontrail.activity.driver', 'database');
+    config()->set('moontrail.activity_logger', 'database');
     app()->forgetInstance(ActivityLoggerContract::class);
     app()->forgetInstance(ActivityQueryContract::class);
 });

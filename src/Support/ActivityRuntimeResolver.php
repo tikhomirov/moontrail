@@ -33,7 +33,7 @@ final class ActivityRuntimeResolver
         return match ($configuredDriver) {
             'auto' => $this->isSpatieInstalled($spatieInstalled) ? 'spatie' : 'database',
             'spatie', 'database', 'none', 'custom' => $configuredDriver,
-            default => throw new RuntimeException('Unsupported moontrail.activity.driver: ' . $configuredDriver),
+            default => throw new RuntimeException('Unsupported moontrail.activity_logger: ' . $configuredDriver),
         };
     }
 

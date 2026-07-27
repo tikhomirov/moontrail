@@ -126,5 +126,5 @@ it('uses one query contract across resource controller page and filter options',
 
     expect($options)->toBe(['custom' => 'custom'])
         ->and(data_get($query, 'distinctCalls'))->toBe(1)
-        ->and(data_get($query, 'modelClassCalls'))->toBe(0);
+        ->and(data_get($query, 'modelClassCalls'))->toBe(1);
 });

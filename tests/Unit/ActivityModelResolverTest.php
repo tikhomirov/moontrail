@@ -15,7 +15,7 @@ it('resolves model class via activity runtime metadata', function (): void {
 });
 
 it('resolves MoonTrailActivity as default activity model for database driver', function (): void {
-    config()->set('moontrail.activity.driver', 'database');
+    config()->set('moontrail.activity_logger', 'database');
 
     $runtime = app(ActivityRuntimeResolver::class)->resolve();
 
@@ -23,7 +23,7 @@ it('resolves MoonTrailActivity as default activity model for database driver', f
 });
 
 it('resolves MoonTrailActivity as default activity model for custom driver', function (): void {
-    config()->set('moontrail.activity.driver', 'custom');
+    config()->set('moontrail.activity_logger', 'custom');
 
     $runtime = app(ActivityRuntimeResolver::class)->resolve();
 

@@ -29,9 +29,9 @@ beforeEach(function (): void {
         $table->timestamp('created_at')->nullable();
     });
 
-    config()->set('moontrail.activity.driver', 'custom');
+    config()->set('moontrail.activity_logger', 'custom');
     config()->set('moontrail.activity_model', TestCustomActivity::class);
-    config()->set('moontrail.pruning.days', 5);
+    config()->set('moontrail.pruning.retention_days', 5);
 
     $query = new class implements ActivityQueryUiContract, ModelBackedActivityQueryContract
     {

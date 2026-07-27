@@ -19,7 +19,7 @@ $resetDriverBindings = static function (): void {
 };
 
 it('supports e2e flow in spatie mode', function () use ($resetDriverBindings): void {
-    config()->set('moontrail.activity.driver', 'spatie');
+    config()->set('moontrail.activity_logger', 'spatie');
     $resetDriverBindings();
 
     $post = TestPost::query()->create(['name' => 'Before', 'body' => 'Body']);
@@ -45,7 +45,7 @@ it('supports e2e flow in spatie mode', function () use ($resetDriverBindings): v
 });
 
 it('supports e2e flow in database mode', function () use ($resetDriverBindings): void {
-    config()->set('moontrail.activity.driver', 'database');
+    config()->set('moontrail.activity_logger', 'database');
     $resetDriverBindings();
 
     $post = TestPost::query()->create(['name' => 'Before', 'body' => 'Body']);
@@ -85,7 +85,7 @@ it('supports e2e flow in custom mode', function () use ($resetDriverBindings): v
         $table->timestamp('created_at')->nullable();
     });
 
-    config()->set('moontrail.activity.driver', 'custom');
+    config()->set('moontrail.activity_logger', 'custom');
     config()->set('moontrail.activity_model', TestCustomActivity::class);
     $resetDriverBindings();
 
@@ -183,7 +183,7 @@ it('supports e2e flow in custom mode', function () use ($resetDriverBindings): v
 });
 
 it('does not crash in none mode and returns empty query results', function () use ($resetDriverBindings): void {
-    config()->set('moontrail.activity.driver', 'none');
+    config()->set('moontrail.activity_logger', 'none');
     $resetDriverBindings();
 
     $post = TestPost::query()->create(['name' => 'Before', 'body' => 'Body']);
