@@ -1,0 +1,27 @@
+# Distribution exclusions
+AGENTS.md                   export-ignore
+CLAUDE.md                   export-ignore
+ABOUT.md                    export-ignore
+REFINEMENT_REPORT.md        export-ignore
+DEVELOPMENT_CHECKLIST.md    export-ignore
+.phpactor.json              export-ignore
+config.json                 export-ignore
+resources/assets/moontrail-logo-v2.svg export-ignore
+/.phpunit.cache/            export-ignore
+phpunit.xml.dist            export-ignore
+phpstan.neon.dist           export-ignore
+rector.php                  export-ignore
+pint.json                   export-ignore
+/.idea/                     export-ignore
+/.vscode/                   export-ignore
+/var/                       export-ignore
+/docs/                      export-ignore
+/.opencode/                 export-ignore
+/.playwright-mcp/           export-ignore
+/.claude/                   export-ignore
+opencode.json               export-ignore
+tui.json                    export-ignore
+tui.jsonc                   export-ignore
+/.phpunit.cache/            export-ignore
+/tests/                     export-ignore
+*.png                       export-ignore

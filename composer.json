@@ -4,6 +4,23 @@
     "homepage": "https://github.com/tikhomirov/moontrail",
     "type": "library",
     "license": "MIT",
+    "authors": [
+        {
+            "name": "Aleksey Tikhomirov",
+            "homepage": "https://github.com/tikhomirov"
+        }
+    ],
+    "keywords": [
+        "moonshine",
+        "laravel",
+        "activity-log",
+        "audit",
+        "versioning",
+        "rollback",
+        "admin-panel"
+    ],
+    "minimum-stability": "dev",
+    "prefer-stable": true,
     "support": {
         "source": "https://github.com/tikhomirov/moontrail",
         "issues": "https://github.com/tikhomirov/moontrail/issues"

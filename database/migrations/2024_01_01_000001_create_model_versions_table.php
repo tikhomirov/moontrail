@@ -13,39 +13,38 @@ return new class extends Migration
         Schema::create('model_versions', function (Blueprint $table) {
             $table->id();
 
-            // Полиморфная связь с моделью
+            // Polymorphic relation to the model
             $table->morphs('versionable');
 
-            // Номер версии (автоинкремент в рамках конкретной записи)
+            // Auto-incrementing version number scoped per record
             $table->unsignedInteger('version');
 
-            // Полный снапшот всех атрибутов модели на момент версии
+            // Full attribute snapshot at this version
             $table->json('snapshot');
 
-            // Связь с записью в activity_log (nullable для начальных версий)
+            // Link to activity_log or moontrail_activity_log (nullable for initial versions)
             $table->foreignId('activity_id')
                 ->nullable()
-                ->constrained('activity_log')
                 ->nullOnDelete();
 
-            // Кто создал версию
+            // Who created the version
             $table->nullableMorphs('author');
 
-            // Событие (created, updated, rolled_back)
+            // Event (created, updated, rolled_back)
             $table->string('event', 50);
 
-            // Метка: является ли это rollback-версией
+            // Whether this version was created by a rollback
             $table->boolean('is_rollback')->default(false);
 
-            // Номер версии, к которой откатились (если is_rollback = true)
+            // Version number that was rolled back to (when is_rollback = true)
             $table->unsignedInteger('rollback_to_version')->nullable();
 
             $table->timestamps();
 
-            // Уникальность версии в рамках конкретной записи
+            // Unique version number per model record
             $table->unique(['versionable_type', 'versionable_id', 'version']);
 
-            // Индекс для быстрого поиска по модели
+            // Index for fast model-based lookups
             $table->index(['versionable_type', 'versionable_id', 'created_at']);
         });
     }
