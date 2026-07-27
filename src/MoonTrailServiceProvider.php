@@ -238,9 +238,17 @@ final class MoonTrailServiceProvider extends ServiceProvider
         /** @var class-string<ResourceContract> $resourceClass */
         $resourceClass = MoonTrailConfig::resourceClass();
 
-        $this->app->afterResolving(CoreContract::class, static function (CoreContract $core) use ($resourceClass): void {
+        $register = static function (CoreContract $core) use ($resourceClass): void {
             $core->resources([$resourceClass]);
-        });
+        };
+
+        if ($this->app->resolved(CoreContract::class)) {
+            $register($this->app->get(CoreContract::class));
+
+            return;
+        }
+
+        $this->app->afterResolving(CoreContract::class, $register);
     }
 
     private function registerAutoTracking(): void
