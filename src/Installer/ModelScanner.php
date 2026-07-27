@@ -53,7 +53,7 @@ final class ModelScanner
                 continue;
             }
 
-            $models[] = trim($namespaceMatch[1]) . '\\' . trim($classMatch[1]);
+            $models[] = mb_trim($namespaceMatch[1]) . '\\' . mb_trim($classMatch[1]);
         }
 
         $models = array_values(array_unique($models));

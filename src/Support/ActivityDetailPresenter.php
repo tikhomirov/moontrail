@@ -29,9 +29,7 @@ final readonly class ActivityDetailPresenter
     /** @return array<string, mixed> */
     public function generalData(Model $activity): array
     {
-        $dateFormat = is_string(config('moontrail.ui.date_format'))
-            ? config('moontrail.ui.date_format')
-            : 'd.m.Y H:i:s';
+        $dateFormat = MoonTrailConfig::uiDateFormat();
 
         $record = $this->recordFactory->fromModel($activity);
         $rawKey = $record->getId();
@@ -89,9 +87,7 @@ final readonly class ActivityDetailPresenter
             return [];
         }
 
-        $perPage = is_numeric(config('moontrail.ui.per_page'))
-            ? (int) config('moontrail.ui.per_page')
-            : 20;
+        $perPage = MoonTrailConfig::uiPerPage();
 
         $versions = ModelVersion::query()
             ->where('versionable_type', $record->getSubjectType())

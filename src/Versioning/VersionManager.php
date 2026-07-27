@@ -13,6 +13,7 @@ use MoonShine\MoonTrail\Events\VersionCreated;
 use MoonShine\MoonTrail\Exceptions\VersionLimitExceededException;
 use MoonShine\MoonTrail\Models\ModelVersion;
 use MoonShine\MoonTrail\Support\ActivityModelResolver;
+use MoonShine\MoonTrail\Support\MoonTrailConfig;
 use MoonShine\MoonTrail\Support\MoonTrailLogger;
 
 final readonly class VersionManager implements VersionManagerContract
@@ -71,7 +72,7 @@ final readonly class VersionManager implements VersionManagerContract
     public function diff(ModelVersion $from, ModelVersion $to): array
     {
         /** @var array<int, string> $hiddenFields */
-        $hiddenFields = config('moontrail.ui.hidden_fields', []);
+        $hiddenFields = MoonTrailConfig::sensitiveHide();
 
         return DiffComputer::compute(
             before: $from->snapshot,
@@ -86,7 +87,7 @@ final readonly class VersionManager implements VersionManagerContract
     public function diffWithCurrent(ModelVersion $version, Model $model): array
     {
         /** @var array<int, string> $hiddenFields */
-        $hiddenFields = config('moontrail.ui.hidden_fields', []);
+        $hiddenFields = MoonTrailConfig::sensitiveHide();
 
         return DiffComputer::compute(
             before: $version->snapshot,
@@ -97,8 +98,7 @@ final readonly class VersionManager implements VersionManagerContract
 
     private function enforceLimitBeforeInsert(Model $model): void
     {
-        $rawMax = config('moontrail.versioning.max_versions');
-        $maxVersions = is_numeric($rawMax) ? (int) $rawMax : 0;
+        $maxVersions = MoonTrailConfig::versionLimit();
 
         if ($maxVersions <= 0) {
             return;
@@ -113,8 +113,7 @@ final readonly class VersionManager implements VersionManagerContract
             return;
         }
 
-        $rawStrategy = config('moontrail.versioning.overflow_strategy');
-        $overflowStrategy = is_string($rawStrategy) ? $rawStrategy : 'delete_oldest';
+        $overflowStrategy = MoonTrailConfig::versionOnLimit();
 
         $rawModelKey = $model->getKey();
         $modelKeyStr = is_int($rawModelKey) || is_string($rawModelKey) ? (string) $rawModelKey : '0';

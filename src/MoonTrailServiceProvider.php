@@ -29,12 +29,12 @@ use MoonShine\MoonTrail\Logging\DatabaseActivityLogger;
 use MoonShine\MoonTrail\Logging\NullActivityLogger;
 use MoonShine\MoonTrail\Logging\SpatieActivityLogger;
 use MoonShine\MoonTrail\Models\ModelVersion;
-use MoonShine\MoonTrail\Resources\MoonTrailResource;
 use MoonShine\MoonTrail\Support\ActivityFilterOptionsProvider;
 use MoonShine\MoonTrail\Support\ActivityModelResolver;
 use MoonShine\MoonTrail\Support\ActivityRecordFactory;
 use MoonShine\MoonTrail\Support\ActivityRuntime;
 use MoonShine\MoonTrail\Support\ActivityRuntimeResolver;
+use MoonShine\MoonTrail\Support\MoonTrailConfig;
 use MoonShine\MoonTrail\Support\MoonTrailLogger;
 use MoonShine\MoonTrail\Versioning\RollbackAuthorizationResolver;
 use MoonShine\MoonTrail\Versioning\RollbackService;
@@ -120,7 +120,7 @@ final class MoonTrailServiceProvider extends ServiceProvider
                 'spatie'   => new SpatieActivityLogger,
                 'database' => new DatabaseActivityLogger,
                 'none'     => new NullActivityLogger,
-                default    => throw new RuntimeException('Unsupported moontrail.activity_logger driver: ' . $runtime->resolvedDriver),
+                default    => throw new RuntimeException('Unsupported moontrail.activity.driver: ' . $runtime->resolvedDriver),
             };
         });
     }
@@ -141,7 +141,7 @@ final class MoonTrailServiceProvider extends ServiceProvider
                 'spatie'   => new SpatieActivityQuery,
                 'database' => new DatabaseActivityQuery,
                 'none'     => new NullActivityQuery,
-                default    => throw new RuntimeException('Unsupported moontrail.activity_logger driver: ' . $runtime->resolvedDriver),
+                default    => throw new RuntimeException('Unsupported moontrail.activity.driver: ' . $runtime->resolvedDriver),
             };
         });
     }
@@ -231,12 +231,12 @@ final class MoonTrailServiceProvider extends ServiceProvider
 
     private function registerResource(): void
     {
-        if (! config('moontrail.resource.in_menu', true)) {
+        if (! MoonTrailConfig::resourceRegister()) {
             return;
         }
 
         /** @var class-string<ResourceContract> $resourceClass */
-        $resourceClass = config('moontrail.resource.class', MoonTrailResource::class);
+        $resourceClass = MoonTrailConfig::resourceClass();
 
         $this->app->afterResolving(CoreContract::class, static function (CoreContract $core) use ($resourceClass): void {
             $core->resources([$resourceClass]);
@@ -247,8 +247,8 @@ final class MoonTrailServiceProvider extends ServiceProvider
     {
         /** @var array<int, class-string> $models */
         $models = array_unique(array_merge(
-            (array) config('moontrail.auto_track_models', []),
-            (array) config('moontrail.tracked_models', []),
+            MoonTrailConfig::autoTrackModels(),
+            MoonTrailConfig::menuModels(),
         ));
 
         if ($models === []) {
@@ -294,7 +294,7 @@ final class MoonTrailServiceProvider extends ServiceProvider
             return;
         }
 
-        if (! config('moontrail.ui.warn_if_tailwind_missing', true)) {
+        if (! MoonTrailConfig::uiWarnIfTailwindMissing()) {
             return;
         }
 

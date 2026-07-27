@@ -32,23 +32,21 @@ final class MoonTrailMenuItem
      */
     public static function make(?string $label = null): MenuGroup|MenuItem|null
     {
-        if (! config('moontrail.menu.enabled', true)) {
+        if (! MoonTrailConfig::menuEnabled()) {
             return null;
         }
 
         /** @var class-string<MoonTrailResource> $resourceClass */
-        $resourceClass = config('moontrail.resource.class', MoonTrailResource::class);
+        $resourceClass = MoonTrailConfig::resourceClass();
 
-        $icon = is_string(config('moontrail.resource.menu_icon'))
-            ? config('moontrail.resource.menu_icon')
-            : 'clock';
+        $icon = MoonTrailConfig::resourceMenuIcon();
 
         $groupLabel = $label
-            ?? (is_string(config('moontrail.menu.label')) ? config('moontrail.menu.label') : null)
+            ?? MoonTrailConfig::menuLabel()
             ?? (string) __('moontrail::ui.activity_log');
 
-        $showChildren = (bool) config('moontrail.menu.show_children', true);
-        $showAllItem = (bool) config('moontrail.menu.show_all_item', true);
+        $showChildren = MoonTrailConfig::menuGroupModels();
+        $showAllItem = MoonTrailConfig::menuShowAll();
 
         if (! $showChildren) {
             return MenuItem::make($resourceClass, $groupLabel)->icon($icon);
@@ -95,15 +93,17 @@ final class MoonTrailMenuItem
     public static function resolveTrackedModels(): array
     {
         /** @var array<int, class-string> $exclude */
-        $exclude = (array) config('moontrail.menu.exclude_models', []);
+        $exclude = MoonTrailConfig::menuExclude();
 
+        /** @phpstan-ignore arrayFilter.same */
         $models = array_unique(array_filter(array_merge(
-            (array) config('moontrail.auto_track_models', []),
-            (array) config('moontrail.tracked_models', []),
+            MoonTrailConfig::autoTrackModels(),
+            MoonTrailConfig::menuModels(),
         )));
 
         $models = array_filter(
             $models,
+            /** @phpstan-ignore function.alreadyNarrowedType */
             static fn (mixed $model): bool => is_string($model) && class_exists($model) && ! in_array($model, $exclude, true),
         );
 

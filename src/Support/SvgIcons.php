@@ -198,6 +198,6 @@ final class SvgIcons
 
     private static function cls(string $size, string $extraClass): string
     {
-        return trim($size . ($extraClass !== '' ? ' ' . $extraClass : ''));
+        return mb_trim($size . ($extraClass !== '' ? ' ' . $extraClass : ''));
     }
 }

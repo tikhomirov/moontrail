@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Schema;
 use MoonShine\MoonTrail\Models\ModelVersion;
 use MoonShine\MoonTrail\Support\ActivityModelResolver;
+use MoonShine\MoonTrail\Support\MoonTrailConfig;
 use MoonShine\MoonTrail\Support\MoonTrailLogger;
 use RuntimeException;
 
@@ -115,8 +116,8 @@ final class PruneMoonTrailCommand extends Command
     private function resolveDays(): int
     {
         $rawDays = $this->option('days');
-        $configuredDays = config('moontrail.pruning.retention_days', 30);
-        $value = is_numeric($rawDays) ? (int) $rawDays : (is_numeric($configuredDays) ? (int) $configuredDays : 30);
+        $configuredDays = MoonTrailConfig::pruningDays();
+        $value = is_numeric($rawDays) ? (int) $rawDays : $configuredDays;
 
         if ($value <= 0) {
             throw new RuntimeException('moontrail:prune option --days must be a positive integer (> 0).');

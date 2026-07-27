@@ -10,6 +10,7 @@ use Illuminate\Pagination\LengthAwarePaginator as Paginator;
 use MoonShine\MoonTrail\Contracts\ActivityQueryContract;
 use MoonShine\MoonTrail\Contracts\ActivityRecordContract;
 use MoonShine\MoonTrail\Models\MoonTrailActivity;
+use MoonShine\MoonTrail\Support\MoonTrailConfig;
 
 /**
  * @implements ActivityQueryContract<Model>
@@ -22,7 +23,7 @@ final class NullActivityQuery implements ActivityQueryContract
      */
     public function paginate(array $filters): LengthAwarePaginator
     {
-        $perPage = is_numeric(config('moontrail.ui.per_page')) ? max(1, (int) config('moontrail.ui.per_page')) : 20;
+        $perPage = MoonTrailConfig::uiPerPage();
 
         return new Paginator(items: [], total: 0, perPage: $perPage, currentPage: 1);
     }

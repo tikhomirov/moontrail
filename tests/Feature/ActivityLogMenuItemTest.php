@@ -22,8 +22,8 @@ it('returns null when menu.enabled is false', function (): void {
 // ---------------------------------------------------------------------------
 
 it('accepts a custom label via argument', function (): void {
-    config()->set('moontrail.tracked_models', []);
-    config()->set('moontrail.auto_track_models', []);
+    config()->set('moontrail.menu.models', []);
+    config()->set('moontrail.tracking.auto.models', []);
     config()->set('moontrail.menu.enabled', true);
 
     $item = MoonTrailMenuItem::make('Custom Label');
@@ -32,11 +32,11 @@ it('accepts a custom label via argument', function (): void {
 });
 
 it('uses menu.label config when no argument given', function (): void {
-    config()->set('moontrail.tracked_models', []);
-    config()->set('moontrail.auto_track_models', []);
+    config()->set('moontrail.menu.models', []);
+    config()->set('moontrail.tracking.auto.models', []);
     config()->set('moontrail.menu.enabled', true);
     config()->set('moontrail.menu.label', 'Config Label');
-    config()->set('moontrail.menu.show_all_item', true);
+    config()->set('moontrail.menu.show_all', true);
 
     $item = MoonTrailMenuItem::make();
 
@@ -48,10 +48,10 @@ it('uses menu.label config when no argument given', function (): void {
 // ---------------------------------------------------------------------------
 
 it('returns a single MenuItem when show_children is false (ignores models)', function (): void {
-    config()->set('moontrail.tracked_models', [TestPost::class]);
-    config()->set('moontrail.auto_track_models', []);
+    config()->set('moontrail.menu.models', [TestPost::class]);
+    config()->set('moontrail.tracking.auto.models', []);
     config()->set('moontrail.menu.enabled', true);
-    config()->set('moontrail.menu.show_children', false);
+    config()->set('moontrail.menu.group_models', false);
 
     $result = MoonTrailMenuItem::make();
 
@@ -63,11 +63,11 @@ it('returns a single MenuItem when show_children is false (ignores models)', fun
 // ---------------------------------------------------------------------------
 
 it('returns a single MenuItem when no tracked models and show_all_item is true', function (): void {
-    config()->set('moontrail.tracked_models', []);
-    config()->set('moontrail.auto_track_models', []);
+    config()->set('moontrail.menu.models', []);
+    config()->set('moontrail.tracking.auto.models', []);
     config()->set('moontrail.menu.enabled', true);
-    config()->set('moontrail.menu.show_children', true);
-    config()->set('moontrail.menu.show_all_item', true);
+    config()->set('moontrail.menu.group_models', true);
+    config()->set('moontrail.menu.show_all', true);
 
     $result = MoonTrailMenuItem::make();
 
@@ -75,11 +75,11 @@ it('returns a single MenuItem when no tracked models and show_all_item is true',
 });
 
 it('returns null when no tracked models and show_all_item is false', function (): void {
-    config()->set('moontrail.tracked_models', []);
-    config()->set('moontrail.auto_track_models', []);
+    config()->set('moontrail.menu.models', []);
+    config()->set('moontrail.tracking.auto.models', []);
     config()->set('moontrail.menu.enabled', true);
-    config()->set('moontrail.menu.show_children', true);
-    config()->set('moontrail.menu.show_all_item', false);
+    config()->set('moontrail.menu.group_models', true);
+    config()->set('moontrail.menu.show_all', false);
 
     expect(MoonTrailMenuItem::make())->toBeNull();
 });
@@ -89,10 +89,10 @@ it('returns null when no tracked models and show_all_item is false', function ()
 // ---------------------------------------------------------------------------
 
 it('returns a MenuGroup when tracked models are configured', function (): void {
-    config()->set('moontrail.tracked_models', [TestPost::class]);
-    config()->set('moontrail.auto_track_models', []);
+    config()->set('moontrail.menu.models', [TestPost::class]);
+    config()->set('moontrail.tracking.auto.models', []);
     config()->set('moontrail.menu.enabled', true);
-    config()->set('moontrail.menu.show_children', true);
+    config()->set('moontrail.menu.group_models', true);
 
     $result = MoonTrailMenuItem::make();
 
@@ -100,12 +100,12 @@ it('returns a MenuGroup when tracked models are configured', function (): void {
 });
 
 it('creates sub-items for each tracked model plus All item', function (): void {
-    config()->set('moontrail.tracked_models', [TestPost::class]);
-    config()->set('moontrail.auto_track_models', []);
+    config()->set('moontrail.menu.models', [TestPost::class]);
+    config()->set('moontrail.tracking.auto.models', []);
     config()->set('moontrail.menu.enabled', true);
-    config()->set('moontrail.menu.show_children', true);
-    config()->set('moontrail.menu.show_all_item', true);
-    config()->set('moontrail.menu.exclude_models', []);
+    config()->set('moontrail.menu.group_models', true);
+    config()->set('moontrail.menu.show_all', true);
+    config()->set('moontrail.menu.exclude', []);
 
     /** @var MenuGroup $group */
     $group = MoonTrailMenuItem::make();
@@ -115,12 +115,12 @@ it('creates sub-items for each tracked model plus All item', function (): void {
 });
 
 it('hides All item when show_all_item is false', function (): void {
-    config()->set('moontrail.tracked_models', [TestPost::class]);
-    config()->set('moontrail.auto_track_models', []);
+    config()->set('moontrail.menu.models', [TestPost::class]);
+    config()->set('moontrail.tracking.auto.models', []);
     config()->set('moontrail.menu.enabled', true);
-    config()->set('moontrail.menu.show_children', true);
-    config()->set('moontrail.menu.show_all_item', false);
-    config()->set('moontrail.menu.exclude_models', []);
+    config()->set('moontrail.menu.group_models', true);
+    config()->set('moontrail.menu.show_all', false);
+    config()->set('moontrail.menu.exclude', []);
 
     /** @var MenuGroup $group */
     $group = MoonTrailMenuItem::make();
@@ -128,13 +128,13 @@ it('hides All item when show_all_item is false', function (): void {
     expect($group->getItems())->toHaveCount(1);
 });
 
-it('excludes models listed in menu.exclude_models', function (): void {
-    config()->set('moontrail.tracked_models', [TestPost::class]);
-    config()->set('moontrail.auto_track_models', []);
+it('excludes models listed in menu.exclude', function (): void {
+    config()->set('moontrail.menu.models', [TestPost::class]);
+    config()->set('moontrail.tracking.auto.models', []);
     config()->set('moontrail.menu.enabled', true);
-    config()->set('moontrail.menu.show_children', true);
-    config()->set('moontrail.menu.show_all_item', true);
-    config()->set('moontrail.menu.exclude_models', [TestPost::class]);
+    config()->set('moontrail.menu.group_models', true);
+    config()->set('moontrail.menu.show_all', true);
+    config()->set('moontrail.menu.exclude', [TestPost::class]);
 
     $result = MoonTrailMenuItem::make();
 
@@ -146,9 +146,9 @@ it('excludes models listed in menu.exclude_models', function (): void {
 // ---------------------------------------------------------------------------
 
 it('resolveTrackedModels merges auto_track and tracked, deduplicates, and excludes', function (): void {
-    config()->set('moontrail.tracked_models', [TestPost::class]);
-    config()->set('moontrail.auto_track_models', [TestPost::class]);
-    config()->set('moontrail.menu.exclude_models', []);
+    config()->set('moontrail.menu.models', [TestPost::class]);
+    config()->set('moontrail.tracking.auto.models', [TestPost::class]);
+    config()->set('moontrail.menu.exclude', []);
 
     $models = MoonTrailMenuItem::resolveTrackedModels();
 
@@ -157,9 +157,9 @@ it('resolveTrackedModels merges auto_track and tracked, deduplicates, and exclud
 });
 
 it('resolveTrackedModels skips non-existent classes', function (): void {
-    config()->set('moontrail.tracked_models', ['App\\Models\\NonExistentModel']);
-    config()->set('moontrail.auto_track_models', []);
-    config()->set('moontrail.menu.exclude_models', []);
+    config()->set('moontrail.menu.models', ['App\\Models\\NonExistentModel']);
+    config()->set('moontrail.tracking.auto.models', []);
+    config()->set('moontrail.menu.exclude', []);
 
     $models = MoonTrailMenuItem::resolveTrackedModels();
 

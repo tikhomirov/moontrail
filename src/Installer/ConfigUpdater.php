@@ -33,8 +33,8 @@ final class ConfigUpdater
         $replacement = $this->buildArrayBlock($models);
 
         $updated = preg_replace(
-            pattern: "/'auto_track_models'\\s*=>\\s*\\[[\\s\\S]*?\\],/",
-            replacement: "'auto_track_models' => {$replacement},",
+            pattern: "/'tracking'\s*=>\s*\[\s*'auto'\s*=>\s*\[\s*'models'\s*=>\s*\[[\s\S]*?\]/",
+            replacement: "'tracking' => ['auto' => ['models' => {$replacement}",
             subject: $content,
             limit: 1,
         );
@@ -44,8 +44,8 @@ final class ConfigUpdater
         }
 
         $updated = preg_replace(
-            pattern: "/'tracked_models'\\s*=>\\s*\\[[\\s\\S]*?\\],/",
-            replacement: "'tracked_models' => {$replacement},",
+            pattern: "/'menu'\s*=>\s*\[\s*'models'\s*=>\s*\[[\s\S]*?\]/",
+            replacement: "'menu' => ['models' => {$replacement}",
             subject: $updated,
             limit: 1,
         );
@@ -64,7 +64,7 @@ final class ConfigUpdater
     {
         $block = $this->buildArrayBlock($models);
 
-        return "'auto_track_models' => {$block},\n'tracked_models' => {$block},";
+        return "'tracking.auto.models' => {$block},\n'menu.models' => {$block},";
     }
 
     /**

@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use MoonShine\MoonTrail\Contracts\ActivityLoggerContract;
 use MoonShine\MoonTrail\Contracts\VersionManagerContract;
 use MoonShine\MoonTrail\Enums\ActivityEvent;
+use MoonShine\MoonTrail\Support\MoonTrailConfig;
 use MoonShine\MoonTrail\Support\MoonTrailLogger;
 use Throwable;
 
@@ -15,7 +16,6 @@ use function array_diff_key;
 use function array_flip;
 use function class_basename;
 use function class_uses_recursive;
-use function config;
 use function in_array;
 use function method_exists;
 
@@ -122,12 +122,12 @@ final class MoonTrailObserver
         array $old,
         array $attributes,
     ): ?int {
-        if (! config('moontrail.auto_track.log_to_activity', true)) {
+        if (! MoonTrailConfig::autoTrackWriteActivity()) {
             return null;
         }
 
         /** @var array<int, string> $hiddenFields */
-        $hiddenFields = (array) config('moontrail.ui.hidden_fields', []);
+        $hiddenFields = MoonTrailConfig::sensitiveHide();
 
         $filteredOld = array_diff_key($old, array_flip($hiddenFields));
         $filteredNew = array_diff_key($attributes, array_flip($hiddenFields));
@@ -167,7 +167,7 @@ final class MoonTrailObserver
      */
     private function canVersion(Model $model): bool
     {
-        return (bool) config('moontrail.versioning.enabled', true)
+        return MoonTrailConfig::versioningEnabled()
             && method_exists($model, 'versions');
     }
 
@@ -202,7 +202,7 @@ final class MoonTrailObserver
             'event'        => $event->value,
         ]));
 
-        if (! config('moontrail.silent_failures', false)) {
+        if (MoonTrailConfig::autoTrackOnError() === 'report') {
             report($exception);
         }
     }

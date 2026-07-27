@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use MoonShine\MoonTrail\Installer\ConfigUpdater;
 
-it('updates tracked and auto track model arrays without duplicates', function (): void {
+it('updates tracking.auto.models and menu.models arrays without duplicates', function (): void {
     $path = sys_get_temp_dir() . '/moontrail-config-updater-' . uniqid('', true) . '.php';
 
     file_put_contents($path, <<<'PHP'
@@ -13,11 +13,17 @@ it('updates tracked and auto track model arrays without duplicates', function ()
 declare(strict_types=1);
 
 return [
-    'auto_track_models' => [
-        // old
+    'tracking' => [
+        'auto' => [
+            'models' => [
+                // old
+            ],
+        ],
     ],
-    'tracked_models' => [
-        // old
+    'menu' => [
+        'models' => [
+            // old
+        ],
     ],
 ];
 PHP
@@ -33,13 +39,13 @@ PHP
 
     expect($result)->toBeTrue();
 
-    /** @var array{auto_track_models: array<int, string>, tracked_models: array<int, string>} $config */
+    /** @var array{tracking: array{auto: array{models: array<int, string>}}, menu: array{models: array<int, string>}} $config */
     $config = include $path;
 
-    expect($config['auto_track_models'])->toBe([
+    expect($config['tracking']['auto']['models'])->toBe([
         'App\\Models\\User',
         \MoonShine\Laravel\Models\MoonshineUser::class,
-    ])->and($config['tracked_models'])->toBe([
+    ])->and($config['menu']['models'])->toBe([
         'App\\Models\\User',
         \MoonShine\Laravel\Models\MoonshineUser::class,
     ]);

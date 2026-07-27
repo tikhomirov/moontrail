@@ -7,8 +7,8 @@ use MoonShine\MoonTrail\Tests\Fixtures\TestPost;
 use MoonShine\MoonTrail\Versioning\RollbackService;
 use MoonShine\MoonTrail\Versioning\VersionManager;
 
-it('rollback succeeds without rules when require_rules is false (default)', function (): void {
-    config(['moontrail.rollback.require_rules' => false]);
+it('rollback succeeds without rules when validation mode is if_rules_provided (default)', function (): void {
+    config(['moontrail.rollback.validation' => 'if_rules_provided']);
 
     $post = TestPost::query()->create(['name' => 'Original']);
     $manager = app(VersionManager::class);
@@ -22,7 +22,7 @@ it('rollback succeeds without rules when require_rules is false (default)', func
 });
 
 it('rollback applies rules when provided and passes', function (): void {
-    config(['moontrail.rollback.validate' => true]);
+    config(['moontrail.rollback.validation' => 'if_rules_provided']);
 
     $post = TestPost::query()->create(['name' => 'Valid name']);
     $manager = app(VersionManager::class);
@@ -35,7 +35,7 @@ it('rollback applies rules when provided and passes', function (): void {
 });
 
 it('rollback fails with ValidationException when rules fail', function (): void {
-    config(['moontrail.rollback.validate' => true]);
+    config(['moontrail.rollback.validation' => 'if_rules_provided']);
 
     $post = TestPost::query()->create(['name' => 'x']);
     $manager = app(VersionManager::class);
@@ -45,21 +45,16 @@ it('rollback fails with ValidationException when rules fail', function (): void 
         ->toThrow(ValidationException::class);
 });
 
-it('rollback throws RollbackConflictException when require_rules is true and no rules provided', function (): void {
+it('rollback succeeds with validation=required and no rules (empty validation passes)', function (): void {
     config([
-        'moontrail.rollback.validate'      => true,
-        'moontrail.rollback.require_rules' => true,
+        'moontrail.rollback.validation' => 'required',
     ]);
 
     $post = TestPost::query()->create(['name' => 'Original']);
     $manager = app(VersionManager::class);
     $manager->createVersion($post, 'created');
 
-    // With require_rules=true and no rules, shouldValidate returns true but rules are empty,
-    // so Validator::make(payload, []) passes — but we should confirm no exception here actually.
-    // The point of require_rules is to force the caller to always pass rules.
-    // When rules are empty array and require_rules=true the validation is run with empty rules → passes.
-    // This test confirms the flag doesn't cause a crash.
+    // With validation=required and no rules, validation runs with empty rules and passes
     app(RollbackService::class)->rollback($post, 1);
 
     $post->refresh();

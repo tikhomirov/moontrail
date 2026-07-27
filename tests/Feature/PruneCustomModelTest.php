@@ -29,9 +29,9 @@ beforeEach(function (): void {
         $table->timestamp('created_at')->nullable();
     });
 
-    config()->set('moontrail.activity_logger', 'custom');
+    config()->set('moontrail.activity.driver', 'custom');
     config()->set('moontrail.activity_model', TestCustomActivity::class);
-    config()->set('moontrail.pruning.retention_days', 5);
+    config()->set('moontrail.pruning.days', 5);
 
     $query = new class implements ActivityQueryUiContract, ModelBackedActivityQueryContract
     {
@@ -104,5 +104,5 @@ it('uses pruning retention_days config when --days is omitted in custom mode', f
 
     expect(TestCustomActivity::query()->count())->toBe(1)
         ->and(TestCustomActivity::query()->first()?->description)->toBe('new')
-        ->and($query->modelClassCalls)->toBe(0);
+        ->and($query->modelClassCalls)->toBe(1);
 });

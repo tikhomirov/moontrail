@@ -9,7 +9,7 @@ use RecursiveIteratorIterator;
 use SplFileInfo;
 
 use function is_string;
-use function ltrim;
+use function mb_ltrim;
 use function preg_match;
 
 final class ResourceScanner
@@ -54,9 +54,9 @@ final class ResourceScanner
                 continue;
             }
 
-            $namespace = trim($namespaceMatch[1]);
-            $className = trim($classMatch[1]);
-            $model = ltrim(trim($modelMatch[1]), '\\');
+            $namespace = mb_trim($namespaceMatch[1]);
+            $className = mb_trim($classMatch[1]);
+            $model = mb_ltrim(mb_trim($modelMatch[1]), '\\');
 
             if (! str_contains($model, '\\')) {
                 $model = $namespace . '\\' . $model;

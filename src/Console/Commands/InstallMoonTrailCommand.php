@@ -7,12 +7,12 @@ namespace MoonShine\MoonTrail\Console\Commands;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
-use MoonShine\Laravel\Models\MoonshineUser;
 use MoonShine\Laravel\Providers\MoonShineServiceProvider;
 use MoonShine\MoonTrail\Installer\ConfigUpdater;
 use MoonShine\MoonTrail\Installer\ModelScanner;
 use MoonShine\MoonTrail\Installer\ResourcePatcher;
 use MoonShine\MoonTrail\Installer\ResourceScanner;
+use MoonShine\MoonTrail\Support\MoonTrailConfig;
 use Throwable;
 
 use function array_filter;
@@ -92,7 +92,7 @@ final class InstallMoonTrailCommand extends Command
             return false;
         }
 
-        $default = (bool) config('moontrail.installer.safe_mode_default', true);
+        $default = MoonTrailConfig::installerDefaultSafeMode();
 
         $raw = $this->option('safe');
 
@@ -253,7 +253,7 @@ final class InstallMoonTrailCommand extends Command
         }
 
         if ($this->configUpdater->updateTrackedModels($configPath, $this->selectedModels)) {
-            $this->components->info('Updated auto_track_models and tracked_models in config.');
+            $this->components->info('Updated tracking.auto.models and menu.models in config.');
 
             return;
         }
@@ -398,16 +398,12 @@ final class InstallMoonTrailCommand extends Command
      */
     private function discoverDefaultModels(): array
     {
-        $defaults = (array) config('moontrail.installer.default_models', [
-            'App\\Models\\User',
-            MoonshineUser::class,
-            'App\\Models\\Role',
-            'MoonShine\\Laravel\\Models\\Role',
-        ]);
+        $defaults = MoonTrailConfig::installerSuggestedModels();
 
         $resolved = [];
 
         foreach ($defaults as $candidate) {
+            /** @phpstan-ignore booleanAnd.alwaysTrue, function.alreadyNarrowedType */
             if (! is_string($candidate)) {
                 continue;
             }
@@ -428,7 +424,9 @@ final class InstallMoonTrailCommand extends Command
             return $this->confirm(sprintf('Publish %s?', $label), false);
         }
 
-        return (bool) config("moontrail.installer.non_interactive.publish_{$label}", false);
+        // In non-interactive mode, we don't auto-publish anything.
+        // Use --force flag or run vendor:publish manually if needed.
+        return false;
     }
 
     private function shouldRunMigrationsStep(): bool
@@ -437,7 +435,9 @@ final class InstallMoonTrailCommand extends Command
             return $this->confirm('Run migrations now?', false);
         }
 
-        return (bool) config('moontrail.installer.non_interactive.run_migrations', false);
+        // In non-interactive mode, we don't auto-run migrations.
+        // Use --force flag or run migrate manually if needed.
+        return false;
     }
 
     private function shouldPublishMissingConfigStep(): bool
@@ -446,7 +446,8 @@ final class InstallMoonTrailCommand extends Command
             return $this->confirm('Config is not published. Publish config now?', true);
         }
 
-        return (bool) config('moontrail.installer.non_interactive.publish_config', false);
+        // In non-interactive mode, we don't auto-publish.
+        return false;
     }
 
     private function printSummary(bool $safeMode): void

@@ -6,7 +6,7 @@ use MoonShine\MoonTrail\Contracts\ActivityLoggerContract;
 use MoonShine\MoonTrail\Contracts\ActivityQueryContract;
 
 it('throws clear exception when custom logger is not manually bound', function (): void {
-    config()->set('moontrail.activity_logger', 'custom');
+    config()->set('moontrail.activity.driver', 'custom');
 
     app()->forgetInstance(ActivityLoggerContract::class);
 
@@ -15,7 +15,7 @@ it('throws clear exception when custom logger is not manually bound', function (
 });
 
 it('throws clear exception when custom query is not manually bound', function (): void {
-    config()->set('moontrail.activity_logger', 'custom');
+    config()->set('moontrail.activity.driver', 'custom');
 
     app()->forgetInstance(ActivityQueryContract::class);
 

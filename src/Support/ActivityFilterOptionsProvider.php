@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace MoonShine\MoonTrail\Support;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Cache;
 use MoonShine\MoonTrail\Contracts\ActivityFilterOptionsContract;
 use MoonShine\MoonTrail\Contracts\ActivityQueryContract;
 use RuntimeException;
@@ -43,28 +44,33 @@ final readonly class ActivityFilterOptionsProvider implements ActivityFilterOpti
      */
     private function resolveValues(string $staticKey, string $column): array
     {
-        $strategy = config('moontrail.filter_options.strategy', 'database_distinct');
-
-        if (! is_string($strategy) || $strategy === '') {
-            $strategy = 'database_distinct';
-        }
+        $strategy = MoonTrailConfig::filterSource();
 
         if ($strategy === 'static') {
-            $values = config("moontrail.filter_options.static.{$staticKey}", []);
+            $values = MoonTrailConfig::filterStaticValues($staticKey);
 
-            return $this->normalizeValues(is_array($values) ? $values : []);
+            return $this->normalizeValues($values);
         }
 
         if ($strategy !== 'database_distinct') {
-            throw new RuntimeException('Unsupported moontrail.filter_options.strategy: ' . $strategy);
+            throw new RuntimeException('Unsupported moontrail.filters.source: ' . $strategy);
         }
 
         if ($column === '') {
             return [];
         }
 
+        if (! $this->isCacheEnabled()) {
+            /** @var non-empty-string $column */
+            return $this->normalizeValues($this->query->distinctValues($column));
+        }
+
         /** @var non-empty-string $column */
-        return $this->normalizeValues($this->query->distinctValues($column));
+        return Cache::remember(
+            key: $this->cacheKey($column),
+            ttl: now()->addSeconds($this->cacheTtlSeconds()),
+            callback: fn (): array => $this->normalizeValues($this->query->distinctValues($column)),
+        );
     }
 
     /**
@@ -90,5 +96,27 @@ final readonly class ActivityFilterOptionsProvider implements ActivityFilterOpti
         $unique = array_values(array_unique($normalized));
 
         return $unique;
+    }
+
+    private function isCacheEnabled(): bool
+    {
+        return MoonTrailConfig::filterCacheEnabled();
+    }
+
+    private function cacheTtlSeconds(): int
+    {
+        return MoonTrailConfig::filterCacheTtl();
+    }
+
+    private function cacheKey(string $column): string
+    {
+        $driver = MoonTrailConfig::activityDriver();
+
+        return sprintf(
+            'moontrail.filter_options.%s.%s.%s',
+            $driver,
+            md5($this->query->modelClass()),
+            $column,
+        );
     }
 }

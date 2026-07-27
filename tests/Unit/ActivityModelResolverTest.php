@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
+use MoonShine\MoonTrail\Models\MoonTrailActivity;
 use MoonShine\MoonTrail\Support\ActivityModelResolver;
 use MoonShine\MoonTrail\Support\ActivityRuntime;
 use MoonShine\MoonTrail\Support\ActivityRuntimeResolver;
-use MoonShine\MoonTrail\Tests\Fixtures\TestCustomActivity;
 
 it('resolves model class via activity runtime metadata', function (): void {
     $resolver = app(ActivityModelResolver::class);
@@ -14,27 +14,20 @@ it('resolves model class via activity runtime metadata', function (): void {
     expect($resolver->resolve())->toBe($runtime->activityModel);
 });
 
-it('throws clear exception when custom activity_model class does not exist', function (): void {
-    config()->set('moontrail.activity_logger', 'custom');
-    config()->set('moontrail.activity_model', 'App\\Models\\DoesNotExist');
-
-    expect(static fn () => app(ActivityRuntimeResolver::class)->resolve())
-        ->toThrow(RuntimeException::class, 'Invalid moontrail.activity_model for configured driver "custom": class "App\\Models\\DoesNotExist" does not exist');
-});
-
-it('throws clear exception when custom activity_model is not eloquent model', function (): void {
-    config()->set('moontrail.activity_logger', 'custom');
-    config()->set('moontrail.activity_model', stdClass::class);
-
-    expect(static fn () => app(ActivityRuntimeResolver::class)->resolve())
-        ->toThrow(RuntimeException::class, 'Invalid moontrail.activity_model for configured driver "custom": class "stdClass" must extend');
-});
-
-it('resolves custom activity model when it is valid', function (): void {
-    config()->set('moontrail.activity_logger', 'custom');
-    config()->set('moontrail.activity_model', TestCustomActivity::class);
+it('resolves MoonTrailActivity as default activity model for database driver', function (): void {
+    config()->set('moontrail.activity.driver', 'database');
 
     $runtime = app(ActivityRuntimeResolver::class)->resolve();
 
-    expect($runtime->activityModel)->toBe(TestCustomActivity::class);
+    expect($runtime->activityModel)->toBe(MoonTrailActivity::class);
+});
+
+it('resolves MoonTrailActivity as default activity model for custom driver', function (): void {
+    config()->set('moontrail.activity.driver', 'custom');
+
+    $runtime = app(ActivityRuntimeResolver::class)->resolve();
+
+    // Custom mode now defers to ActivityQueryContract::modelClass() at resolve time
+    // Default placeholder is MoonTrailActivity
+    expect($runtime->activityModel)->toBe(MoonTrailActivity::class);
 });

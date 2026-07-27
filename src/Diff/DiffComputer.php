@@ -7,6 +7,7 @@ namespace MoonShine\MoonTrail\Diff;
 use Illuminate\Support\Collection;
 use MoonShine\MoonTrail\Contracts\ActivityRecordContract;
 use MoonShine\MoonTrail\Enums\ChangeType;
+use MoonShine\MoonTrail\Support\MoonTrailConfig;
 
 final class DiffComputer
 {
@@ -75,9 +76,9 @@ final class DiffComputer
         }
 
         /** @var array<int, string> $hiddenFields */
-        $hiddenFields = config('moontrail.ui.hidden_fields', []);
+        $hiddenFields = MoonTrailConfig::sensitiveHide();
         /** @var array<int, string> $maskedFields */
-        $maskedFields = config('moontrail.ui.masked_fields', []);
+        $maskedFields = MoonTrailConfig::sensitiveMask();
 
         return self::compute(
             before: $old,

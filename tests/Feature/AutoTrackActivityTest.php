@@ -13,7 +13,7 @@ beforeEach(function (): void {
 });
 
 it('auto-observer writes to activity_log when log_to_activity is enabled', function (): void {
-    config(['moontrail.auto_track.log_to_activity' => true]);
+    config(['moontrail.tracking.auto.write_activity' => true]);
 
     $post = TestAutoTrackedPost::query()->create([
         'name' => 'Auto',
@@ -30,7 +30,7 @@ it('auto-observer writes to activity_log when log_to_activity is enabled', funct
 });
 
 it('auto-observer writes old and attributes into activity properties', function (): void {
-    config(['moontrail.auto_track.log_to_activity' => true]);
+    config(['moontrail.tracking.auto.write_activity' => true]);
 
     $post = TestAutoTrackedPost::query()->create([
         'name' => 'Original',
@@ -58,7 +58,7 @@ it('auto-observer writes old and attributes into activity properties', function 
 });
 
 it('auto-observer links activity_id in model_version', function (): void {
-    config(['moontrail.auto_track.log_to_activity' => true]);
+    config(['moontrail.tracking.auto.write_activity' => true]);
 
     $post = TestAutoTrackedPost::query()->create([
         'name' => 'Link test',
@@ -79,7 +79,7 @@ it('auto-observer links activity_id in model_version', function (): void {
 });
 
 it('auto-observer does not write to activity_log when log_to_activity is disabled', function (): void {
-    config(['moontrail.auto_track.log_to_activity' => false]);
+    config(['moontrail.tracking.auto.write_activity' => false]);
 
     $post = TestAutoTrackedPost::query()->create([
         'name' => 'No log',
@@ -95,7 +95,7 @@ it('auto-observer does not write to activity_log when log_to_activity is disable
 });
 
 it('auto-observer creates model_version regardless of log_to_activity setting', function (): void {
-    config(['moontrail.auto_track.log_to_activity' => false]);
+    config(['moontrail.tracking.auto.write_activity' => false]);
 
     $post = TestAutoTrackedPost::query()->create([
         'name' => 'Version only',

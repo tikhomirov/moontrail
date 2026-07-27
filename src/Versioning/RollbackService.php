@@ -22,6 +22,7 @@ use MoonShine\MoonTrail\Exceptions\RollbackCancelledException;
 use MoonShine\MoonTrail\Exceptions\RollbackConflictException;
 use MoonShine\MoonTrail\Models\ModelVersion;
 use MoonShine\MoonTrail\MoonTrailObserver;
+use MoonShine\MoonTrail\Support\MoonTrailConfig;
 use MoonShine\MoonTrail\Support\MoonTrailLogger;
 use Throwable;
 
@@ -222,16 +223,19 @@ final readonly class RollbackService implements RollbackStrategyContract
      */
     private function shouldValidate(?array $rules): bool
     {
-        if (! config('moontrail.rollback.validate', true)) {
+        $mode = MoonTrailConfig::rollbackValidation();
+
+        if ($mode === 'none') {
             return false;
         }
 
-        if (! is_array($rules) || $rules === []) {
-            // When require_rules=true deny rollback if no rules provided.
-            return (bool) config('moontrail.rollback.require_rules', false);
+        if ($mode === 'required') {
+            // Always validate, even with empty rules (validation will pass with empty rules)
+            return true;
         }
 
-        return true;
+        // if_rules_provided: validate only when rules are provided
+        return is_array($rules) && $rules !== [];
     }
 
     private function usesSoftDeletes(Model|string $model): bool

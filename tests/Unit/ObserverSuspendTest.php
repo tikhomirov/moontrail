@@ -7,7 +7,7 @@ use MoonShine\MoonTrail\MoonTrailObserver;
 use MoonShine\MoonTrail\Tests\Fixtures\TestPost;
 
 beforeEach(function (): void {
-    config()->set('moontrail.versioning.enabled', false);
+    config()->set('moontrail.tracking.versions.enabled', false);
     MoonTrailObserver::resume();
 });
 
@@ -16,7 +16,7 @@ afterEach(function (): void {
 });
 
 it('does not create versions when observer is suspended', function (): void {
-    config()->set('moontrail.versioning.enabled', true);
+    config()->set('moontrail.tracking.versions.enabled', true);
 
     $post = TestPost::query()->create(['name' => 'Initial']);
     $initialCount = ModelVersion::query()->forModel($post)->count();
@@ -29,7 +29,7 @@ it('does not create versions when observer is suspended', function (): void {
 });
 
 it('resumes version creation after resume', function (): void {
-    config()->set('moontrail.versioning.enabled', true);
+    config()->set('moontrail.tracking.versions.enabled', true);
 
     $post = TestPost::query()->create(['name' => 'Initial']);
 

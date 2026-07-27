@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace MoonShine\MoonTrail\Traits;
 
 use MoonShine\MoonTrail\Components\ActivityTimeline;
+use MoonShine\MoonTrail\Support\MoonTrailConfig;
 use MoonShine\Support\Enums\Layer;
 use MoonShine\UI\Components\Tabs;
 use MoonShine\UI\Components\Tabs\Tab;
@@ -18,7 +19,7 @@ trait WithMoonTrailTab
 
     protected function activityTabLimit(): int
     {
-        return (int) config('moontrail.ui.per_page', 20);
+        return MoonTrailConfig::uiPerPage();
     }
 
     protected function activityTabShowRollback(): bool

@@ -176,6 +176,18 @@ Static values config:
 ],
 ```
 
+Optional cache for distinct strategy:
+
+```php
+'filter_options' => [
+    'strategy' => 'database_distinct',
+    'cache' => [
+        'enabled' => true,
+        'ttl' => 60, // seconds
+    ],
+],
+```
+
 Deprecated warning keys remain as fallback for database strategy:
 - `ui.warn_on_expensive_distinct_values`
 - `ui.distinct_values_warn_threshold`
@@ -193,6 +205,51 @@ Legacy compatibility contracts:
 - `ModelBackedActivityQueryContract`
 
 These are deprecated compatibility layers and are no longer required by package boot validation.
+
+### Custom Logger Example
+
+```php
+<?php
+
+declare(strict_types=1);
+
+namespace App\Logging;
+
+use Illuminate\Database\Eloquent\Model;
+use MoonShine\MoonTrail\Contracts\ActivityLoggerContract;
+
+final class MyCustomLogger implements ActivityLoggerContract
+{
+    public function log(Model $model, string $event, array $data = []): ?int
+    {
+        // Write to your audit storage and return activity id if you have one.
+        return null;
+    }
+}
+```
+
+```php
+<?php
+
+// app/Providers/AppServiceProvider.php
+use App\Logging\MyCustomLogger;
+use App\Queries\MyCustomActivityQuery;
+use MoonShine\MoonTrail\Contracts\ActivityLoggerContract;
+use MoonShine\MoonTrail\Contracts\ActivityQueryContract;
+
+public function register(): void
+{
+    $this->app->bind(ActivityLoggerContract::class, MyCustomLogger::class);
+    $this->app->bind(ActivityQueryContract::class, MyCustomActivityQuery::class);
+}
+```
+
+```php
+// config/moontrail.php
+'activity_logger' => 'custom',
+```
+
+MoonTrail resolves these bindings at runtime and uses them for observer writes and UI/read-path queries.
 
 ---
 
@@ -582,6 +639,8 @@ MoonTrail supports multiple logging backends. Set the `activity_logger` option i
 > ⚠️ If using `custom` mode, you MUST bind:
 > - `ActivityLoggerContract`
 > - `ActivityQueryContract`
+>
+> Legacy compatibility bindings are optional (deprecated):
 > - `ActivityQueryUiContract`
 > - `ModelBackedActivityQueryContract`
 
@@ -632,6 +691,8 @@ Rollback restores only fields listed in the model's `$fillable` array. If `$fill
 | `ui.warn_if_tailwind_missing` | `true` | Logs a warning if host Tailwind config is missing package `content` paths |
 | `ui.hidden_fields` | `[password, ...]` | Fields hidden from diff globally |
 | `ui.masked_fields` | `[password, ..., token]` | Fields shown in diff as masked placeholders |
+| `filter_options.cache.enabled` | `false` | Cache distinct-based filter options (`database_distinct` only) |
+| `filter_options.cache.ttl` | `60` | Cache TTL in seconds for filter options |
 | `auto_track_models` | `[]` | Models tracked automatically without the trait |
 
 ---

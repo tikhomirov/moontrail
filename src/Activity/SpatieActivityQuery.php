@@ -11,6 +11,7 @@ use MoonShine\MoonTrail\Contracts\ActivityQueryContract;
 use MoonShine\MoonTrail\Contracts\ActivityRecordContract;
 use MoonShine\MoonTrail\Support\ActivityLogFilterData;
 use MoonShine\MoonTrail\Support\ActivityLogQuery;
+use MoonShine\MoonTrail\Support\MoonTrailConfig;
 use Spatie\Activitylog\Models\Activity;
 
 /**
@@ -25,21 +26,12 @@ final class SpatieActivityQuery implements ActivityQueryContract
     public function paginate(array $filters): LengthAwarePaginator
     {
         $filterData = ActivityLogFilterData::fromArray($filters);
-        $rawPerPage = config('moontrail.ui.per_page');
-        $perPage = is_numeric($rawPerPage) ? (int) $rawPerPage : 20;
+        $perPage = MoonTrailConfig::uiPerPage();
 
-        $paginator = (new ActivityLogQuery)->apply(Activity::query(), $filterData)
+        return (new ActivityLogQuery)->apply(Activity::query(), $filterData)
             ->with(['subject', 'causer'])
             ->latest('id')
             ->paginate($perPage);
-
-        $paginator->setCollection(
-            $paginator->getCollection()->map(
-                static fn (Model $model): Model => $model,
-            ),
-        );
-
-        return $paginator;
     }
 
     public function find(int|string $id): ?ActivityRecordContract
@@ -99,21 +91,11 @@ final class SpatieActivityQuery implements ActivityQueryContract
 
     private function warnDistinctValuesIfLarge(Model $model, string $column): void
     {
-        $warnOnExpensive = config('moontrail.filter_options.warn_on_expensive_distinct_values');
-
-        if (! is_bool($warnOnExpensive)) {
-            $warnOnExpensive = (bool) config('moontrail.ui.warn_on_expensive_distinct_values', true);
-        }
-
-        if (! $warnOnExpensive) {
+        if (! MoonTrailConfig::filterWarnOnExpensiveQueries()) {
             return;
         }
 
-        $configuredThreshold = config('moontrail.filter_options.distinct_values_warn_threshold');
-        $fallbackThreshold = config('moontrail.ui.distinct_values_warn_threshold', 50000);
-        $threshold = is_numeric($configuredThreshold)
-            ? (int) $configuredThreshold
-            : (is_numeric($fallbackThreshold) ? (int) $fallbackThreshold : 50000);
+        $threshold = MoonTrailConfig::filterWarnThreshold();
 
         if ($threshold <= 0) {
             return;
