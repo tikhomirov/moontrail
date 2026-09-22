@@ -62,3 +62,40 @@ it('clears cache after publishing assets', function (): void {
     $this->artisan('moontrail:install', ['--no-interaction' => true])
         ->assertExitCode(0);
 });
+
+it('runs with force flag and auto-patch flag', function (): void {
+    if (! class_exists('App\\Models\\User')) {
+        eval('namespace App\\Models; class User extends \\Illuminate\\Database\\Eloquent\\Model {}');
+    }
+
+    file_put_contents(base_path('app/MoonShine/Resources/UserResource.php'), <<<'PHP'
+<?php
+
+declare(strict_types=1);
+
+namespace App\MoonShine\Resources;
+
+final class UserResource
+{
+    protected string $model = \App\Models\User::class;
+}
+PHP
+    );
+
+    config()->set('moontrail.installer.default_models', ['App\\Models\\User']);
+
+    $this->artisan('moontrail:install', [
+        '--no-interaction' => true,
+        '--force'          => true,
+        '--auto-patch'     => true,
+    ])->assertExitCode(0);
+});
+
+it('aborts installation in non-interactive production environment', function (): void {
+    app()['env'] = 'production';
+
+    $this->artisan('moontrail:install', ['--no-interaction' => true])
+        ->assertExitCode(1);
+
+    app()['env'] = 'testing';
+});

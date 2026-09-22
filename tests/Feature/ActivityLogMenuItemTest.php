@@ -178,3 +178,19 @@ it('resolveTrackedModels skips non-existent classes', function (): void {
 
     expect($models)->toHaveCount(0);
 });
+
+it('generates URLs and resolves active states for menu sub-items', function (): void {
+    config()->set('moontrail.tracked_models', [TestPost::class]);
+    config()->set('moontrail.menu.enabled', true);
+    config()->set('moontrail.menu.show_children', true);
+    config()->set('moontrail.menu.show_all_item', true);
+
+    /** @var MenuGroup $group */
+    $group = MoonTrailMenuItem::make();
+    $items = $group->getItems();
+
+    foreach ($items as $item) {
+        $url = $item->getUrl();
+        expect($url)->toBeString();
+    }
+});

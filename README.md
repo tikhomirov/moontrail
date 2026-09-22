@@ -89,13 +89,16 @@ php artisan moontrail:install
 | **Visual Diff Viewer** | Color-coded side-by-side comparison of field changes (added / modified / removed) |
 | **Model Versioning** | Automatic full-attribute snapshots on every create, update, delete, and restore |
 | **Transactional Rollback** | Restore any model to a previous version with row-level locking and validation |
+| **IDOR & Policy Protection** | Secure access: Gate & policy checks (`view`, `viewAny`, `update`) on subject models before serving diffs or details |
+| **Storage-Level Masking** | Sensitive data configured in `moontrail.sensitive.hide` masked pre-storage in both activity logs and version snapshots |
+| **Octane & Worker Safe** | `MoonTrailObserver::withoutTracking()` for leak-free, scoped execution in long-running processes |
 | **Timeline Component** | Chronological history with dates, authors, event badges, and inline diff |
 | **Rollback Confirmation** | Alpine.js modal with snapshot timestamp and warnings before destructive actions |
 | **Rollback Authorization** | Secure-by-default: rollback requires explicit opt-in via model method or Laravel policy |
 | **Activity Log Resource** | Global MoonShine resource with filters, search, and paginated log browsing |
 | **Auto-Tracking** | Track third-party models (e.g. `MoonshineUser`) via config — no trait needed |
-| **Menu Integration** | `MoonTrailMenuItem::make()` helper for one-line menu setup |
-| **Prune Command** | `moontrail:prune` with `--days`, `--model`, `--versions-only` options |
+| **Menu Integration** | `MoonTrailMenuItem::make()` with customizable default state (`menu_default_open`) and `localStorage` persistence |
+| **Safe Chunked Pruning** | `moontrail:prune` deletes records in batches of 1,000 to prevent database table locks on large datasets |
 | **Extensible** | Swap DiffRenderer, VersionManager, RollbackStrategy, ActivityFormatter via IoC |
 | **Localized** | English and Russian translations included |
 | **Dark Mode** | Full dark mode support in all UI components |
@@ -807,6 +810,7 @@ Possible exceptions:
 
 | Event | Payload | Fired When |
 |---|---|---|
+| `ActivityLogged` | `$activity`, `$event`, `$subject`, `$causer` | Dispatched immediately after an activity log entry is written |
 | `VersionCreated` | `$model`, `$version` | A new version snapshot is stored |
 | `ModelRollingBack` | `$model`, `$targetVersion`, `$version` | Before rollback — **cancellable** (return `false` to abort) |
 | `ModelRolledBack` | `$model`, `$fromVersion`, `$toVersion`, `$newVersion` | After successful rollback and transaction commit |
@@ -884,13 +888,33 @@ $this->app->bind(DiffRendererContract::class, MyCustomDiffRenderer::class);
 
 ---
 
+## Disabling Tracking Temporarily (Octane / Seeders / Bulk Ops)
+
+To execute operations without recording activity logs or version snapshots (e.g. during migrations, seeders, or background jobs):
+
+```php
+use MoonShine\MoonTrail\MoonTrailObserver;
+
+$user = MoonTrailObserver::withoutTracking(function () {
+    return User::create([
+        'name' => 'System Worker',
+        'email' => 'worker@internal.local',
+    ]);
+});
+```
+
+`withoutTracking()` guarantees state restoration even if an exception occurs, making it safe for long-running workers (Laravel Octane, Swoole, Queue workers).
+
+---
+
 ## Security
 
 - All package routes are protected by MoonShine's authentication and session middleware.
+- IDOR protection: diff endpoints and activity views check Laravel Gates/Policies (`view`, `viewAny`) for the underlying model.
+- Storage-level sanitization: sensitive fields configured in `moontrail.sensitive.hide` are stripped before persistence.
 - Rollback is **secure-by-default**: the button is hidden unless explicitly allowed.
-- Authorization uses a single `RollbackAuthorizationResolver` shared by both the controller and the UI component — there is no risk of a mismatch between what the button shows and what the server allows.
+- Authorization uses a single `RollbackAuthorizationResolver` shared by both the controller and the UI component.
 - Rollback actions require confirmation via an Alpine.js modal that displays the snapshot timestamp and version number.
-- Sensitive fields (`password`, `remember_token`, etc.) are excluded from diffs by default.
 - DB conflicts during rollback return HTTP 409 (not 500), so the client can distinguish a conflict from an unexpected server error.
 
 ---

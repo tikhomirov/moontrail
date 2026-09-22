@@ -558,6 +558,7 @@ Rollback выполняется внутри DB-транзакции с `lockFor
 
 | Событие | Payload | Когда вызывается |
 |---|---|---|
+| `ActivityLogged` | `$activity`, `$event`, `$subject`, `$causer` | Вызывается сразу после записи лога активности |
 | `VersionCreated` | `$model`, `$version` | Сохранён новый снапшот версии |
 | `ModelRollingBack` | `$model`, `$targetVersion`, `$version` | Перед rollback — **можно отменить** (вернуть `false`) |
 | `ModelRolledBack` | `$model`, `$fromVersion`, `$toVersion`, `$newVersion` | После успешного rollback и commit транзакции |
@@ -623,13 +624,33 @@ $this->app->bind(DiffRendererContract::class, MyCustomDiffRenderer::class);
 
 ---
 
+## Временное отключение трекинга (Octane / Сидеры / Массовые операции)
+
+Для выполнения операций без записи логов активности и создания версий (например, в фоновых воркерах, сидерах или миграциях):
+
+```php
+use MoonShine\MoonTrail\MoonTrailObserver;
+
+$user = MoonTrailObserver::withoutTracking(function () {
+    return User::create([
+        'name' => 'System Worker',
+        'email' => 'worker@internal.local',
+    ]);
+});
+```
+
+Метод `withoutTracking()` гарантирует сброс флага даже в случае исключения, что критично для долгоживущих процессов (Laravel Octane, Swoole, очереди).
+
+---
+
 ## Безопасность
 
 - Все маршруты пакета защищены middleware аутентификации и сессии MoonShine.
+- Защита от IDOR: просмотр истории и diff проверяет Policy/Gate модели (`view`, `viewAny`).
+- Очистка чувствительных данных на уровне хранилища: поля из `moontrail.sensitive.hide` маскируются перед записью в БД.
 - Rollback работает в режиме **secure-by-default**: кнопка скрыта, пока нет явного разрешения.
 - Авторизация идёт через единый `RollbackAuthorizationResolver`, который используется и в контроллере, и в UI-компоненте — расхождений между отображением кнопки и серверной проверкой нет.
 - Для rollback требуется подтверждение в Alpine.js модалке с показом времени снапшота и номера версии.
-- Чувствительные поля (`password`, `remember_token` и т.п.) исключены из diff по умолчанию.
 - DB-конфликты при rollback возвращают HTTP 409 (а не 500), чтобы клиент отличал конфликт от неожиданной ошибки сервера.
 
 ---
