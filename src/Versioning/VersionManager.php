@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace MoonShine\MoonTrail\Versioning;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Auth;
 use MoonShine\MoonTrail\Contracts\VersionManagerContract;
 use MoonShine\MoonTrail\Diff\DiffComputer;
 use MoonShine\MoonTrail\Diff\FieldChange;
@@ -13,6 +12,7 @@ use MoonShine\MoonTrail\Events\VersionCreated;
 use MoonShine\MoonTrail\Exceptions\VersionLimitExceededException;
 use MoonShine\MoonTrail\Models\ModelVersion;
 use MoonShine\MoonTrail\Support\ActivityModelResolver;
+use MoonShine\MoonTrail\Support\MoonTrailAuthResolver;
 use MoonShine\MoonTrail\Support\MoonTrailConfig;
 use MoonShine\MoonTrail\Support\MoonTrailLogger;
 
@@ -21,6 +21,7 @@ final readonly class VersionManager implements VersionManagerContract
     public function __construct(
         private ActivityModelResolver $activityModelResolver,
         private MoonTrailLogger $logger,
+        private MoonTrailAuthResolver $authResolver = new MoonTrailAuthResolver,
     ) {}
 
     public function createVersion(Model $model, string $event, ?int $activityId = null): ModelVersion
@@ -32,7 +33,7 @@ final readonly class VersionManager implements VersionManagerContract
             ->where('versionable_id', $model->getKey())
             ->max('version');
 
-        $author = Auth::user();
+        $author = $this->authResolver->resolveUser();
 
         $version = ModelVersion::query()->create([
             'versionable_type'    => $model->getMorphClass(),
@@ -41,7 +42,7 @@ final readonly class VersionManager implements VersionManagerContract
             'snapshot'            => $this->snapshot($model),
             'activity_id'         => $activityId ?? $this->resolveActivityId($model),
             'author_type'         => $author instanceof Model ? $author->getMorphClass() : null,
-            'author_id'           => Auth::id(),
+            'author_id'           => $this->authResolver->resolveId(),
             'event'               => $event,
             'is_rollback'         => false,
             'rollback_to_version' => null,
@@ -182,6 +183,16 @@ final readonly class VersionManager implements VersionManagerContract
             foreach ($excluded as $field) {
                 unset($attributes[$field]);
             }
+        }
+
+        /** @var array<int, string> $sensitiveFields */
+        $sensitiveFields = array_unique(array_merge(
+            MoonTrailConfig::sensitiveHide(),
+            $model->getHidden(),
+        ));
+
+        foreach ($sensitiveFields as $field) {
+            unset($attributes[$field]);
         }
 
         return $attributes;

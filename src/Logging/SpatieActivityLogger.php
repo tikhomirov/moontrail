@@ -6,6 +6,7 @@ namespace MoonShine\MoonTrail\Logging;
 
 use Illuminate\Database\Eloquent\Model;
 use MoonShine\MoonTrail\Contracts\ActivityLoggerContract;
+use MoonShine\MoonTrail\Events\ActivityLogged;
 use Spatie\Activitylog\Models\Activity;
 
 use function class_basename;
@@ -39,7 +40,10 @@ final class SpatieActivityLogger implements ActivityLoggerContract
         $activity = $builder->log($description);
 
         $key = $activity->getKey();
+        $activityId = is_int($key) ? $key : null;
 
-        return is_int($key) ? $key : null;
+        event(new ActivityLogged($model, $event, $data, $activityId));
+
+        return $activityId;
     }
 }

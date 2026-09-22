@@ -8,8 +8,10 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use MoonShine\MoonTrail\Contracts\ActivityQueryContract;
+use MoonShine\MoonTrail\Contracts\ActivityRecordContract;
 use MoonShine\MoonTrail\Contracts\DiffRendererContract;
 use MoonShine\MoonTrail\Diff\DiffComputer;
+use MoonShine\MoonTrail\Support\ActivityAuthorizationResolver;
 
 final readonly class ActivityController
 {
@@ -19,15 +21,18 @@ final readonly class ActivityController
     public function __construct(
         private ActivityQueryContract $activityQuery,
         private DiffRendererContract $diffRenderer,
+        private ActivityAuthorizationResolver $authorization,
     ) {}
 
     public function diff(int|string $activity): JsonResponse
     {
         $activityModel = $this->activityQuery->find($activity);
 
-        if (! $activityModel instanceof \MoonShine\MoonTrail\Contracts\ActivityRecordContract) {
-            throw (new ModelNotFoundException)->setModel(\Illuminate\Database\Eloquent\Model::class, [$activity]);
+        if (! $activityModel instanceof ActivityRecordContract) {
+            throw (new ModelNotFoundException)->setModel(Model::class, [$activity]);
         }
+
+        $this->authorization->authorize($activityModel);
 
         $changes = DiffComputer::fromActivity($activityModel);
 

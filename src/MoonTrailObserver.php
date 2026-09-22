@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use MoonShine\MoonTrail\Contracts\ActivityLoggerContract;
 use MoonShine\MoonTrail\Contracts\VersionManagerContract;
 use MoonShine\MoonTrail\Enums\ActivityEvent;
+use MoonShine\MoonTrail\Support\MoonTrailAuthResolver;
 use MoonShine\MoonTrail\Support\MoonTrailConfig;
 use MoonShine\MoonTrail\Support\MoonTrailLogger;
 use Throwable;
@@ -27,6 +28,7 @@ final class MoonTrailObserver
         private readonly VersionManagerContract $versionManager,
         private readonly ActivityLoggerContract $activityLogger,
         private readonly MoonTrailLogger $logger,
+        private readonly MoonTrailAuthResolver $authResolver = new MoonTrailAuthResolver,
     ) {}
 
     public static function suspend(): void
@@ -42,6 +44,26 @@ final class MoonTrailObserver
     public static function isSuspended(): bool
     {
         return self::$suspended;
+    }
+
+    /**
+     * Run a callback with observer suspended, restoring previous state in finally block.
+     *
+     * @template TReturn
+     *
+     * @param callable(): TReturn $callback
+     * @return TReturn
+     */
+    public static function withoutTracking(callable $callback): mixed
+    {
+        $previous = self::$suspended;
+        self::$suspended = true;
+
+        try {
+            return $callback();
+        } finally {
+            self::$suspended = $previous;
+        }
     }
 
     public function created(Model $model): void
@@ -127,7 +149,10 @@ final class MoonTrailObserver
         }
 
         /** @var array<int, string> $hiddenFields */
-        $hiddenFields = MoonTrailConfig::sensitiveHide();
+        $hiddenFields = array_unique(array_merge(
+            MoonTrailConfig::sensitiveHide(),
+            $model->getHidden(),
+        ));
 
         $filteredOld = array_diff_key($old, array_flip($hiddenFields));
         $filteredNew = array_diff_key($attributes, array_flip($hiddenFields));
@@ -173,25 +198,10 @@ final class MoonTrailObserver
 
     /**
      * Try to resolve the currently authenticated user as activity causer.
-     * Checks MoonShine guard first, then the default guard.
      */
     private function resolveCauser(): ?Model
     {
-        try {
-            /** @var string $guard */
-            $guard = config('moonshine.auth.guard', 'moonshine');
-            $user = auth($guard)->user();
-
-            if ($user instanceof Model) {
-                return $user;
-            }
-
-            $defaultUser = auth()->user();
-
-            return $defaultUser instanceof Model ? $defaultUser : null;
-        } catch (Throwable) {
-            return null;
-        }
+        return $this->authResolver->resolveUser();
     }
 
     private function handleException(Throwable $exception, string $operation, Model $model, ActivityEvent $event): void

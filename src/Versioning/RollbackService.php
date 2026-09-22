@@ -118,46 +118,46 @@ final readonly class RollbackService implements RollbackStrategyContract
 
         $fromVersion = is_numeric($fromVersionRaw) ? (int) $fromVersionRaw : 0;
 
-        MoonTrailObserver::suspend();
-
         try {
-            $result = DB::transaction(
-                function () use ($model, $payload, $targetVersion, $fromVersion): array {
-                    $query = $model->newQuery();
+            $result = MoonTrailObserver::withoutTracking(
+                fn (): array => DB::transaction(
+                    function () use ($model, $payload, $targetVersion, $fromVersion): array {
+                        $query = $model->newQuery();
 
-                    if ($this->usesSoftDeletes($model)) {
-                        $query = $query->withoutGlobalScope(SoftDeletingScope::class);
-                    }
+                        if ($this->usesSoftDeletes($model)) {
+                            $query = $query->withoutGlobalScope(SoftDeletingScope::class);
+                        }
 
-                    /** @var Model $freshModel */
-                    $freshModel = $query
-                        ->whereKey($model->getKey())
-                        ->lockForUpdate()
-                        ->firstOrFail();
+                        /** @var Model $freshModel */
+                        $freshModel = $query
+                            ->whereKey($model->getKey())
+                            ->lockForUpdate()
+                            ->firstOrFail();
 
-                    if (
-                        $this->usesSoftDeletes($freshModel)
-                        && $freshModel->getAttribute('deleted_at') !== null
-                        && is_callable([$freshModel, 'restore'])
-                    ) {
-                        call_user_func([$freshModel, 'restore']);
-                    }
+                        if (
+                            $this->usesSoftDeletes($freshModel)
+                            && $freshModel->getAttribute('deleted_at') !== null
+                            && is_callable([$freshModel, 'restore'])
+                        ) {
+                            call_user_func([$freshModel, 'restore']);
+                        }
 
-                    $freshModel->fill($payload);
-                    $freshModel->save();
+                        $freshModel->fill($payload);
+                        $freshModel->save();
 
-                    $rollbackVersion = $this->versionManager->createVersion(
-                        model: $freshModel,
-                        event: ActivityEvent::RolledBack->value,
-                    );
+                        $rollbackVersion = $this->versionManager->createVersion(
+                            model: $freshModel,
+                            event: ActivityEvent::RolledBack->value,
+                        );
 
-                    $rollbackVersion->forceFill([
-                        'is_rollback'         => true,
-                        'rollback_to_version' => $targetVersion,
-                    ])->save();
+                        $rollbackVersion->forceFill([
+                            'is_rollback'         => true,
+                            'rollback_to_version' => $targetVersion,
+                        ])->save();
 
-                    return [$freshModel, $fromVersion, $targetVersion, $rollbackVersion];
-                },
+                        return [$freshModel, $fromVersion, $targetVersion, $rollbackVersion];
+                    },
+                ),
             );
         } catch (ValidationException|ModelVersionNotFoundException|RollbackCancelledException $e) {
             $this->logger->warning('rollback_failed', $this->logger->withException($e, [
@@ -176,8 +176,6 @@ final readonly class RollbackService implements RollbackStrategyContract
             ]));
 
             throw RollbackConflictClassifier::classify($e);
-        } finally {
-            MoonTrailObserver::resume();
         }
 
         /** @var array{0: Model, 1: int, 2: int, 3: ModelVersion} $result */

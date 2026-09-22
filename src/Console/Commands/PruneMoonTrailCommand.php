@@ -74,7 +74,17 @@ final class PruneMoonTrailCommand extends Command
         }
 
         $count = $query->count();
-        $query->delete();
+
+        if ($count === 0) {
+            $this->components->info("Pruned 0 model version(s) older than {$cutoff->format('Y-m-d')}.");
+
+            return 0;
+        }
+
+        $chunkSize = 1000;
+        do {
+            $deleted = (clone $query)->limit($chunkSize)->delete();
+        } while ($deleted > 0);
 
         $this->components->info("Pruned {$count} model version(s) older than {$cutoff->format('Y-m-d')}.");
 
@@ -99,7 +109,17 @@ final class PruneMoonTrailCommand extends Command
         }
 
         $count = $query->count();
-        $query->delete();
+
+        if ($count === 0) {
+            $this->components->info("Pruned 0 activity log record(s) older than {$cutoff->format('Y-m-d')}.");
+
+            return 0;
+        }
+
+        $chunkSize = 1000;
+        do {
+            $deleted = (clone $query)->limit($chunkSize)->delete();
+        } while ($deleted > 0);
 
         $this->components->info("Pruned {$count} activity log record(s) older than {$cutoff->format('Y-m-d')}.");
 
