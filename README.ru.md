@@ -4,15 +4,21 @@
   <img src="resources/assets/moontrail-logo.svg" alt="Логотип MoonTrail" width="220" />
 </p>
 
-Язык: [English](README.md) · **Русский**
+<p align="center">
+  Язык: [English](README.md) · **Русский**
+</p>
 
-Пакет: `tikhomirov/moontrail`
+<p align="center">
+  Пакет: `tikhomirov/moontrail`
+</p>
 
-[![PHP](https://img.shields.io/badge/PHP-8.2%2B-blue)](https://php.net)
-[![Laravel](https://img.shields.io/badge/Laravel-11%2B-red)](https://laravel.com)
-[![MoonShine](https://img.shields.io/badge/MoonShine-4.8%2B-purple)](https://moonshine-laravel.com)
-[![PHPStan Level 9](https://img.shields.io/badge/PHPStan-level%209-brightgreen.svg?style=flat)](https://phpstan.org/)
-[![License](https://img.shields.io/badge/license-MIT-green)](LICENSE.md)
+<p align="center">
+  <a href="https://php.net"><img src="https://img.shields.io/badge/PHP-8.2%2B-blue" alt="PHP 8.2+" /></a>
+  <a href="https://laravel.com"><img src="https://img.shields.io/badge/Laravel-11%2B-red" alt="Laravel 11+" /></a>
+  <a href="https://moonshine-laravel.com"><img src="https://img.shields.io/badge/MoonShine-4.8%2B-purple" alt="MoonShine 4.8+" /></a>
+  <a href="https://phpstan.org/"><img src="https://img.shields.io/badge/PHPStan-level%209-brightgreen.svg?style=flat" alt="PHPStan Level 9" /></a>
+  <a href="LICENSE.md"><img src="https://img.shields.io/badge/license-MIT-green" alt="MIT License" /></a>
+</p>
 
 **Кратко:** расширенное логирование для MoonShine с историей изменений, визуальным diff, версионированием моделей и безопасным rollback.
 
