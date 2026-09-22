@@ -5,11 +5,11 @@
 </p>
 
 <p align="center">
-  Language: **English** · [Russian translation](README.ru.md)
+  Language: <strong>English</strong> · <a href="README.ru.md">Russian translation</a>
 </p>
 
 <p align="center">
-  Package: `tikhomirov/moontrail`
+  Package: <code>tikhomirov/moontrail</code>
 </p>
 
 <p align="center">

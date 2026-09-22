@@ -5,11 +5,11 @@
 </p>
 
 <p align="center">
-  Язык: [English](README.md) · **Русский**
+  Язык: <a href="README.md">English</a> · <strong>Русский</strong>
 </p>
 
 <p align="center">
-  Пакет: `tikhomirov/moontrail`
+  Пакет: <code>tikhomirov/moontrail</code>
 </p>
 
 <p align="center">
