@@ -71,6 +71,8 @@ return [
     'diff_loaded'       => 'Cached',
 
     'filter_clear_all' => 'Clear all',
+    'filter_remove'    => 'Remove filter',
+    'filter_reset'     => 'Reset filters',
     'search'           => 'Search',
     'search_hint'      => 'Description, type, ID, log name...',
     'any'              => 'Any',

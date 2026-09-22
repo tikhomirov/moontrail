@@ -249,3 +249,29 @@ it('diff viewer table contains scope=col on th elements', function (): void {
 
     expect($html)->toContain('scope="col"');
 });
+
+it('renderInlineFilters renders theme button classes and localized text', function (): void {
+    $page = app(MoonTrailIndexPage::class);
+
+    /** @var string $html */
+    $html = callProtected($page, 'renderInlineFilters');
+
+    expect($html)
+        ->toContain('btn btn-primary')
+        ->toContain((string) __('moontrail::ui.filter'))
+        ->toContain((string) __('moontrail::ui.filter_reset'));
+});
+
+it('renders active filter chip with localized remove label', function (): void {
+    $request = request()->replace(['event' => 'created']);
+    app()->instance('request', $request);
+
+    $page = app(MoonTrailIndexPage::class);
+
+    /** @var string $html */
+    $html = callProtected($page, 'renderActiveFilterChips');
+
+    expect($html)
+        ->toContain('aria-label="' . __('moontrail::ui.filter_remove') . '"')
+        ->toContain('title="' . __('moontrail::ui.filter_remove') . '"');
+});

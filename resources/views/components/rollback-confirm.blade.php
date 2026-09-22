@@ -1,72 +1,60 @@
-<div x-data="{ open: false, versionId: null, versionNum: null, versionAt: null, dark: document.documentElement.classList.contains('dark') }"
-     @open-rollback-modal.window="dark = document.documentElement.classList.contains('dark'); open = true; versionId = $event.detail.versionId; versionNum = $event.detail.versionNum; versionAt = $event.detail.versionAt ?? null"
+<div x-data="{ open: false, versionId: null, versionNum: null, versionAt: null }"
+     @open-rollback-modal.window="open = true; versionId = $event.detail.versionId; versionNum = $event.detail.versionNum; versionAt = $event.detail.versionAt ?? null"
      @keydown.escape.window="open = false">
 
     <template x-teleport="body">
-        <div x-show="open" x-cloak
-             :style="open ? 'position:fixed;top:0;right:0;bottom:0;left:0;z-index:9999;' : 'display:none'">
+        <div x-show="open" x-cloak class="fixed inset-0 z-[9999] flex items-center justify-center p-4">
 
             {{-- Backdrop --}}
-            <div style="position:fixed;top:0;right:0;bottom:0;left:0;z-index:1;background:rgba(0,0,0,0.5);backdrop-filter:blur(4px);"
-                 @click="open = false" aria-hidden="true"></div>
+            <div class="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
+                 @click="open = false"
+                 aria-hidden="true"></div>
 
-            {{-- Dialog card — centered via fixed + transform to avoid MoonShine body containing-block issue --}}
-            <div :style="'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:2;max-width:28rem;width:calc(100% - 2rem);padding:1.5rem;border-radius:0.75rem;box-shadow:0 25px 50px -12px rgba(0,0,0,0.25);'
-                    + (dark ? 'background:#1f2937;color:#f3f4f6;' : 'background:#ffffff;color:#111827;')"
+            {{-- Dialog card --}}
+            <div class="relative z-10 w-full max-w-md rounded-xl bg-white p-6 text-gray-900 shadow-2xl transition-all dark:bg-gray-800 dark:text-gray-100 border border-gray-200 dark:border-gray-700"
                  role="dialog"
                  aria-modal="true"
                  aria-labelledby="ms-al-rollback-title"
                  aria-describedby="ms-al-rollback-desc"
-                 x-transition.opacity.duration.200ms>
+                 x-transition:enter="ease-out duration-200"
+                 x-transition:enter-start="opacity-0 scale-95"
+                 x-transition:enter-end="opacity-100 scale-100"
+                 x-transition:leave="ease-in duration-150"
+                 x-transition:leave-start="opacity-100 scale-100"
+                 x-transition:leave-end="opacity-0 scale-95">
 
                 {{-- Header --}}
-                <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:1rem;">
-                    <div :style="'flex-shrink:0;width:2.5rem;height:2.5rem;border-radius:9999px;display:flex;align-items:center;justify-content:center;color:#ea580c;'
-                            + (dark ? 'background:rgba(154,52,18,0.4);' : 'background:#ffedd5;')"
-                         aria-hidden="true">
-                        <svg style="width:1.25rem;height:1.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-orange-100 text-orange-600 dark:bg-orange-950/40 dark:text-orange-400">
+                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
                         </svg>
                     </div>
                     <div>
-                        <h3 id="ms-al-rollback-title"
-                            :style="'font-size:1.125rem;line-height:1.75rem;font-weight:600;margin:0;' + (dark ? 'color:#ffffff;' : 'color:#111827;')">
+                        <h3 id="ms-al-rollback-title" class="text-base font-semibold leading-6">
                             {{ __('moontrail::ui.rollback_confirm_title') }}
                         </h3>
-                        <p id="ms-al-rollback-desc"
-                           :style="'font-size:0.875rem;line-height:1.25rem;margin:0.125rem 0 0 0;' + (dark ? 'color:#9ca3af;' : 'color:#6b7280;')">
+                        <p id="ms-al-rollback-desc" class="text-sm text-gray-500 dark:text-gray-400">
                             {{ __('moontrail::ui.rollback_confirm_text') }}
-                            <strong x-text="'#' + versionNum" style="color:#ea580c;"></strong>
+                            <strong x-text="'#' + versionNum" class="text-orange-600 dark:text-orange-400"></strong>
                         </p>
-                        <p x-show="versionAt" x-cloak
-                           :style="'font-size:0.75rem;line-height:1rem;margin:0.125rem 0 0 0;font-variant-numeric:tabular-nums;' + (dark ? 'color:#6b7280;' : 'color:#9ca3af;')"
-                           x-text="versionAt"></p>
+                        <p x-show="versionAt" x-cloak class="text-xs text-gray-400 dark:text-gray-500 tabular-nums mt-0.5" x-text="versionAt"></p>
                     </div>
                 </div>
 
                 {{-- Warning box --}}
-                <div :style="'border-radius:0.5rem;padding:0.75rem;margin-bottom:1rem;'
-                        + (dark ? 'background:rgba(154,52,18,0.15);border:1px solid rgba(146,64,14,0.5);' : 'background:#fff7ed;border:1px solid #fed7aa;')"
-                     role="note">
-                    <p :style="'font-size:0.75rem;line-height:1.125rem;margin:0 0 0.25rem 0;' + (dark ? 'color:#fdba74;' : 'color:#c2410c;')">
-                        {{ __('moontrail::ui.rollback_confirm_snapshot_note') }}
-                    </p>
-                    <p :style="'font-size:0.75rem;line-height:1.125rem;margin:0 0 0.25rem 0;' + (dark ? 'color:#fdba74;' : 'color:#c2410c;')">
-                        {{ __('moontrail::ui.rollback_confirm_overwrite_warning') }}
-                    </p>
-                    <p :style="'font-size:0.75rem;line-height:1.125rem;margin:0;' + (dark ? 'color:#fdba74;' : 'color:#c2410c;')">
-                        {{ __('moontrail::ui.rollback_confirm_history_warning') }}
-                    </p>
+                <div class="mb-5 rounded-lg border border-orange-200 bg-orange-50/80 p-3 text-xs leading-relaxed text-orange-800 dark:border-orange-900/50 dark:bg-orange-950/30 dark:text-orange-300 space-y-1" role="note">
+                    <p>{{ __('moontrail::ui.rollback_confirm_snapshot_note') }}</p>
+                    <p>{{ __('moontrail::ui.rollback_confirm_overwrite_warning') }}</p>
+                    <p>{{ __('moontrail::ui.rollback_confirm_history_warning') }}</p>
                 </div>
 
-                {{-- Buttons --}}
-                <div style="display:flex;align-items:center;justify-content:flex-end;gap:0.75rem;">
-                    <button type="button" @click="open = false"
-                            aria-label="{{ __('moontrail::ui.cancel') }}"
-                            :style="'padding:0.5rem 1rem;font-size:0.875rem;line-height:1.25rem;font-weight:500;border-radius:0.5rem;cursor:pointer;transition:background-color 0.15s;'
-                                + (dark ? 'background:#374151;color:#d1d5db;border:1px solid #4b5563;' : 'background:#ffffff;color:#374151;border:1px solid #d1d5db;')"
-                            @mouseover="$el.style.backgroundColor = dark ? '#4b5563' : '#f9fafb'"
-                            @mouseout="$el.style.backgroundColor = dark ? '#374151' : '#ffffff'">
+                {{-- Action buttons --}}
+                <div class="flex items-center justify-end gap-3">
+                    <button type="button"
+                            @click="open = false"
+                            class="btn btn-secondary inline-flex items-center justify-center px-4 py-2 text-sm font-medium rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-400 focus-visible:ring-offset-1"
+                            aria-label="{{ __('moontrail::ui.cancel') }}">
                         {{ __('moontrail::ui.cancel') }}
                     </button>
 
@@ -74,16 +62,15 @@
                         @csrf
                         <input type="hidden" name="modelVersion" :value="versionId">
                         <button type="submit"
-                                style="display:inline-flex;align-items:center;gap:0.375rem;padding:0.5rem 1rem;font-size:0.875rem;line-height:1.25rem;font-weight:500;border-radius:0.5rem;background:#ea580c;color:#ffffff;border:none;cursor:pointer;box-shadow:0 1px 2px rgba(0,0,0,0.05);transition:background-color 0.15s;"
-                                @mouseover="$el.style.backgroundColor='#c2410c'"
-                                @mouseout="$el.style.backgroundColor='#ea580c'">
-                            <svg style="width:1rem;height:1rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                                class="btn btn-error inline-flex items-center justify-center gap-1.5 px-4 py-2 text-sm font-medium rounded-lg bg-red-600 text-white hover:bg-red-700 active:bg-red-800 transition-colors duration-150 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-1">
+                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/>
                             </svg>
                             {{ __('moontrail::ui.rollback_confirm_button') }}
                         </button>
                     </form>
                 </div>
+
             </div>
         </div>
     </template>

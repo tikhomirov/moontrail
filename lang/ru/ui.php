@@ -71,6 +71,8 @@ return [
     'diff_loaded'       => 'Кэшировано',
 
     'filter_clear_all' => 'Сбросить всё',
+    'filter_remove'    => 'Удалить фильтр',
+    'filter_reset'     => 'Сбросить фильтры',
     'search'           => 'Поиск',
     'search_hint'      => 'Описание, тип, ID, имя лога...',
     'any'              => 'Любой',

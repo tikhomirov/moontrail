@@ -7,7 +7,7 @@
         <span class="ms-al-filter-chip inline-flex items-center gap-1.5 pl-2.5 pr-1 py-1 text-xs font-medium rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-700">
             <span class="opacity-60">{{ $chip['label'] }}:</span>
             <span class="font-semibold">{{ $chip['value'] }}</span>
-            <a href="{{ $chip['removeUrl'] }}" class="ms-al-filter-chip-remove inline-flex items-center justify-center w-4 h-4 rounded-full hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors duration-100 flex-shrink-0" title="Remove filter">
+            <a href="{{ $chip['removeUrl'] }}" class="ms-al-filter-chip-remove inline-flex items-center justify-center w-4 h-4 rounded-full hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors duration-100 flex-shrink-0" title="{{ __('moontrail::ui.filter_remove') }}" aria-label="{{ __('moontrail::ui.filter_remove') }}">
                 <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/>
                 </svg>

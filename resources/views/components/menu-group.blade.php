@@ -14,7 +14,28 @@
         @click.outside="dropdown = false"
         data-dropdown-placement="bottom-start"
     @else
-        x-data="{ dropdown: {{ $defaultOpen ? ($isActive ? 'true' : 'false') : 'false' }} }"
+        x-data="{
+            dropdown: (function() {
+                try {
+                    const stored = localStorage.getItem('moontrail_menu_open');
+                    if (stored !== null) {
+                        return stored === 'true';
+                    }
+                } catch (e) {}
+                return {{ $defaultOpen ? ($isActive ? 'true' : 'false') : 'false' }};
+            })(),
+            toggle() {
+                this.dropdown = !this.dropdown;
+                try {
+                    localStorage.setItem('moontrail_menu_open', this.dropdown ? 'true' : 'false');
+                } catch (e) {}
+                $nextTick(() => {
+                    if (this.dropdown && $refs.dropdownMenu) {
+                        $refs.dropdownMenu.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+                    }
+                });
+            }
+        }"
     @endif
     :class="dropdown && 'menu-item--opened'"
     x-ref="dropdownMenu"
@@ -23,8 +44,10 @@
         @if(!$top)
             x-data="navTooltip"
             @mouseenter="toggleTooltip()"
+            @click.prevent="toggle()"
+        @else
+            @click.prevent="dropdown = ! dropdown"
         @endif
-        @click.prevent="dropdown = ! dropdown; $nextTick(() => { if (dropdown && $refs.dropdownMenu) $refs.dropdownMenu.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); })"
         class="menu-button"
         :class="dropdown && '_is-active'"
         type="button"

@@ -30,6 +30,8 @@ return new class extends Migration
             $table->index(['subject_type', 'subject_id']);
             $table->index(['model_type', 'model_id']);
             $table->index('event');
+            $table->index('log_name');
+            $table->index('created_at');
         });
     }
 
