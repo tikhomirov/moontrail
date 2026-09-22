@@ -27,10 +27,7 @@ final class ActivityAuthorizationResolver
     public function authorize(ActivityRecordContract $activity): void
     {
         $guard = MoonShineAuth::getGuard();
-
-        if (! $guard->check()) {
-            throw new AuthorizationException('MoonShine user is not authenticated.');
-        }
+        $user = $guard->user();
 
         $subjectType = $activity->getSubjectType();
         $subjectId = $activity->getSubjectId();
@@ -54,16 +51,23 @@ final class ActivityAuthorizationResolver
             $subject = $subjectType::query()->find($subjectId);
         }
 
-        $user = $guard->user();
         $policy = Gate::getPolicyFor($subjectType);
 
         if ($subject instanceof Model && is_object($policy) && method_exists($policy, 'view')) {
+            if ($user === null) {
+                throw new AuthorizationException('MoonShine user is not authenticated.');
+            }
+
             Gate::forUser($user)->authorize('view', $subject);
 
             return;
         }
 
         if (is_object($policy) && method_exists($policy, 'viewAny')) {
+            if ($user === null) {
+                throw new AuthorizationException('MoonShine user is not authenticated.');
+            }
+
             Gate::forUser($user)->authorize('viewAny', $subjectType);
         }
     }

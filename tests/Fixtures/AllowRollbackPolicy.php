@@ -12,4 +12,11 @@ final class AllowRollbackPolicy
 
         return true;
     }
+
+    public function view(object $user, TestPost $post): bool
+    {
+        unset($user, $post);
+
+        return true;
+    }
 }

@@ -92,13 +92,18 @@ final class MoonTrailConfig
      */
     public static function sensitiveHide(): array
     {
-        /** @var array<int, string>|mixed $raw */
-        $raw = config('moontrail.ui.hidden_fields', []);
+        /** @var array<int, string>|mixed $raw1 */
+        $raw1 = config('moontrail.ui.hidden_fields', []);
+        $values1 = is_array($raw1) ? array_values($raw1) : [];
 
-        $values = is_array($raw) ? array_values($raw) : [];
+        /** @var array<int, string>|mixed $raw2 */
+        $raw2 = config('moontrail.sensitive_hide', []);
+        $values2 = is_array($raw2) ? array_values($raw2) : [];
 
-        /** @var list<string> $values */
-        return $values;
+        /** @var list<string> $merged */
+        $merged = array_values(array_unique(array_merge($values1, $values2)));
+
+        return $merged;
     }
 
     /**

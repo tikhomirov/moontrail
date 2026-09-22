@@ -5,7 +5,8 @@ declare(strict_types=1);
 use MoonShine\MoonTrail\Tests\Fixtures\TestPost;
 
 it('sanitizes sensitive fields and hidden model attributes from version snapshots', function (): void {
-    config()->set('moontrail.sensitive_hide', ['secret_token']);
+    config()->set('moontrail.ui.hidden_fields', ['email']);
+    config()->set('moontrail.sensitive_hide', ['email']);
 
     $post = new class extends TestPost
     {
@@ -14,14 +15,14 @@ it('sanitizes sensitive fields and hidden model attributes from version snapshot
 
     $post->name = 'Secure Post';
     $post->body = 'Body';
-    $post->setAttribute('secret_token', 'super-secret-value');
-    $post->setAttribute('password', 'secret-password-hash');
+    $post->email = 'super-secret@example.com';
+    $post->password = 'secret-password-hash';
     $post->save();
 
     $version = $post->versions()->latest('version')->first();
 
     expect($version)->not->toBeNull()
         ->and($version->snapshot)->toHaveKey('name')
-        ->and($version->snapshot)->not->toHaveKey('secret_token')
+        ->and($version->snapshot)->not->toHaveKey('email')
         ->and($version->snapshot)->not->toHaveKey('password');
 });

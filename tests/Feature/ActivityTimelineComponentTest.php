@@ -47,7 +47,7 @@ it('renders timeline with preset versions (standalone mode)', function (): void 
 
     expect($html)
         ->toContain('Version History')
-        ->toContain('Version #');
+        ->toContain((string) __('moontrail::ui.version'));
 });
 
 it('renders show diff button when activity_id is present', function (): void {
@@ -60,7 +60,7 @@ it('renders show diff button when activity_id is present', function (): void {
     $component = ActivityTimeline::make('History', $resource);
     $html = (string) $component->render();
 
-    expect($html)->toContain(__('moontrail::ui.show_diff'));
+    expect($html)->toContain('ms-al-btn-diff');
 });
 
 it('does not render show diff button when activity_id is missing', function (): void {

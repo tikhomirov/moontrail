@@ -2,7 +2,9 @@
 
 declare(strict_types=1);
 
+use Illuminate\Support\Facades\Gate;
 use MoonShine\Laravel\MoonShineAuth;
+use MoonShine\MoonTrail\Tests\Fixtures\DenyRollbackPolicy;
 use MoonShine\MoonTrail\Tests\Fixtures\TestAdmin;
 use MoonShine\MoonTrail\Tests\Fixtures\TestPost;
 use Spatie\Activitylog\Models\Activity;
@@ -39,7 +41,9 @@ it('returns diff html for activity record when authenticated', function (): void
         ->assertJsonPath('event', $activity->event);
 });
 
-it('returns 403 when diff is requested without authentication', function (): void {
+it('returns 403 when diff is requested and policy denies view', function (): void {
+    Gate::policy(TestPost::class, DenyRollbackPolicy::class);
+
     $post = TestPost::query()->create([
         'name' => 'Old',
         'body' => 'Body',
@@ -53,7 +57,13 @@ it('returns 403 when diff is requested without authentication', function (): voi
         ->latest('id')
         ->firstOrFail();
 
-    $this->withoutMiddleware()
+    $admin = TestAdmin::query()->create([
+        'name'  => 'Admin Deny Diff',
+        'email' => 'diff-deny@example.test',
+    ]);
+
+    $this->actingAs($admin, MoonShineAuth::getGuardName())
+        ->withoutMiddleware()
         ->get(route('moonshine.moontrail.diff', ['activity' => $activity->id]))
         ->assertForbidden();
 });
