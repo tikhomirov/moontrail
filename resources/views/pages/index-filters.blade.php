@@ -57,8 +57,8 @@
         </div>
 
         <div class="ms-al-filter-actions">
-            <button type="submit" class="ms-al-btn-filter">
-                Filter
+            <button type="submit" class="btn btn-primary">
+                {{ __('moontrail::ui.filter') }}
             </button>
             <a href="?" class="ms-al-btn-reset" title="Reset">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

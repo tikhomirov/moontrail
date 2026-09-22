@@ -84,7 +84,10 @@ final class MoonTrailMenuItem
             );
         }
 
-        return MenuGroup::make($groupLabel, $items, $icon);
+        return MenuGroup::make($groupLabel, $items, $icon)
+            ->customView('moontrail::components.menu-group', [
+                'defaultOpen' => MoonTrailConfig::menuDefaultOpen(),
+            ]);
     }
 
     /**

@@ -97,4 +97,5 @@ return [
     'rollback_error_unexpected'          => 'Rollback failed. Please try again later.',
     'rollback_no_rights'                 => 'Rollback',
     'rollback_denied_hint'               => 'Rollback is not available: insufficient permissions.',
+    'filter'                             => 'Filter',
 ];

@@ -97,4 +97,5 @@ return [
     'rollback_error_unexpected'          => 'Не удалось выполнить откат. Попробуйте позже.',
     'rollback_no_rights'                 => 'Откат',
     'rollback_denied_hint'               => 'Откат недоступен: недостаточно прав.',
+    'filter'                             => 'Применить',
 ];

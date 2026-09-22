@@ -99,6 +99,19 @@ it('returns a MenuGroup when tracked models are configured', function (): void {
     expect($result)->toBeInstanceOf(MenuGroup::class);
 });
 
+it('respects menu.default_open config and custom view data', function (): void {
+    config()->set('moontrail.tracked_models', [TestPost::class]);
+    config()->set('moontrail.auto_track_models', []);
+    config()->set('moontrail.menu.enabled', true);
+    config()->set('moontrail.menu.show_children', true);
+    config()->set('moontrail.menu.default_open', false);
+
+    $result = MoonTrailMenuItem::make();
+
+    expect($result)->toBeInstanceOf(MenuGroup::class)
+        ->and($result->getCustomViewData())->toHaveKey('defaultOpen', false);
+});
+
 it('creates sub-items for each tracked model plus All item', function (): void {
     config()->set('moontrail.tracked_models', [TestPost::class]);
     config()->set('moontrail.auto_track_models', []);

@@ -227,6 +227,7 @@ return [
     |                  When false and there are no tracked models, the item is
     |                  hidden entirely.
     |  show_children:  false — collapse sub-items, show only a single top-level item.
+    |  default_open:   false — whether the menu group is open by default.
     |  exclude_models:   Models to hide from sub-items (even if in tracked_models).
     |
     */
@@ -235,6 +236,7 @@ return [
         'label'          => null,
         'show_all_item'  => true,
         'show_children'  => true,
+        'default_open'   => false,
         'exclude_models' => [
             // \App\Models\User::class,
         ],

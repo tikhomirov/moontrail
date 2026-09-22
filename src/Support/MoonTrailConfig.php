@@ -259,6 +259,11 @@ final class MoonTrailConfig
         return (bool) config('moontrail.menu.show_children', true);
     }
 
+    public static function menuDefaultOpen(): bool
+    {
+        return (bool) config('moontrail.menu.default_open', false);
+    }
+
     /**
      * @return list<class-string>
      */
