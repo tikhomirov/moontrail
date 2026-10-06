@@ -19,8 +19,6 @@ it('dispatches ActivityLogged event when activity is logged', function (): void 
     $logger = app(ActivityLoggerContract::class);
     $logger->log($post, 'custom_event', ['description' => 'Test event log']);
 
-    Event::assertDispatched(ActivityLogged::class, function (ActivityLogged $event) use ($post): bool {
-        return $event->model->getKey() === $post->getKey()
-            && $event->event === 'custom_event';
-    });
+    Event::assertDispatched(ActivityLogged::class, fn (ActivityLogged $event): bool => $event->model->getKey() === $post->getKey()
+        && $event->event === 'custom_event');
 });

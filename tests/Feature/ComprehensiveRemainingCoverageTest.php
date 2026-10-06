@@ -28,7 +28,7 @@ it('tests ActivityRecordFactory conversions and exceptions', function (): void {
     expect($factory->fromModel($backed->model()))->toBeInstanceOf(ActivityRecordContract::class);
 
     $dummyModel = new class extends Model {};
-    expect(fn () => $factory->fromModel($dummyModel))->toThrow(RuntimeException::class);
+    expect(fn (): \MoonShine\MoonTrail\Contracts\ActivityRecordContract => $factory->fromModel($dummyModel))->toThrow(RuntimeException::class);
 });
 
 it('tests DefaultActivityFormatter with standard and custom events', function (): void {
