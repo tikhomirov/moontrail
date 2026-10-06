@@ -54,7 +54,10 @@ trait HasMoonTrailVersioning
 
     protected static function bootHasMoonTrailVersioning(): void
     {
-        static::observe(MoonTrailObserver::class);
+        static::created(MoonTrailObserver::class . '@created');
+        static::updated(MoonTrailObserver::class . '@updated');
+        static::deleted(MoonTrailObserver::class . '@deleted');
+        static::restored(MoonTrailObserver::class . '@restored');
     }
 
     /**
