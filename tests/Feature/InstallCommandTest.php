@@ -5,97 +5,41 @@ declare(strict_types=1);
 use Illuminate\Support\Facades\File;
 
 beforeEach(function (): void {
-    $resourceDir = base_path('app/MoonShine/Resources');
-
-    if (! File::exists($resourceDir)) {
-        File::makeDirectory($resourceDir, 0777, true);
-    }
+    $this->app->useConfigPath(sys_get_temp_dir() . '/moontrail-install-' . uniqid());
+    File::ensureDirectoryExists(config_path());
 });
 
 afterEach(function (): void {
-    File::deleteDirectory(base_path('app'));
+    File::deleteDirectory(config_path());
 });
 
-it('runs in no interaction mode without failures', function (): void {
-    $this->artisan('moontrail:install', ['--no-interaction' => true])
+it('publishes configuration and only version migrations for spatie', function (): void {
+    $this->artisan('moontrail:install', ['--no-interaction' => true, '--ui' => 'headless', '--logger' => 'spatie'])
         ->assertExitCode(0);
+
+    expect(File::exists(config_path('moontrail.php')))->toBeTrue()
+        ->and(File::exists(database_path('migrations/2024_01_01_000001_create_model_versions_table.php')))->toBeTrue()
+        ->and(File::exists(database_path('migrations/2024_01_01_000002_create_moontrail_activity_log_table.php')))->toBeFalse()
+        ->and(File::get(config_path('moontrail.php')))->toContain("'ui_adapter' => 'headless'");
 });
 
-it('runs publish and migrate branches in no interaction mode when enabled by config', function (): void {
-    // Note: non_interactive settings removed from config;
-    // CLI flags should be used instead
-    $this->artisan('moontrail:install', ['--no-interaction' => true])
+it('does not overwrite existing configuration when run again', function (): void {
+    $this->artisan('moontrail:install', ['--no-interaction' => true, '--ui' => 'headless', '--logger' => 'none'])
         ->assertExitCode(0);
-});
 
-it('prints safe mode instructions for selected resources', function (): void {
-    if (! class_exists('App\\Models\\User')) {
-        eval('namespace App\\Models; class User extends \\Illuminate\\Database\\Eloquent\\Model {}');
-    }
+    File::put(config_path('moontrail.php'), '<?php return ["custom" => true];');
 
-    file_put_contents(base_path('app/MoonShine/Resources/UserResource.php'), <<<'PHP'
-<?php
-
-declare(strict_types=1);
-
-namespace App\MoonShine\Resources;
-
-final class UserResource
-{
-    protected string $model = \App\Models\User::class;
-}
-PHP
-    );
-
-    config()->set('moontrail.installer.default_models', ['App\\Models\\User']);
-    config()->set('moontrail.installer.safe_mode_default', true);
-
-    $this->artisan('moontrail:install', ['--no-interaction' => true])
-        ->expectsOutputToContain('Manual steps for App\\MoonShine\\Resources\\UserResource:')
-        ->expectsOutputToContain('Mode: SAFE')
+    $this->artisan('moontrail:install', ['--no-interaction' => true, '--ui' => 'headless', '--logger' => 'spatie'])
         ->assertExitCode(0);
+
+    expect(File::get(config_path('moontrail.php')))->toBe('<?php return ["custom" => true];');
 });
 
-it('clears cache after publishing assets', function (): void {
-    // Note: non_interactive settings removed from config;
-    // Use --force flag or run vendor:publish manually if needed
-    $this->artisan('moontrail:install', ['--no-interaction' => true])
-        ->assertExitCode(0);
-});
+it('rejects unsupported adapters before publishing files', function (): void {
+    $before = File::exists(config_path('moontrail.php')) ? File::get(config_path('moontrail.php')) : null;
 
-it('runs with force flag and auto-patch flag', function (): void {
-    if (! class_exists('App\\Models\\User')) {
-        eval('namespace App\\Models; class User extends \\Illuminate\\Database\\Eloquent\\Model {}');
-    }
-
-    file_put_contents(base_path('app/MoonShine/Resources/UserResource.php'), <<<'PHP'
-<?php
-
-declare(strict_types=1);
-
-namespace App\MoonShine\Resources;
-
-final class UserResource
-{
-    protected string $model = \App\Models\User::class;
-}
-PHP
-    );
-
-    config()->set('moontrail.installer.default_models', ['App\\Models\\User']);
-
-    $this->artisan('moontrail:install', [
-        '--no-interaction' => true,
-        '--force'          => true,
-        '--auto-patch'     => true,
-    ])->assertExitCode(0);
-});
-
-it('aborts installation in non-interactive production environment', function (): void {
-    app()['env'] = 'production';
-
-    $this->artisan('moontrail:install', ['--no-interaction' => true])
+    $this->artisan('moontrail:install', ['--no-interaction' => true, '--ui' => 'unknown'])
         ->assertExitCode(1);
 
-    app()['env'] = 'testing';
+    expect(File::exists(config_path('moontrail.php')) ? File::get(config_path('moontrail.php')) : null)->toBe($before);
 });

@@ -23,9 +23,9 @@ return new class extends Migration
             $table->json('snapshot');
 
             // Link to activity_log or moontrail_activity_log (nullable for initial versions)
-            $table->foreignId('activity_id')
+            $table->unsignedBigInteger('activity_id')
                 ->nullable()
-                ->nullOnDelete();
+                ->index();
 
             // Who created the version
             $table->nullableMorphs('author');

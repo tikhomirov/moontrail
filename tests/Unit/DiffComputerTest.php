@@ -136,6 +136,51 @@ it('computes diff from activity properties with old and attributes', function ()
         ->and($changes['status']->type)->toBe(ChangeType::Unchanged);
 });
 
+it('marks untracked attributes as unchanged in update events when old only has dirty fields', function (): void {
+    config()->set('moontrail.ui.hidden_fields', []);
+
+    // Spatie activity log format for model update:
+    // attributes contains full model snapshot, old only contains dirty fields
+    $properties = collect([
+        'attributes' => [
+            'id'            => 1,
+            'name'          => 'tikhomirov@lanit.ru',
+            'email'         => 'tikhomirov@lanit.ru',
+            'last_login_at' => '2026-10-17 10:44:13',
+        ],
+        'old' => [
+            'last_login_at' => null,
+        ],
+        'changed' => [
+            'last_login_at' => '2026-10-17 10:44:13',
+        ],
+    ]);
+
+    $changes = DiffComputer::fromActivityProperties($properties, event: 'updated');
+
+    expect($changes['last_login_at']->type)->toBe(ChangeType::Modified)
+        ->and($changes['last_login_at']->oldValue)->toBeNull()
+        ->and($changes['last_login_at']->newValue)->toBe('2026-10-17 10:44:13')
+        ->and($changes['id']->type)->toBe(ChangeType::Unchanged)
+        ->and($changes['name']->type)->toBe(ChangeType::Unchanged)
+        ->and($changes['email']->type)->toBe(ChangeType::Unchanged);
+});
+
+it('uses changed properties as after state when attributes is missing', function (): void {
+    config()->set('moontrail.ui.hidden_fields', []);
+
+    $properties = collect([
+        'old'     => ['permissions' => []],
+        'changed' => ['permissions' => ['view.users', 'edit.users']],
+    ]);
+
+    $changes = DiffComputer::fromActivityProperties($properties, event: 'updated');
+
+    expect($changes['permissions']->type)->toBe(ChangeType::Modified)
+        ->and($changes['permissions']->oldValue)->toBe([])
+        ->and($changes['permissions']->newValue)->toBe(['view.users', 'edit.users']);
+});
+
 it('handles non-array properties gracefully', function (): void {
     $changes = DiffComputer::fromActivityProperties(null);
 

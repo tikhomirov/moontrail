@@ -7,8 +7,8 @@ namespace MoonShine\MoonTrail\Versioning;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Gate;
-use MoonShine\Laravel\MoonShineAuth;
 use MoonShine\MoonTrail\Exceptions\RollbackDeniedException;
+use MoonShine\MoonTrail\Support\MoonTrailAuthResolver;
 
 /**
  * Single source of truth for rollback authorization.
@@ -32,21 +32,21 @@ final class RollbackAuthorizationResolver
      */
     public function authorize(Model $model): void
     {
-        $guard = MoonShineAuth::getGuard();
+        $user = app(MoonTrailAuthResolver::class)->resolveUser();
 
-        if (! $guard->check()) {
-            throw new AuthorizationException('MoonShine user is not authenticated.');
+        if ($user === null) {
+            throw new AuthorizationException('MoonTrail user is not authenticated.');
         }
 
         $policy = Gate::getPolicyFor($model);
 
         if (is_object($policy) && method_exists($policy, 'rollback')) {
-            Gate::forUser($guard->user())->authorize('rollback', $model);
+            Gate::forUser($user)->authorize('rollback', $model);
 
             return;
         }
 
-        if (method_exists($model, 'isRollbackAllowed') && $model->isRollbackAllowed()) {
+        if (config('moontrail.ui_adapter') === 'moonshine' && method_exists($model, 'isRollbackAllowed') && $model->isRollbackAllowed()) {
             return;
         }
 
@@ -58,19 +58,19 @@ final class RollbackAuthorizationResolver
      */
     public function canRollback(Model $model): bool
     {
-        $guard = MoonShineAuth::getGuard();
+        $user = app(MoonTrailAuthResolver::class)->resolveUser();
 
-        if (! $guard->check()) {
+        if ($user === null) {
             return false;
         }
 
         $policy = Gate::getPolicyFor($model);
 
         if (is_object($policy) && method_exists($policy, 'rollback')) {
-            return Gate::forUser($guard->user())->allows('rollback', $model);
+            return Gate::forUser($user)->allows('rollback', $model);
         }
 
-        if (method_exists($model, 'isRollbackAllowed')) {
+        if (config('moontrail.ui_adapter') === 'moonshine' && method_exists($model, 'isRollbackAllowed')) {
             return $model->isRollbackAllowed();
         }
 

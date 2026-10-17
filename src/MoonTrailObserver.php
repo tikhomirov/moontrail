@@ -183,6 +183,17 @@ final class MoonTrailObserver
      */
     private function shouldLogActivity(Model $model): bool
     {
+        if (method_exists($model, 'shouldMoonTrailLogActivity')) {
+            return (bool) $model->shouldMoonTrailLogActivity();
+        }
+
+        if (in_array(Traits\HasMoonTrailVersioning::class, class_uses_recursive($model), true)
+            && ! in_array(Traits\HasMoonTrailActivity::class, class_uses_recursive($model), true)
+            && ! in_array(\Spatie\Activitylog\Traits\LogsActivity::class, class_uses_recursive($model), true)
+        ) {
+            return false;
+        }
+
         return ! in_array(\Spatie\Activitylog\Traits\LogsActivity::class, class_uses_recursive($model), true);
     }
 

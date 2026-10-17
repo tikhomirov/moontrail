@@ -16,11 +16,17 @@ abstract class TestCase extends Orchestra
 
     protected function getPackageProviders($app): array
     {
-        return [
+        $providers = [
             MoonShineServiceProvider::class,
             SpatieActivitylogServiceProvider::class,
             MoonTrailServiceProvider::class,
         ];
+
+        if (class_exists(\Livewire\LivewireServiceProvider::class)) {
+            $providers[] = \Livewire\LivewireServiceProvider::class;
+        }
+
+        return $providers;
     }
 
     protected function defineDatabaseMigrations(): void
@@ -45,5 +51,7 @@ abstract class TestCase extends Orchestra
 
         $app['config']->set('activitylog.table_name', 'activity_log');
         $app['config']->set('activitylog.database_connection', 'testing');
+        $app['config']->set('moontrail.ui_adapter', 'moonshine');
+        $app['config']->set('moontrail.activity_logger', 'spatie');
     }
 }

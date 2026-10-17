@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace MoonShine\MoonTrail\Support;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Auth;
 use MoonShine\Laravel\MoonShineAuth;
 use Throwable;
 
@@ -16,7 +17,10 @@ final class MoonTrailAuthResolver
     public function resolveUser(): ?Model
     {
         try {
-            $guard = MoonShineAuth::getGuard();
+            $guardName = config('moontrail.auth_guard', 'web');
+            $guard = config('moontrail.ui_adapter') === 'moonshine' && class_exists(MoonShineAuth::class)
+                ? MoonShineAuth::getGuard()
+                : Auth::guard(is_string($guardName) ? $guardName : 'web');
 
             if ($guard->check()) {
                 $user = $guard->user();
@@ -26,9 +30,13 @@ final class MoonTrailAuthResolver
                 }
             }
 
-            $defaultUser = auth()->user();
+            if (config('moontrail.ui_adapter') === 'moonshine') {
+                $defaultUser = auth()->user();
 
-            return $defaultUser instanceof Model ? $defaultUser : null;
+                return $defaultUser instanceof Model ? $defaultUser : null;
+            }
+
+            return null;
         } catch (Throwable) {
             return null;
         }

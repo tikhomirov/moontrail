@@ -5,467 +5,80 @@ declare(strict_types=1);
 namespace MoonShine\MoonTrail\Console\Commands;
 
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Artisan;
-use Illuminate\Support\Facades\DB;
-use MoonShine\Laravel\Providers\MoonShineServiceProvider;
-use MoonShine\MoonTrail\Installer\ConfigUpdater;
-use MoonShine\MoonTrail\Installer\ModelScanner;
-use MoonShine\MoonTrail\Installer\ResourcePatcher;
-use MoonShine\MoonTrail\Installer\ResourceScanner;
-use MoonShine\MoonTrail\Support\MoonTrailConfig;
-use Throwable;
-
-use function array_filter;
-use function array_map;
-use function array_unique;
-use function array_values;
-use function class_exists;
-use function file_exists;
-use function filter_var;
-use function in_array;
-use function is_scalar;
-use function is_string;
-use function Laravel\Prompts\multiselect;
-use function sprintf;
 
 final class InstallMoonTrailCommand extends Command
 {
-    protected $signature = 'moontrail:install
-                            {--force : Overwrite published files when possible}
-                            {--safe= : Do not modify PHP files of resources/models}
-                            {--auto-patch : Try to auto-patch MoonShine resources after confirmation}';
+    protected $signature = 'moontrail:install {--ui= : moonshine, livewire, headless} {--logger= : spatie, database, none}';
 
-    protected $description = 'Interactive installer for MoonShine Logs package';
-
-    /**
-     * @var array<int, string>
-     */
-    private array $publishSteps = [];
-
-    private bool $migrationsExecuted = false;
-
-    /**
-     * @var array<int, string>
-     */
-    private array $selectedModels = [];
-
-    /**
-     * @var array<int, string>
-     */
-    private array $resourcesUpdated = [];
-
-    /**
-     * @var array<int, string>
-     */
-    private array $resourcesManual = [];
-
-    public function __construct(
-        private readonly ModelScanner $modelScanner,
-        private readonly ConfigUpdater $configUpdater,
-        private readonly ResourceScanner $resourceScanner,
-        private readonly ResourcePatcher $resourcePatcher,
-    ) {
-        parent::__construct();
-    }
+    protected $description = 'Publish MoonTrail configuration and migrations without modifying application code';
 
     public function handle(): int
     {
-        $safeMode = $this->resolveSafeMode();
+        $ui = $this->option('ui') ?: ($this->input->isInteractive() ? $this->choice('UI', ['headless', 'moonshine', 'livewire'], 'headless') : 'headless');
+        $logger = $this->option('logger') ?: ($this->input->isInteractive() ? $this->choice('Activity logger', ['spatie', 'database', 'none'], 'none') : 'none');
 
-        if (! $this->checkMoonShineInstalled() || ! $this->checkDatabaseConnection() || ! $this->confirmProduction()) {
+        if (! in_array($ui, ['headless', 'moonshine', 'livewire'], true) || ! in_array($logger, ['spatie', 'database', 'none'], true)) {
+            $this->error('Unsupported MoonTrail UI or logger.');
+
             return self::FAILURE;
         }
 
-        $this->handlePublishing();
-        $this->handleMigrations();
-        $this->handleModelSelection();
-        $this->handleResourceSelection($safeMode);
+        if ($ui === 'moonshine' && ! class_exists(\MoonShine\Laravel\MoonShineAuth::class)) {
+            $this->error('Install moonshine/moonshine before choosing MoonShine UI.');
 
-        $this->printSummary($safeMode);
-
-        return self::SUCCESS;
-    }
-
-    private function resolveSafeMode(): bool
-    {
-        if ($this->option('auto-patch')) {
-            return false;
+            return self::FAILURE;
         }
 
-        $default = MoonTrailConfig::installerDefaultSafeMode();
+        if ($ui === 'livewire' && ! class_exists(\Livewire\Livewire::class)) {
+            $this->error('Install livewire/livewire before choosing Livewire UI.');
 
-        $raw = $this->option('safe');
-
-        if ($raw === null) {
-            return $default;
+            return self::FAILURE;
         }
 
-        if (is_bool($raw)) {
-            return $raw;
-        }
+        if ($logger === 'spatie' && ! class_exists(\Spatie\Activitylog\Models\Activity::class)) {
+            $this->error('Install spatie/laravel-activitylog before choosing Spatie logging.');
 
-        if (! is_scalar($raw)) {
-            return $default;
-        }
-
-        $parsed = filter_var((string) $raw, FILTER_VALIDATE_BOOL, FILTER_NULL_ON_FAILURE);
-
-        return $parsed ?? $default;
-    }
-
-    private function checkMoonShineInstalled(): bool
-    {
-        if (! class_exists(MoonShineServiceProvider::class)) {
-            $this->components->error('MoonShine package was not detected. Install moonshine/moonshine first.');
-
-            return false;
-        }
-
-        $this->components->info('MoonShine detected');
-
-        return true;
-    }
-
-    private function checkDatabaseConnection(): bool
-    {
-        try {
-            DB::connection()->getPdo();
-        } catch (Throwable $exception) {
-            $this->components->error('Database connection failed. Check DB_* env variables and retry.');
-            $this->line($exception->getMessage());
-
-            return false;
-        }
-
-        $this->components->info('DB connection ok');
-
-        return true;
-    }
-
-    private function confirmProduction(): bool
-    {
-        if (! app()->environment('production')) {
-            return true;
-        }
-
-        if (! $this->input->isInteractive()) {
-            $this->components->error('Application is in production. Run installer interactively to confirm.');
-
-            return false;
-        }
-
-        return $this->confirm('App is in production. Continue?', false);
-    }
-
-    private function handlePublishing(): void
-    {
-        $steps = [
-            'config' => 'moontrail-config',
-            'views'  => 'moontrail-views',
-            'lang'   => 'moontrail-lang',
-            'assets' => 'moontrail-assets',
-        ];
-
-        $assetsPublished = false;
-
-        foreach ($steps as $label => $tag) {
-            if (! $this->shouldPublishStep($label)) {
-                continue;
-            }
-
-            $exitCode = Artisan::call('vendor:publish', [
-                '--tag'   => $tag,
-                '--force' => (bool) $this->option('force'),
-            ]);
-
-            if ($exitCode === self::SUCCESS) {
-                $this->publishSteps[] = $label;
-                $this->components->info(sprintf('Published %s', $label));
-
-                if ($label === 'assets') {
-                    $assetsPublished = true;
-                }
-            }
-        }
-
-        if ($assetsPublished) {
-            Artisan::call('optimize:clear');
-            $this->components->info('Cache cleared to ensure fresh assets');
-        }
-    }
-
-    private function handleMigrations(): void
-    {
-        if (! $this->shouldRunMigrationsStep()) {
-            return;
-        }
-
-        if (app()->environment('production') && ! $this->confirm('Run migrations in production with --force?', false)) {
-            return;
-        }
-
-        $exitCode = Artisan::call('migrate', ['--force' => true]);
-
-        if ($exitCode === self::SUCCESS) {
-            $this->migrationsExecuted = true;
-            $this->components->info('Migrations completed');
-        }
-    }
-
-    private function handleModelSelection(): void
-    {
-        $candidates = $this->discoverCandidateModels();
-        $defaults = $this->discoverDefaultModels();
-
-        if ($candidates === []) {
-            $this->components->warn('No models found in app/Models.');
-
-            return;
-        }
-
-        if ($this->input->isInteractive()) {
-            $selected = multiselect(
-                label: 'Select models to track',
-                options: $candidates,
-                default: $defaults,
-            );
-
-            $this->selectedModels = array_values(array_filter(
-                array_map(static fn (int|string $value): string => (string) $value, $selected),
-                static fn (string $value): bool => $value !== '',
-            ));
-        } else {
-            $this->selectedModels = $defaults;
-        }
-
-        if ($this->selectedModels === []) {
-            $this->components->warn('No models selected for tracking.');
-
-            return;
+            return self::FAILURE;
         }
 
         $configPath = config_path('moontrail.php');
 
-        if (! file_exists($configPath)) {
-            $this->handleMissingConfigFile();
+        if (file_exists($configPath)) {
+            $this->warn('Existing config/moontrail.php was not overwritten. Set ui_adapter and activity_logger manually.');
+        } else {
+            $config = file_get_contents(__DIR__ . '/../../../config/moontrail.php');
 
-            return;
+            if ($config === false) {
+                $this->error('Could not read MoonTrail configuration template.');
+
+                return self::FAILURE;
+            }
+            $config = str_replace("'ui_adapter' => 'headless'", "'ui_adapter' => '{$ui}'", $config);
+            $config = str_replace("env('MOONTRAIL_LOGGER', 'auto')", "env('MOONTRAIL_LOGGER', '{$logger}')", $config);
+            file_put_contents($configPath, $config);
+            $this->info('Published config/moontrail.php.');
         }
 
-        if ($this->configUpdater->updateTrackedModels($configPath, $this->selectedModels)) {
-            $this->components->info('Updated auto_track_models and tracked_models in config.');
+        $migrations = ['2024_01_01_000001_create_model_versions_table.php'];
 
-            return;
+        if ($logger === 'database') {
+            $migrations[] = '2024_01_01_000002_create_moontrail_activity_log_table.php';
+            $migrations[] = '2026_03_22_000003_align_moontrail_activity_log_schema.php';
+            $migrations[] = '2026_03_22_000004_optimize_moontrail_activity_log_indexes.php';
         }
 
-        $this->components->warn('Could not update config automatically. Apply snippet manually:');
-        $this->line($this->configUpdater->buildManualSnippet($this->selectedModels));
-    }
+        foreach ($migrations as $migration) {
+            $destination = database_path('migrations/' . $migration);
 
-    private function handleMissingConfigFile(): void
-    {
-        if ($this->shouldPublishMissingConfigStep()) {
-            $exitCode = Artisan::call('vendor:publish', [
-                '--tag'   => 'moontrail-config',
-                '--force' => (bool) $this->option('force'),
-            ]);
-
-            if ($exitCode === self::SUCCESS) {
-                $this->publishSteps[] = 'config';
-
-                $configPath = config_path('moontrail.php');
-
-                if ($this->configUpdater->updateTrackedModels($configPath, $this->selectedModels)) {
-                    $this->components->info('Config published and updated.');
-
-                    return;
-                }
+            if (! file_exists($destination)) {
+                copy(__DIR__ . '/../../../database/migrations/' . $migration, $destination);
+                $this->info("Published {$migration}.");
             }
         }
 
-        $this->components->warn('Config file is missing. Add this snippet manually to moontrail config:');
-        $this->line($this->configUpdater->buildManualSnippet($this->selectedModels));
-    }
+        $this->components->info('No migrations were run and no application code was changed.');
+        $this->line('Next: configure the model policy, add HasMoonTrail to selected models, embed the selected UI, then run migrations in a safe deployment step.');
 
-    private function handleResourceSelection(bool $safeMode): void
-    {
-        $resources = $this->resourceScanner->scan(base_path('app/MoonShine/Resources'));
-
-        if ($resources === []) {
-            $this->components->warn('No MoonShine resources found in app/MoonShine/Resources.');
-
-            return;
-        }
-
-        $defaults = array_values(array_map(
-            static fn (array $resource): string => $resource['name'],
-            array_filter(
-                $resources,
-                fn (array $resource): bool => in_array($resource['model'], $this->selectedModels, true),
-            ),
-        ));
-
-        $choices = array_values(array_map(static fn (array $resource): string => $resource['name'], $resources));
-
-        $selectedNames = $this->input->isInteractive()
-            ? multiselect(
-                label: 'Select resources for History tab',
-                options: $choices,
-                default: $defaults,
-            )
-            : $defaults;
-
-        $selectedNames = array_values(array_filter(
-            array_map(static fn (int|string $value): string => (string) $value, $selectedNames),
-            static fn (string $value): bool => $value !== '',
-        ));
-
-        if ($selectedNames === []) {
-            return;
-        }
-
-        $selectedResources = array_values(array_filter(
-            $resources,
-            static fn (array $resource): bool => in_array($resource['name'], $selectedNames, true),
-        ));
-
-        if ($safeMode) {
-            foreach ($selectedResources as $resource) {
-                $this->resourcesManual[] = $resource['name'];
-                $this->printManualResourceInstructions($resource['class']);
-            }
-
-            return;
-        }
-
-        if (! $this->confirmAutoPatch()) {
-            foreach ($selectedResources as $resource) {
-                $this->resourcesManual[] = $resource['name'];
-                $this->printManualResourceInstructions($resource['class']);
-            }
-
-            return;
-        }
-
-        foreach ($selectedResources as $resource) {
-            if ($this->resourcePatcher->patch($resource['path'])) {
-                $this->resourcesUpdated[] = $resource['name'];
-                continue;
-            }
-
-            $this->resourcesManual[] = $resource['name'];
-            $this->printManualResourceInstructions($resource['class']);
-        }
-    }
-
-    private function confirmAutoPatch(): bool
-    {
-        if (! (bool) $this->option('auto-patch')) {
-            return false;
-        }
-
-        if (! $this->input->isInteractive()) {
-            return false;
-        }
-
-        return $this->confirm('Auto-patch can modify resource PHP files. Continue?', false);
-    }
-
-    private function printManualResourceInstructions(string $resourceClass): void
-    {
-        $this->line("Manual steps for {$resourceClass}:");
-        $this->line('1) add: use MoonShine\\MoonTrail\\Traits\\WithMoonTrailTab;');
-        $this->line('2) add trait in class: use WithMoonTrailTab;');
-        $this->line('   The history tab will appear automatically on the detail page.');
-    }
-
-    /**
-     * @return array<int, string>
-     */
-    private function discoverCandidateModels(): array
-    {
-        $models = $this->modelScanner->scan(base_path('app/Models'));
-
-        foreach ($this->discoverDefaultModels() as $defaultModel) {
-            $models[] = $defaultModel;
-        }
-
-        return array_values(array_unique($models));
-    }
-
-    /**
-     * @return array<int, string>
-     */
-    private function discoverDefaultModels(): array
-    {
-        $defaults = MoonTrailConfig::installerSuggestedModels();
-
-        $resolved = [];
-
-        foreach ($defaults as $candidate) {
-            /** @phpstan-ignore booleanAnd.alwaysTrue, function.alreadyNarrowedType */
-            if (! is_string($candidate)) {
-                continue;
-            }
-
-            if (! class_exists($candidate)) {
-                continue;
-            }
-
-            $resolved[] = $candidate;
-        }
-
-        return $resolved;
-    }
-
-    private function shouldPublishStep(string $label): bool
-    {
-        if ($this->input->isInteractive()) {
-            return $this->confirm(sprintf('Publish %s?', $label), false);
-        }
-
-        // In non-interactive mode, we don't auto-publish anything.
-        // Use --force flag or run vendor:publish manually if needed.
-        return false;
-    }
-
-    private function shouldRunMigrationsStep(): bool
-    {
-        if ($this->input->isInteractive()) {
-            return $this->confirm('Run migrations now?', false);
-        }
-
-        // In non-interactive mode, we don't auto-run migrations.
-        // Use --force flag or run migrate manually if needed.
-        return false;
-    }
-
-    private function shouldPublishMissingConfigStep(): bool
-    {
-        if ($this->input->isInteractive()) {
-            return $this->confirm('Config is not published. Publish config now?', true);
-        }
-
-        // In non-interactive mode, we don't auto-publish.
-        return false;
-    }
-
-    private function printSummary(bool $safeMode): void
-    {
-        $this->newLine();
-        $this->components->info('Installation summary');
-        $this->line('Publish steps: ' . ($this->publishSteps === [] ? 'none' : implode(', ', $this->publishSteps)));
-        $this->line('Migrations: ' . ($this->migrationsExecuted ? 'executed' : 'skipped'));
-        $this->line('Tracked models: ' . ($this->selectedModels === [] ? 'none' : implode(', ', $this->selectedModels)));
-        $this->line('Resources updated: ' . ($this->resourcesUpdated === [] ? 'none' : implode(', ', $this->resourcesUpdated)));
-        $this->line('Resources requiring manual changes: ' . ($this->resourcesManual === [] ? 'none' : implode(', ', $this->resourcesManual)));
-        $this->line('Mode: ' . ($safeMode ? 'SAFE' : 'AUTO-PATCH'));
-
-        $this->newLine();
-        $this->line('Next checks:');
-        $this->line('1) Hard refresh browser (Ctrl+Shift+R) to load fresh CSS');
-        $this->line('2) Open /admin/resource/moon-trail-resource/moon-trail-index-page');
-        $this->line('3) Check storage/logs/laravel.log');
-        $this->line('4) Run composer ci');
+        return self::SUCCESS;
     }
 }

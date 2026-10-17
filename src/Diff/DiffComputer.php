@@ -50,7 +50,8 @@ final class DiffComputer
                         masked: $isMasked,
                     ),
                 ];
-            });
+            })
+            ->sortBy(static fn (FieldChange $change): int => $change->type === ChangeType::Unchanged ? 1 : 0);
 
         /** @var array<string, FieldChange> $result */
         $result = $changes->all();
@@ -62,10 +63,11 @@ final class DiffComputer
      * @param Collection<string, mixed>|array<string, mixed>|null $properties
      * @return array<string, FieldChange>
      */
-    public static function fromActivityProperties(Collection|array|null $properties): array
+    public static function fromActivityProperties(Collection|array|null $properties, ?string $event = null): array
     {
         $attributes = data_get($properties, 'attributes', []);
         $old = data_get($properties, 'old', []);
+        $changed = data_get($properties, 'changed', []);
 
         if (! is_array($attributes)) {
             $attributes = [];
@@ -73,6 +75,24 @@ final class DiffComputer
 
         if (! is_array($old)) {
             $old = [];
+        }
+
+        if (! is_array($changed)) {
+            $changed = [];
+        }
+
+        if (empty($attributes) && ! empty($changed)) {
+            $attributes = $changed;
+        }
+
+        $isUpdateEvent = $event === 'updated' || $event === 'reverted' || (! empty($old) && ! empty($attributes));
+
+        if ($isUpdateEvent && ! empty($old)) {
+            foreach ($attributes as $key => $value) {
+                if (! array_key_exists($key, $old) && ! array_key_exists($key, $changed)) {
+                    $old[$key] = $value;
+                }
+            }
         }
 
         /** @var array<int, string> $hiddenFields */
@@ -93,6 +113,6 @@ final class DiffComputer
      */
     public static function fromActivity(ActivityRecordContract $activity): array
     {
-        return self::fromActivityProperties($activity->getProperties());
+        return self::fromActivityProperties($activity->getProperties(), $activity->getEvent());
     }
 }

@@ -67,14 +67,42 @@ final class MoonTrailServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        $this->loadMigrationsFrom(__DIR__ . '/../database/migrations');
+        if (! in_array(config('moontrail.ui_adapter'), ['headless', 'moonshine', 'livewire'], true)) {
+            throw new RuntimeException('Unsupported moontrail.ui_adapter.');
+        }
+
+        // Migrations are published explicitly by the installer for the selected driver.
         $this->loadTranslationsFrom(__DIR__ . '/../lang', 'moontrail');
         $this->loadViewsFrom(__DIR__ . '/../resources/views', 'moontrail');
-        $this->loadRoutesFrom(__DIR__ . '/../routes/moontrail.php');
 
-        $this->warnAboutTailwindDependency();
+        if (config('moontrail.ui_adapter') === 'moonshine') {
+            $this->loadRoutesFrom(__DIR__ . '/../routes/moontrail.php');
+        }
 
-        $this->registerResource();
+        if (config('moontrail.ui_adapter') !== 'headless') {
+            $this->warnAboutTailwindDependency();
+        }
+
+        if (config('moontrail.ui_adapter') === 'moonshine') {
+            if (! class_exists(\MoonShine\Laravel\MoonShineAuth::class)) {
+                throw new RuntimeException('MoonTrail MoonShine UI requires moonshine/moonshine.');
+            }
+
+            $this->registerResource();
+        }
+
+        if (config('moontrail.ui_adapter') === 'livewire' && ! class_exists(\Livewire\Livewire::class)) {
+            throw new RuntimeException('MoonTrail Livewire UI requires livewire/livewire.');
+        }
+
+        if (config('moontrail.ui_adapter') === 'livewire') {
+            \Livewire\Livewire::component('moontrail-timeline', \MoonShine\MoonTrail\Adapters\Livewire\Components\ActivityTimeline::class);
+            \Livewire\Livewire::component('moontrail-timeline-modal', \MoonShine\MoonTrail\Adapters\Livewire\Components\ActivityTimelineModal::class);
+            \Livewire\Livewire::component('moontrail-diff-modal', \MoonShine\MoonTrail\Adapters\Livewire\Components\ActivityDiffModal::class);
+            \Livewire\Livewire::component('moontrail-detail-modal', \MoonShine\MoonTrail\Adapters\Livewire\Components\ActivityDetailModal::class);
+            \Livewire\Livewire::component('moontrail-index', \MoonShine\MoonTrail\Adapters\Livewire\Components\ActivityIndex::class);
+        }
+
         $this->registerAutoTracking();
         $this->registerModelVersionActivityResolver();
         $this->validateCustomModeBindings();
@@ -89,6 +117,10 @@ final class MoonTrailServiceProvider extends ServiceProvider
             $this->publishes([
                 __DIR__ . '/../config/moontrail.php' => config_path('moontrail.php'),
             ], 'moontrail-config');
+
+            $this->publishes([
+                __DIR__ . '/../database/migrations/2024_01_01_000001_create_model_versions_table.php' => database_path('migrations/2024_01_01_000001_create_model_versions_table.php'),
+            ], 'moontrail-versions');
 
             $this->publishes([
                 __DIR__ . '/../resources/views' => resource_path('views/vendor/moontrail'),

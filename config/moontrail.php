@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 return [
+    'ui_adapter' => 'headless',
     /*
     |--------------------------------------------------------------------------
     | Activity Logger

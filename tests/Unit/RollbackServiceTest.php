@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use MoonShine\MoonTrail\Exceptions\RollbackConflictException;
 use MoonShine\MoonTrail\Tests\Fixtures\TestPost;
 use MoonShine\MoonTrail\Versioning\RollbackService;
 use MoonShine\MoonTrail\Versioning\VersionManager;
@@ -21,6 +22,20 @@ it('rolls back model to target version', function (): void {
     $post->refresh();
 
     expect($post->name)->toBe('Original');
+});
+
+it('rejects a rollback confirmed against an outdated version', function (): void {
+    $post = TestPost::query()->create(['name' => 'Original']);
+    $manager = app(VersionManager::class);
+    $manager->createVersion($post, 'created');
+
+    $post->update(['name' => 'Current']);
+    $manager->createVersion($post, 'updated');
+
+    expect(fn () => app(RollbackService::class)->rollback($post, 1, expectedCurrentVersion: 1))
+        ->toThrow(RollbackConflictException::class);
+
+    expect($post->fresh()->name)->toBe('Current');
 });
 
 it('throws ModelVersionNotFoundException for non-existent version', function (): void {

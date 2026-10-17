@@ -48,8 +48,12 @@ final readonly class RollbackService implements RollbackStrategyContract
      * @throws RollbackCancelledException
      * @throws ModelVersionNotFoundException
      */
-    public function rollback(Model $model, int $targetVersion, ?array $rules = null): Model
+    public function rollback(Model $model, int $targetVersion, ?array $rules = null, ?int $expectedCurrentVersion = null): Model
     {
+        if ($expectedCurrentVersion === null && config('moontrail.ui_adapter') !== 'moonshine') {
+            throw new RollbackConflictException('Expected current version is required outside MoonShine.');
+        }
+
         $this->logger->info('rollback_start', [
             'subject_type'   => $model->getMorphClass(),
             'subject_id'     => $model->getKey(),
@@ -121,7 +125,7 @@ final readonly class RollbackService implements RollbackStrategyContract
         try {
             $result = MoonTrailObserver::withoutTracking(
                 fn (): array => DB::transaction(
-                    function () use ($model, $payload, $targetVersion, $fromVersion): array {
+                    function () use ($model, $payload, $targetVersion, $fromVersion, $expectedCurrentVersion): array {
                         $query = $model->newQuery();
 
                         if ($this->usesSoftDeletes($model)) {
@@ -133,6 +137,22 @@ final readonly class RollbackService implements RollbackStrategyContract
                             ->whereKey($model->getKey())
                             ->lockForUpdate()
                             ->firstOrFail();
+
+                        if ($expectedCurrentVersion !== null) {
+                            $rawVersion = ModelVersion::query()
+                                ->where('versionable_type', $freshModel->getMorphClass())
+                                ->where('versionable_id', $freshModel->getKey())
+                                ->max('version');
+                            $currentVersion = is_numeric($rawVersion) ? (int) $rawVersion : 0;
+
+                            if ($currentVersion !== $expectedCurrentVersion) {
+                                throw new RollbackConflictException('The model changed after confirmation. Reload its history.');
+                            }
+
+                            if ($freshModel->getRawOriginal('updated_at') !== $model->getRawOriginal('updated_at')) {
+                                throw new RollbackConflictException('The model changed after confirmation. Reload its history.');
+                            }
+                        }
 
                         if (
                             $this->usesSoftDeletes($freshModel)

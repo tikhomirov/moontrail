@@ -28,11 +28,12 @@ final class DatabaseActivityQuery implements ActivityQueryContract
     {
         $filterData = ActivityLogFilterData::fromArray($filters);
         $perPage = MoonTrailConfig::uiPerPage();
+        $page = isset($filters['page']) && is_numeric($filters['page']) ? (int) $filters['page'] : null;
 
         return (new ActivityLogQuery)->apply(MoonTrailActivity::query(), $filterData)
             ->with(['subject', 'causer'])
             ->latest('id')
-            ->paginate($perPage);
+            ->paginate($perPage, ['*'], 'page', $page);
     }
 
     public function find(int|string $id): ?ActivityRecordContract

@@ -26,6 +26,24 @@ final class ActivityAuthorizationResolver
      */
     public function authorize(ActivityRecordContract $activity): void
     {
+        if (config('moontrail.ui_adapter') !== 'moonshine') {
+            $user = app(MoonTrailAuthResolver::class)->resolveUser();
+            $subjectType = $activity->getSubjectType();
+            $subjectId = $activity->getSubjectId();
+
+            if ($user === null || $subjectType === null || ! is_subclass_of($subjectType, Model::class)) {
+                throw new AuthorizationException('Viewing this activity is denied.');
+            }
+
+            $subject = $subjectType::query()->find($subjectId);
+
+            if (! $subject instanceof Model || ! Gate::forUser($user)->allows('view', $subject)) {
+                throw new AuthorizationException('Viewing this activity is denied.');
+            }
+
+            return;
+        }
+
         $guard = MoonShineAuth::getGuard();
         $user = $guard->user();
 

@@ -174,6 +174,8 @@ final readonly class VersionManager implements VersionManagerContract
      */
     private function snapshot(Model $model): array
     {
+        // Hidden attributes must never reach a persisted snapshot, even if a model
+        // customizes its array serialization or exposes them through an accessor.
         $attributes = $model->attributesToArray();
 
         if (method_exists($model, 'getVersionExcludedFields')) {

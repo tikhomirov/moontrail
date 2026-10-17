@@ -27,12 +27,16 @@
     },
     "require": {
         "php": "^8.2",
-        "moonshine/moonshine": "^4.8"
+        "illuminate/support": "^11.0 || ^12.0 || ^13.0"
     },
     "suggest": {
+        "moonshine/moonshine": "MoonShine admin UI (^4.8)",
+        "livewire/livewire": "Livewire and Blade UI (^3.0)",
         "spatie/laravel-activitylog": "Required when using the 'spatie' or 'auto' activity logger (^4.7)"
     },
     "require-dev": {
+        "moonshine/moonshine": "^4.8",
+        "livewire/livewire": "^3.0",
         "spatie/laravel-activitylog": "^4.7",
         "orchestra/testbench": "^9.0 || ^10.0 || ^11.0",
         "pestphp/pest": "^3.0 || ^4.0",
