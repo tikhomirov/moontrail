@@ -63,7 +63,7 @@ final class ActivityDiffModal extends Component
                 try {
                     app(ActivityAuthorizationResolver::class)->authorize($record);
                     $changes = DiffComputer::fromActivity($record);
-                    $event = (string) $record->getEvent();
+                    $event = $record->getEvent();
                     $description = $record->getDescription();
                     $date = $record->getCreatedAt()->format(MoonTrailConfig::uiDateFormat());
 
@@ -72,7 +72,7 @@ final class ActivityDiffModal extends Component
                     $causerId = $record->getCauserId();
                     $causer = is_object($causerObj) && isset($causerObj->name)
                         ? (string) $causerObj->name
-                        : (is_scalar($causerId) && (string) $causerId !== '' ? ('ID: ' . (string) $causerId) : __('moontrail::ui.system'));
+                        : (is_scalar($causerId) && (string) $causerId !== '' ? ('ID: ' . $causerId) : __('moontrail::ui.system'));
 
                     $rawSubjectType = $record->getSubjectType();
                     $subjectType = is_string($rawSubjectType) ? class_basename($rawSubjectType) : '—';

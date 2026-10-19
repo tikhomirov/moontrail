@@ -149,7 +149,7 @@ final class ActivityTimeline extends Component
                 ->limit(30)
                 ->get(),
             'canRollback' => app(RollbackAuthorizationResolver::class)->canRollback($model),
-            'changes'     => $selectedVersion !== null
+            'changes'     => $selectedVersion instanceof \MoonShine\MoonTrail\Models\ModelVersion
                 ? app(VersionManagerContract::class)->diffWithCurrent($selectedVersion, $model)
                 : [],
         ]);

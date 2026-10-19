@@ -81,13 +81,13 @@ final class DiffComputer
             $changed = [];
         }
 
-        if (empty($attributes) && ! empty($changed)) {
+        if ($attributes === [] && $changed !== []) {
             $attributes = $changed;
         }
 
-        $isUpdateEvent = $event === 'updated' || $event === 'reverted' || (! empty($old) && ! empty($attributes));
+        $isUpdateEvent = $event === 'updated' || $event === 'reverted' || ($old !== [] && $attributes !== []);
 
-        if ($isUpdateEvent && ! empty($old)) {
+        if ($isUpdateEvent && $old !== []) {
             foreach ($attributes as $key => $value) {
                 if (! array_key_exists($key, $old) && ! array_key_exists($key, $changed)) {
                     $old[$key] = $value;
