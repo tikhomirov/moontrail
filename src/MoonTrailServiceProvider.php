@@ -407,16 +407,7 @@ final class MoonTrailServiceProvider extends ServiceProvider
 
     private function logRuntimeResolution(): void
     {
-        $runtime = $this->app->make(ActivityRuntime::class);
-        $event = $runtime->configuredDriver === 'auto'
-            ? sprintf('auto resolved to "%s" driver', $runtime->resolvedDriver)
-            : 'runtime_resolved';
-
-        $this->app->make(MoonTrailLogger::class)->info($event, [
-            'configured_driver' => $runtime->configuredDriver,
-            'resolved_driver'   => $runtime->resolvedDriver,
-            'activity_model'    => $runtime->activityModel,
-            'resolution_mode'   => $runtime->configuredDriver === 'auto' ? 'auto_detected' : 'explicit',
-        ]);
+        $this->app->make(MoonTrailLogger::class)
+            ->runtimeResolution($this->app->make(ActivityRuntime::class));
     }
 }

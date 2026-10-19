@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.0.1 - 2026-10-19
 
 ### Fixed
 
@@ -12,6 +12,11 @@
   `ui_adapter=livewire`/`headless` без установленного moonshine команда падала с
   `Unable to locate a class or view for component [moonshine::icon]`, и деплой
   host-приложения вынужденно шёл с `php artisan optimize --except=views`.
+- **Засорение лога на каждом запросе** — диагностика выбора драйвера
+  (`MoonTrail: runtime_resolved`) писалась на уровне `info` при каждом boot
+  приложения, то есть на каждый HTTP-запрос. Теперь она пишется на уровне
+  `debug` (`MoonTrailLogger::runtimeResolution()`), поэтому в production-логе
+  с обычным `LOG_LEVEL` её нет.
 
 ### Changed
 
