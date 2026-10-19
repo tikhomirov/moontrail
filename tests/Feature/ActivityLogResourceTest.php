@@ -157,7 +157,7 @@ it('allows VIEW ability', function (): void {
 });
 
 it('shows System when causer_type is null', function (): void {
-    $html = view('moontrail::components.entity-link', [
+    $html = view('moontrail-moonshine::components.entity-link', [
         'morphType' => null,
         'morphId'   => null,
         'model'     => null,
@@ -193,13 +193,13 @@ it('renders Open button in relations only when matching resource is available', 
     $post = TestPost::query()->create(['name' => 'Open Me']);
     $openLabel = (string) __('moontrail::ui.open');
 
-    $withResource = view('moontrail::components.relation-entry', [
+    $withResource = view('moontrail-moonshine::components.relation-entry', [
         'morphType' => TestPost::class,
         'morphId'   => $post->getKey(),
         'model'     => $post,
         'openLabel' => $openLabel,
     ])->render();
-    $withoutResource = view('moontrail::components.relation-entry', [
+    $withoutResource = view('moontrail-moonshine::components.relation-entry', [
         'morphType' => 'App\\Models\\UnknownModel',
         'morphId'   => 777,
         'model'     => null,

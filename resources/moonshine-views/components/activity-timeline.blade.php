@@ -260,7 +260,7 @@
 
     {{-- Rollback confirmation modal --}}
     @if($showRollback && $canRollback)
-        @include('moontrail::components.rollback-confirm')
+        @include('moontrail-moonshine::components.rollback-confirm')
     @endif
 
 

@@ -6,7 +6,7 @@
 /** @var string $date */
 @endphp
 <div class="ms-al-card">
-    @include('moontrail::components.section-header', ['type' => 'general'])
+    @include('moontrail-moonshine::components.section-header', ['type' => 'general'])
     <div class="px-4 py-2">
         <div class="ms-al-row flex items-start gap-4 py-2.5 border-b border-gray-50 dark:border-gray-700/40 last:border-0">
             <span class="ms-al-row-label w-28 shrink-0 text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wide pt-0.5">{{ __('moontrail::ui.field_id') }}</span>

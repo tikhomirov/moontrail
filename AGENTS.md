@@ -68,21 +68,35 @@ moontrail/
 │   ├── en/ui.php                     # English UI strings
 │   └── ru/ui.php                     # Russian UI strings
 │
-├── resources/views/components/
-│   ├── activity-tab.blade.php        # Tab wrapper (placeholder)
-│   ├── activity-timeline.blade.php   # Chronological activity list
-│   ├── diff-viewer.blade.php         # Side-by-side field diff
-│   ├── version-badge.blade.php       # Version number badge widget
-│   └── rollback-confirm.blade.php    # Confirmation modal before rollback
+├── resources/views/                  # namespace `moontrail` (UI-адаптер не важен)
+│   ├── components/
+│   │   ├── diff-viewer.blade.php     # Side-by-side field diff
+│   │   ├── event-badge.blade.php     # Activity event badge
+│   │   └── version-badge.blade.php   # Version number badge widget
+│   │
+│   └── livewire/                     # Livewire adapter markup
 │
-├── resources/views/pages/
-│   ├── index-filters.blade.php       # Inline filter form for global history index
-│   ├── filter-chips.blade.php        # Active filter chips bar
-│   ├── index-kpi.blade.php           # KPI cards grid (total / created / updated / deleted / other)
-│   ├── detail-general.blade.php      # Activity detail — General section
-│   ├── detail-relations.blade.php    # Activity detail — Relations section
-│   ├── detail-changes.blade.php      # Activity detail — Changes/diff section
-│   └── detail-history.blade.php      # Activity detail — Version history section
+├── resources/moonshine-views/        # namespace `moontrail-moonshine` (только ui_adapter=moonshine)
+│   ├── components/
+│   │   ├── activity-tab.blade.php    # Tab wrapper (placeholder)
+│   │   ├── activity-timeline.blade.php   # Chronological activity list
+│   │   ├── entity-link.blade.php     # Link to a MoonShine resource page
+│   │   ├── menu-group.blade.php      # MoonShine menu group item
+│   │   ├── relation-entry.blade.php  # Related activity entity card
+│   │   ├── rollback-confirm.blade.php    # Confirmation modal before rollback
+│   │   └── section-header.blade.php  # Titled section header
+│   │
+│   └── pages/
+│       ├── index-filters.blade.php       # Inline filter form for global history index
+│       ├── filter-chips.blade.php        # Active filter chips bar
+│       ├── index-kpi.blade.php           # KPI cards grid (total / created / updated / deleted / other)
+│       ├── detail-general.blade.php      # Activity detail — General section
+│       ├── detail-relations.blade.php    # Activity detail — Relations section
+│       ├── detail-changes.blade.php      # Activity detail — Changes/diff section
+│       └── detail-history.blade.php      # Activity detail — Version history section
+│
+│   MoonShine-вьюхи вынесены в отдельный namespace, чтобы `artisan view:cache`
+│   не компилировал их в приложении без moonshine (иначе падает на x-moonshine::*).
 │
 ├── routes/
 │   └── moontrail.php                 # Rollback POST + AJAX endpoints
@@ -646,12 +660,13 @@ Custom exceptions for error handling:
 |---|---|---|
 | **Domain / core** | `src/Diff/`, `src/Versioning/`, `src/Events/`, `src/Exceptions/`, `src/Models/` | No MoonShine UI component dependencies; no manual HTML assembly; no knowledge of page/resource layout |
 | **Application / delivery** | `src/Http/`, `src/Pages/`, `src/Resources/` | Orchestration only; minimal presentation logic; filter/query delegation to `src/Support/` objects |
-| **Presentation** | `src/Components/`, `resources/views/` | Receives prepared data; renders HTML; no complex domain/query logic |
+| **Presentation** | `src/Components/`, `resources/views/`, `resources/moonshine-views/` | Receives prepared data; renders HTML; no complex domain/query logic |
 
 Key guardrails:
 - `src/Diff/HtmlDiffRenderer` **must** render via `view()` — never via `DiffViewer` or other MoonShine UI components.
 - `src/Diff/*` and `src/Versioning/*` **must not** import from `src/Components/`.
 - HTML markup **must** live in `resources/views/` Blade templates — not in PHP heredoc strings inside page or resource classes.
+- MoonShine-only views **must** live in `resources/moonshine-views/` (namespace `moontrail-moonshine`), never in `resources/views/`: `artisan view:cache` compiles every registered namespace, so a `x-moonshine::*` template inside the shared namespace breaks hosts without moonshine. Covered by `tests/Feature/ViewNamespacesTest.php` and `tests/NoMoonShine/ViewCachingTest.php`.
 - `src/Pages/*` and `src/Resources/*` **must not** build large HTML strings inline; they orchestrate data and call `view()->render()`.
 - Filter/query logic **must** live in `src/Support/ActivityLogFilterData`, `ActivityLogQuery`, `ActivityLogFilterOptions`.
 - Presentation helpers (event badges, entity links, section headers) **must** live in `src/Support/ActivityDetailPresenter`.

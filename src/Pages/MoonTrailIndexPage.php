@@ -83,7 +83,7 @@ final class MoonTrailIndexPage extends IndexPage
             $eventOptions[$case->value] = $case->label();
         }
 
-        return view('moontrail::pages.index-filters', [
+        return view('moontrail-moonshine::pages.index-filters', [
             'logNameOptions'   => $this->filterOptions->logNames(),
             'eventOptions'     => $eventOptions,
             'currentLogName'   => $filterData->logName ?? '',
@@ -117,7 +117,7 @@ final class MoonTrailIndexPage extends IndexPage
             return '';
         }
 
-        return view('moontrail::pages.filter-chips', [
+        return view('moontrail-moonshine::pages.filter-chips', [
             'chips'       => $chips,
             'clearAllUrl' => $urlBuilder->clearAllFiltersUrl(ActivityLogFilterData::filterRequestKeys()),
         ])->render();
@@ -181,6 +181,6 @@ final class MoonTrailIndexPage extends IndexPage
             ],
         ];
 
-        return view('moontrail::pages.index-kpi', ['cards' => $cards])->render();
+        return view('moontrail-moonshine::pages.index-kpi', ['cards' => $cards])->render();
     }
 }

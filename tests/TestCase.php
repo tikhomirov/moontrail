@@ -14,13 +14,32 @@ abstract class TestCase extends Orchestra
 {
     use RefreshDatabase;
 
+    /**
+     * UI-адаптер пакета для тестового приложения.
+     */
+    protected function uiAdapter(): string
+    {
+        return 'moonshine';
+    }
+
+    /**
+     * Нужно ли поднимать сервис-провайдер MoonShine (тесты без moonshine).
+     */
+    protected function usesMoonShine(): bool
+    {
+        return true;
+    }
+
     protected function getPackageProviders($app): array
     {
-        $providers = [
-            MoonShineServiceProvider::class,
-            SpatieActivitylogServiceProvider::class,
-            MoonTrailServiceProvider::class,
-        ];
+        $providers = [];
+
+        if ($this->usesMoonShine()) {
+            $providers[] = MoonShineServiceProvider::class;
+        }
+
+        $providers[] = SpatieActivitylogServiceProvider::class;
+        $providers[] = MoonTrailServiceProvider::class;
 
         if (class_exists(\Livewire\LivewireServiceProvider::class)) {
             $providers[] = \Livewire\LivewireServiceProvider::class;
@@ -51,7 +70,7 @@ abstract class TestCase extends Orchestra
 
         $app['config']->set('activitylog.table_name', 'activity_log');
         $app['config']->set('activitylog.database_connection', 'testing');
-        $app['config']->set('moontrail.ui_adapter', 'moonshine');
+        $app['config']->set('moontrail.ui_adapter', $this->uiAdapter());
         $app['config']->set('moontrail.activity_logger', 'spatie');
     }
 }

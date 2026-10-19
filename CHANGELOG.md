@@ -1,5 +1,32 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+
+- **`artisan view:cache` в приложении без MoonShine** — MoonShine-шаблоны
+  (`x-moonshine::*`, helper `moonshine()`) больше не лежат в общем namespace `moontrail`.
+  Они вынесены в `resources/moonshine-views/` с namespace `moontrail-moonshine`,
+  который регистрируется только при `ui_adapter=moonshine`.
+  `view:cache` компилирует все зарегистрированные namespace'ы, поэтому при
+  `ui_adapter=livewire`/`headless` без установленного moonshine команда падала с
+  `Unable to locate a class or view for component [moonshine::icon]`, и деплой
+  host-приложения вынужденно шёл с `php artisan optimize --except=views`.
+
+### Changed
+
+- **Публикация шаблонов** — `vendor:publish --tag=moontrail-views` публикует теперь два
+  каталога: `resources/views/vendor/moontrail` (общие views и Livewire UI) и
+  `resources/views/vendor/moontrail-moonshine` (MoonShine UI).
+
+### Migration
+
+- Хост, переопределявший MoonShine-шаблоны через опубликованные копии, должен
+  переопубликовать их: `moontrail::components.menu-group` →
+  `moontrail-moonshine::components.menu-group` (то же для `activity-tab`,
+  `activity-timeline`, `entity-link`, `relation-entry`, `rollback-confirm`,
+  `section-header` и `moontrail::pages.*`).
+
 ## 1.1.0 - 2026-03-22
 
 ### Multiple Activity Logging Backends

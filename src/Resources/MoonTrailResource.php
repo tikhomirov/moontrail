@@ -155,7 +155,7 @@ final class MoonTrailResource extends ModelResource
             Preview::make(
                 (string) __('moontrail::ui.field_subject'),
                 'subject_type',
-                formatted: static fn (Model $activity): string => view('moontrail::components.entity-link', [
+                formatted: static fn (Model $activity): string => view('moontrail-moonshine::components.entity-link', [
                     'morphType' => data_get($activity, 'subject_type'),
                     'morphId'   => data_get($activity, 'subject_id'),
                     'model'     => data_get($activity, 'subject'),
@@ -165,7 +165,7 @@ final class MoonTrailResource extends ModelResource
             Preview::make(
                 (string) __('moontrail::ui.field_causer'),
                 'causer_type',
-                formatted: static fn (Model $activity): string => view('moontrail::components.entity-link', [
+                formatted: static fn (Model $activity): string => view('moontrail-moonshine::components.entity-link', [
                     'morphType' => data_get($activity, 'causer_type'),
                     'morphId'   => data_get($activity, 'causer_id'),
                     'model'     => data_get($activity, 'causer'),
@@ -271,17 +271,17 @@ final class MoonTrailResource extends ModelResource
 
     private function renderGeneralSection(Model $activity): string
     {
-        return view('moontrail::pages.detail-general', $this->presenter->generalData($activity))->render();
+        return view('moontrail-moonshine::pages.detail-general', $this->presenter->generalData($activity))->render();
     }
 
     private function renderRelationsSection(Model $activity): string
     {
-        return view('moontrail::pages.detail-relations', $this->presenter->relationsData($activity))->render();
+        return view('moontrail-moonshine::pages.detail-relations', $this->presenter->relationsData($activity))->render();
     }
 
     private function renderChangesSection(Model $activity): string
     {
-        return view('moontrail::pages.detail-changes', $this->presenter->changesData($activity))->render();
+        return view('moontrail-moonshine::pages.detail-changes', $this->presenter->changesData($activity))->render();
     }
 
     private function renderHistorySection(Model $activity): string
@@ -292,6 +292,6 @@ final class MoonTrailResource extends ModelResource
             return '';
         }
 
-        return view('moontrail::pages.detail-history', $data)->render();
+        return view('moontrail-moonshine::pages.detail-history', $data)->render();
     }
 }

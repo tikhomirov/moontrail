@@ -372,6 +372,12 @@ php artisan vendor:publish --tag=moontrail-config
 
 # Blade views (for customization)
 php artisan vendor:publish --tag=moontrail-views
+```
+
+> The tag publishes two view namespaces: `moontrail` (adapter-agnostic views and
+> Livewire UI) into `resources/views/vendor/moontrail`, and `moontrail-moonshine`
+> (MoonShine UI, requires `moonshine/moonshine`) into
+> `resources/views/vendor/moontrail-moonshine`.
 
 # Translations
 php artisan vendor:publish --tag=moontrail-lang

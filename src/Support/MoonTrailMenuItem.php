@@ -85,7 +85,7 @@ final class MoonTrailMenuItem
         }
 
         return MenuGroup::make($groupLabel, $items, $icon)
-            ->customView('moontrail::components.menu-group', [
+            ->customView('moontrail-moonshine::components.menu-group', [
                 'defaultOpen' => MoonTrailConfig::menuDefaultOpen(),
             ]);
     }

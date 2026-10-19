@@ -8,7 +8,7 @@ use MoonShine\UI\Components\MoonShineComponent;
 
 final class ActivityTab extends MoonShineComponent
 {
-    protected string $view = 'moontrail::components.activity-tab';
+    protected string $view = 'moontrail-moonshine::components.activity-tab';
 
     public function __construct(
         private readonly object $resource,

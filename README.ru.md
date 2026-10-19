@@ -154,6 +154,12 @@ php artisan vendor:publish --tag=moontrail-config
 
 # Blade views (для кастомизации)
 php artisan vendor:publish --tag=moontrail-views
+```
+
+> Тэг публикует два namespace'а шаблонов: `moontrail` (не зависящие от UI-адаптера
+> views и Livewire-интерфейс) в `resources/views/vendor/moontrail` и
+> `moontrail-moonshine` (MoonShine UI, требует `moonshine/moonshine`) в
+> `resources/views/vendor/moontrail-moonshine`.
 
 # Переводы
 php artisan vendor:publish --tag=moontrail-lang

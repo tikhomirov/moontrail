@@ -17,7 +17,7 @@ final class ActivityTimeline extends MoonShineComponent
 {
     use WithLabel;
 
-    protected string $view = 'moontrail::components.activity-timeline';
+    protected string $view = 'moontrail-moonshine::components.activity-timeline';
 
     private int $limit = 20;
 

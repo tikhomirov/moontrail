@@ -73,9 +73,15 @@ final class MoonTrailServiceProvider extends ServiceProvider
 
         // Migrations are published explicitly by the installer for the selected driver.
         $this->loadTranslationsFrom(__DIR__ . '/../lang', 'moontrail');
+
+        // Общий namespace: только view'хи, не зависящие от UI-адаптера.
         $this->loadViewsFrom(__DIR__ . '/../resources/views', 'moontrail');
 
         if (config('moontrail.ui_adapter') === 'moonshine') {
+            // MoonShine-вьюхи живут в отдельном namespace: `artisan view:cache`
+            // компилирует все зарегистрированные namespace'ы, и в приложении без
+            // moonshine их blade-теги (x-moonshine::*) ломали бы кэширование.
+            $this->loadViewsFrom(__DIR__ . '/../resources/moonshine-views', 'moontrail-moonshine');
             $this->loadRoutesFrom(__DIR__ . '/../routes/moontrail.php');
         }
 
@@ -123,7 +129,8 @@ final class MoonTrailServiceProvider extends ServiceProvider
             ], 'moontrail-versions');
 
             $this->publishes([
-                __DIR__ . '/../resources/views' => resource_path('views/vendor/moontrail'),
+                __DIR__ . '/../resources/views'           => resource_path('views/vendor/moontrail'),
+                __DIR__ . '/../resources/moonshine-views' => resource_path('views/vendor/moontrail-moonshine'),
             ], 'moontrail-views');
 
             $this->publishes([
