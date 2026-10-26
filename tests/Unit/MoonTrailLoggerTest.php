@@ -6,23 +6,18 @@ use Illuminate\Support\Facades\Log;
 use MoonShine\MoonTrail\MoonTrailServiceProvider;
 use MoonShine\MoonTrail\Support\MoonTrailLogger;
 
-it('writes structured runtime resolution log at debug level', function (): void {
+it('does not log runtime resolution when booting the provider', function (string $driver): void {
     Log::spy();
-    config()->set('moontrail.activity_logger', 'auto');
+    config()->set('moontrail.activity_logger', $driver);
+    config()->set('moontrail.ui_adapter', 'headless');
 
     $provider = new MoonTrailServiceProvider(app());
-    $method = new ReflectionMethod($provider, 'logRuntimeResolution');
-    $method->invoke($provider);
+    $provider->register();
+    $provider->boot();
 
-    Log::shouldHaveReceived('debug')->withArgs(
-        static fn (string $message, array $context): bool => str_contains($message, 'MoonTrail: auto resolved to')
-            && isset($context['configured_driver'], $context['resolved_driver'], $context['activity_model']),
-    );
-
-    // Строка пишется на каждом boot (то есть на каждом HTTP-запросе): на уровне
-    // info она засоряла production-лог, поэтому уровень — только debug.
+    Log::shouldNotHaveReceived('debug');
     Log::shouldNotHaveReceived('info');
-});
+})->with(['spatie', 'auto', 'database', 'none']);
 
 it('adds base component key to structured context', function (): void {
     Log::spy();

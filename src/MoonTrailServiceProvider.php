@@ -112,7 +112,6 @@ final class MoonTrailServiceProvider extends ServiceProvider
         $this->registerAutoTracking();
         $this->registerModelVersionActivityResolver();
         $this->validateCustomModeBindings();
-        $this->logRuntimeResolution();
 
         if ($this->app->runningInConsole()) {
             $this->commands([
@@ -403,11 +402,5 @@ final class MoonTrailServiceProvider extends ServiceProvider
             'missing_content_paths'  => $missing,
             'disable_warning_config' => 'moontrail.ui.warn_if_tailwind_missing',
         ]);
-    }
-
-    private function logRuntimeResolution(): void
-    {
-        $this->app->make(MoonTrailLogger::class)
-            ->runtimeResolution($this->app->make(ActivityRuntime::class));
     }
 }
