@@ -5,7 +5,9 @@
 /.php-cs-fixer.cache
 /.pint.cache
 /coverage/
-/.idea/
+/.idea/*
+!/.idea/icon.svg
+!/.idea/icon.png
 /.vscode/
 *.log
 .DS_Store

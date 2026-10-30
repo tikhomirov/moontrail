@@ -1,7 +1,7 @@
 # MoonTrail for MoonShine
 
 <p align="center">
-  <img src="resources/assets/moontrail-logo.svg" alt="MoonTrail logo" width="220" />
+  <img src="resources/assets/moontrail-logo.svg" alt="MoonTrail logo" width="220" height="220"/>
 </p>
 
 <p align="center">
