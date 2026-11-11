@@ -48,7 +48,7 @@ jobs:
         run: composer test:types
 
   tests:
-    name: PHP ${{ matrix.php }} - Laravel ${{ matrix.laravel }}
+    name: PHP ${{ matrix.php }} - Laravel ${{ matrix.laravel }} - MoonShine ${{ matrix.moonshine }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
@@ -57,6 +57,7 @@ jobs:
       matrix:
         php: ['8.2', '8.3', '8.4']
         laravel: ['11.*', '12.*', '13.*']
+        moonshine: ['^4.8']
         include:
           - laravel: '11.*'
             testbench: '^9.0'
@@ -64,6 +65,14 @@ jobs:
             testbench: '^10.0'
           - laravel: '13.*'
             testbench: '^11.0'
+          - php: '8.4'
+            laravel: '12.*'
+            testbench: '^10.0'
+            moonshine: '5.x-dev'
+          - php: '8.4'
+            laravel: '13.*'
+            testbench: '^11.0'
+            moonshine: '5.x-dev'
         exclude:
           - php: '8.2'
             laravel: '13.*'
@@ -84,7 +93,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.composer/cache/files
-          key: ${{ runner.os }}-composer-${{ matrix.php }}-${{ matrix.laravel }}-${{ hashFiles('composer.json') }}
+          key: ${{ runner.os }}-composer-${{ matrix.php }}-${{ matrix.laravel }}-${{ matrix.moonshine }}-${{ hashFiles('composer.json') }}
           restore-keys: |
             ${{ runner.os }}-composer-${{ matrix.php }}-${{ matrix.laravel }}-
             ${{ runner.os }}-composer-${{ matrix.php }}-
@@ -94,8 +103,15 @@ jobs:
 
       - name: Install dependencies
         run: |
-          composer require "laravel/framework:${{ matrix.laravel }}" "orchestra/testbench:${{ matrix.testbench }}" --no-interaction --no-update
-          composer update --prefer-dist --no-interaction --no-progress
+          composer require "laravel/framework:${{ matrix.laravel }}" "orchestra/testbench:${{ matrix.testbench }}" "moonshine/moonshine:${{ matrix.moonshine }}" --no-interaction --no-update
+          # Laravel 11 is EOL: Packagist flags every 11.* release with security
+          # advisories, so Composer 2.9+ would refuse the install. Support stays
+          # in composer.json; --no-blocking is only used for the 11.* matrix jobs.
+          if [[ "${{ matrix.laravel }}" == 11.* ]]; then
+            composer update --prefer-dist --no-interaction --no-progress --no-blocking
+          else
+            composer update --prefer-dist --no-interaction --no-progress
+          fi
 
       - name: Run Pest tests
         run: composer test

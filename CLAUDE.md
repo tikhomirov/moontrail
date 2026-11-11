@@ -14,11 +14,11 @@ This file provides **project-specific** guidance for Claude Code when working in
 
 **Minimum PHP:** 8.2 (`composer.json`)
 
-**Target Laravel:** 10.x–12.x (via `moonshine/moonshine ^4.8`)
+**Target Laravel:** 11.x–13.x. MoonShine stays optional (`moonshine/moonshine ^4.8 || ^5.0`). MoonShine 5 requires PHP 8.4.
 
 **Core dependencies:**
 
-- `moonshine/moonshine ^4.8`
+- `moonshine/moonshine ^4.8 || ^5.0`
 - `spatie/laravel-activitylog ^4.7`
 
 ## 2) Commands (local)

@@ -662,6 +662,44 @@
     opacity: 0.9;
 }
 
+/* Rollback confirmation modal.
+   The Blade markup also carries Tailwind utilities, but MoonShine's bundled
+   CSS does not ship all of them (inset-0, z-[9999], max-w-md...). Without
+   these rules the dialog rendered off-screen below the page. */
+.ms-al-modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+}
+
+.ms-al-modal-overlay[x-cloak] {
+    display: none;
+}
+
+.ms-al-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+}
+
+.ms-al-modal-dialog {
+    position: relative;
+    z-index: 10;
+    width: 100%;
+    max-width: 28rem;
+    padding: 1.5rem;
+    border-radius: var(--ms-al-radius);
+    border: 1px solid var(--ms-al-border);
+    background-color: var(--ms-al-bg-card);
+    color: var(--ms-al-text-primary);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+
 /* ==========================================================================
    10. RELATION ENTRY
    ========================================================================== */

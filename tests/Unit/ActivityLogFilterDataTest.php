@@ -48,6 +48,23 @@ it('reads nested filters.* params from request', function (): void {
         ->and($data->search)->toBe('world');
 });
 
+it('reads filter.* params sent by the MoonShine filter form', function (): void {
+    $request = request()->replace([
+        'filter' => [
+            'event'      => 'updated',
+            'subject_id' => '92',
+            'causer_id'  => '',
+        ],
+    ]);
+    app()->instance('request', $request);
+
+    $data = ActivityLogFilterData::fromRequestStrict(request());
+
+    expect($data->event)->toBe('updated')
+        ->and($data->subjectId)->toBe('92')
+        ->and($data->causerId)->toBeNull();
+});
+
 it('returns null for absent params', function (): void {
     $request = request()->replace([]);
     app()->instance('request', $request);

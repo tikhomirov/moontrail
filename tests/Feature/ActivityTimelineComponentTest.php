@@ -110,7 +110,7 @@ it('hides rollback button when withoutRollback is called', function (): void {
     expect($html)->not->toContain(__('moontrail::ui.rollback'));
 });
 
-it('renders rollback button for all versions except first when canRollback is true', function (): void {
+it('renders rollback button for every version except the current one when canRollback is true', function (): void {
     Gate::policy(TestPost::class, AllowRollbackPolicy::class);
 
     $admin = TestAdmin::query()->create([
@@ -131,10 +131,11 @@ it('renders rollback button for all versions except first when canRollback is tr
     $component = ActivityTimeline::make('History', $resource);
     $html = (string) $component->render();
 
+    // Version 3 is the current state: rolling back to it would be a no-op.
     expect($html)
-        ->toContain(__('moontrail::ui.rollback_to_version', ['version' => 3]))
+        ->not->toContain(__('moontrail::ui.rollback_to_version', ['version' => 3]))
         ->toContain(__('moontrail::ui.rollback_to_version', ['version' => 2]))
-        ->not->toContain(__('moontrail::ui.rollback_to_version', ['version' => 1]))
+        ->toContain(__('moontrail::ui.rollback_to_version', ['version' => 1]))
         ->toContain(__('moontrail::ui.rollback_confirm_title'));
 });
 
@@ -185,7 +186,7 @@ it('renders no_history message when no versions exist', function (): void {
     expect($html)->toContain(__('moontrail::ui.no_history'));
 });
 
-it('shows no-rights hint for non-earliest versions when canRollback is false and showRollback is true', function (): void {
+it('shows no-rights hint for older versions when canRollback is false and showRollback is true', function (): void {
     // Default TestPost: isRollbackAllowed() = false, no authenticated user.
     $post = TestPost::query()->create(['name' => 'Test']);
     $post->update(['name' => 'Changed once']);
@@ -197,7 +198,7 @@ it('shows no-rights hint for non-earliest versions when canRollback is false and
     $component = ActivityTimeline::make('History', $resource);
     $html = (string) $component->render();
 
-    // The hint text (tooltip) should be present for non-earliest versions.
+    // The hint text (tooltip) should be present for older versions.
     expect($html)->toContain(__('moontrail::ui.rollback_denied_hint'))
         ->toContain(__('moontrail::ui.rollback_no_rights'));
 });
@@ -215,18 +216,17 @@ it('does not show no-rights hint when withoutRollback is called', function (): v
     expect($html)->not->toContain(__('moontrail::ui.rollback_denied_hint'));
 });
 
-it('does not show no-rights hint for the earliest version', function (): void {
-    // Even with showRollbackHint=true the earliest version never gets the hint.
+it('does not show no-rights hint for the current version', function (): void {
+    // Even with showRollbackHint=true the current version never gets the hint.
     $post = TestPost::query()->create(['name' => 'Test']);
-    $post->update(['name' => 'Changed']);
 
     $resource = app(TestPostResource::class);
     $resource->setItem($post);
 
-    // With only 2 versions the earliest is version 1. The hint must appear only on version 2.
+    // A single version is the current state: nothing to roll back to.
     $component = ActivityTimeline::make('History', $resource);
     $html = (string) $component->render();
 
-    // rollback_to_version for v1 must NOT appear (it's the earliest).
-    expect($html)->not->toContain(__('moontrail::ui.rollback_to_version', ['version' => 1]));
+    expect($html)->not->toContain(__('moontrail::ui.rollback_denied_hint'))
+        ->and($html)->not->toContain(__('moontrail::ui.rollback_to_version', ['version' => 1]));
 });

@@ -7,6 +7,7 @@ namespace MoonShine\MoonTrail\Resources;
 use Illuminate\Contracts\Database\Eloquent\Builder as BuilderContract;
 use Illuminate\Contracts\Pagination\CursorPaginator;
 use Illuminate\Contracts\Pagination\Paginator;
+use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
@@ -21,7 +22,6 @@ use MoonShine\MoonTrail\Pages\MoonTrailDetailPage;
 use MoonShine\MoonTrail\Pages\MoonTrailIndexPage;
 use MoonShine\MoonTrail\Support\ActivityDetailPresenter;
 use MoonShine\MoonTrail\Support\ActivityLogFilterData;
-use MoonShine\MoonTrail\Support\ActivityLogFilterOptions;
 use MoonShine\MoonTrail\Support\ActivityLogQuery;
 use MoonShine\MoonTrail\Support\ActivityModelResolver;
 use MoonShine\MoonTrail\Support\ActivityRecordFactory;
@@ -29,7 +29,6 @@ use MoonShine\Support\Enums\Ability;
 use MoonShine\UI\Fields\Date;
 use MoonShine\UI\Fields\ID;
 use MoonShine\UI\Fields\Preview;
-use MoonShine\UI\Fields\Select;
 use MoonShine\UI\Fields\Text;
 use RuntimeException;
 
@@ -52,7 +51,6 @@ final class MoonTrailResource extends ModelResource
         private readonly Request $request,
         private readonly ActivityDetailPresenter $presenter,
         private readonly ActivityRecordFactory $recordFactory,
-        private readonly ActivityLogFilterOptions $filterOptions,
         private readonly ActivityModelResolver $activityModelResolver,
         private readonly ActivityQueryContract $activityQuery,
     ) {
@@ -225,38 +223,19 @@ final class MoonTrailResource extends ModelResource
 
     protected function modifyQueryBuilder(BuilderContract $builder): BuilderContract
     {
-        $builder = parent::modifyQueryBuilder($builder)
-            ->with(['subject', 'causer'])
-            ->latest('id');
+        $builder = parent::modifyQueryBuilder($builder);
+        $builder->with(['subject', 'causer'])->latest('id');
+
+        // MoonShine 5 may hand over a relation instead of an Eloquent builder.
+        // The activity filters only apply to the plain activity log query.
+        if (! $builder instanceof EloquentBuilder) {
+            return $builder;
+        }
 
         return (new ActivityLogQuery)->apply(
             $builder,
             ActivityLogFilterData::fromRequestStrict($this->request),
         );
-    }
-
-    protected function filters(): iterable
-    {
-        $options = $this->filterOptions;
-
-        return [
-            Select::make((string) __('moontrail::ui.field_log'), 'log_name')
-                ->options($options->logNames())
-                ->nullable(),
-            Select::make((string) __('moontrail::ui.field_event'), 'event')
-                ->options($options->events())
-                ->nullable(),
-            Select::make((string) __('moontrail::ui.field_subject_type'), 'subject_type')
-                ->options($options->subjectTypes())
-                ->nullable(),
-            Text::make((string) __('moontrail::ui.field_subject_id'), 'subject_id'),
-            Select::make((string) __('moontrail::ui.field_causer_type'), 'causer_type')
-                ->options($options->causerTypes())
-                ->nullable(),
-            Text::make((string) __('moontrail::ui.field_causer_id'), 'causer_id'),
-            Date::make((string) __('moontrail::ui.filter_date_from'), 'date_from'),
-            Date::make((string) __('moontrail::ui.filter_date_until'), 'date_until'),
-        ];
     }
 
     protected function search(): array

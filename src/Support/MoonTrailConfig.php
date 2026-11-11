@@ -100,10 +100,12 @@ final class MoonTrailConfig
         $raw2 = config('moontrail.sensitive_hide', []);
         $values2 = is_array($raw2) ? array_values($raw2) : [];
 
-        /** @var list<string> $merged */
-        $merged = array_values(array_unique(array_merge($values1, $values2)));
+        $strings = array_filter(
+            array_merge($values1, $values2),
+            is_string(...),
+        );
 
-        return $merged;
+        return array_values(array_unique($strings));
     }
 
     /**

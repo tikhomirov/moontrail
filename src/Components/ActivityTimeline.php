@@ -76,7 +76,13 @@ final class ActivityTimeline extends MoonShineComponent
         $canRollback = $this->showRollback && $this->resolveCanRollback();
         $versions = $this->resolveVersions();
 
-        // The earliest version (minimum version number) is not rollback-able.
+        // Each snapshot holds the model state after that version was saved.
+        // The newest version equals the current state, so rolling back to it
+        // would change nothing. Every older version, including the first, is
+        // a real rollback target.
+        $currentVersionId = $this->resolveCurrentVersionId($versions);
+
+        // Kept for views published before currentVersionId existed.
         $minVersionId = $versions !== []
             ? min(array_map(static fn (ModelVersion $v): int => (int) $v->id, $versions))
             : null;
@@ -92,8 +98,25 @@ final class ActivityTimeline extends MoonShineComponent
             'canRollback'      => $canRollback,
             'showRollbackHint' => $this->showRollback && ! $canRollback,
             'minVersionId'     => $minVersionId,
+            'currentVersionId' => $currentVersionId,
             'changesCount'     => $dataBuilder->computeChangesCount($versions),
         ];
+    }
+
+    /**
+     * @param list<ModelVersion> $versions
+     */
+    private function resolveCurrentVersionId(array $versions): ?int
+    {
+        $current = null;
+
+        foreach ($versions as $version) {
+            if ($current === null || (int) $version->version > (int) $current->version) {
+                $current = $version;
+            }
+        }
+
+        return $current instanceof ModelVersion ? (int) $current->id : null;
     }
 
     /**

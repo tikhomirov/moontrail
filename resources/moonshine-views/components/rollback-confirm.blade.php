@@ -3,15 +3,15 @@
      @keydown.escape.window="open = false">
 
     <template x-teleport="body">
-        <div x-show="open" x-cloak class="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+        <div x-show="open" x-cloak class="ms-al-modal-overlay fixed inset-0 z-[9999] flex items-center justify-center p-4">
 
             {{-- Backdrop --}}
-            <div class="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
+            <div class="ms-al-modal-backdrop fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
                  @click="open = false"
                  aria-hidden="true"></div>
 
             {{-- Dialog card --}}
-            <div class="relative z-10 w-full max-w-md rounded-xl bg-white p-6 text-gray-900 shadow-2xl transition-all dark:bg-gray-800 dark:text-gray-100 border border-gray-200 dark:border-gray-700"
+            <div class="ms-al-modal-dialog relative z-10 w-full max-w-md rounded-xl bg-white p-6 text-gray-900 shadow-2xl transition-all dark:bg-gray-800 dark:text-gray-100 border border-gray-200 dark:border-gray-700"
                  role="dialog"
                  aria-modal="true"
                  aria-labelledby="ms-al-rollback-title"

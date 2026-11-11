@@ -1,5 +1,33 @@
 # Changelog
 
+## 1.2.0 - 2026-11-11
+
+### Added
+
+- Поддержка MoonShine 5 при сохранении совместимости с MoonShine 4.8+:
+  `moonshine/moonshine` `^4.8 || ^5.0`. В CI добавлена матрица MoonShine 5.x-dev
+  на PHP 8.4 (Laravel 12 и 13).
+- Фильтры индекса для MoonShine 5 перенесены в `MoonTrailIndexPage` (в MS5
+  фильтры читаются со страницы, а не из ресурса).
+- `ActivityLogFilterData` читает и `filters[...]`, и `filter[...]`, поэтому
+  стандартная форма фильтров MoonShine снова работает.
+
+### Fixed
+
+- Кнопка «Откатить к версии #N» показывается у всех версий, кроме текущей.
+  Раньше её не было у исходной версии, а на текущей она была бесполезной.
+- Модалка подтверждения отката получила CSS-классы `ms-al-modal-*`: раньше она
+  рисовалась за экраном, потому что в CSS MoonShine нет нужных Tailwind-утилит.
+- Если в `config/moontrail.php` нет ключа `ui_adapter` и установлен MoonShine,
+  подставляется `moonshine` (раньше подставлялся `headless` и админка со старым
+  конфигом отдавала 500). Явное значение не меняется.
+- `modifyQueryBuilder` не падает, если пришёл `Relation`.
+- `MoonTrailConfig::sensitiveHide` использует строгую фильтрацию строк (PHPStan на MS5).
+- CI: установка зависимостей для матрицы Laravel 11 использует `--no-blocking`,
+  потому что Packagist помечает все релизы Laravel 11 security advisories
+  (фреймворк EOL). Поддержка Laravel 11 в `composer.json` сохранена.
+
+
 ## 1.0.2 - 2026-10-26
 
 ### Fixed

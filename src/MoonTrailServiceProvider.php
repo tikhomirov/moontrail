@@ -46,6 +46,7 @@ final class MoonTrailServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
+        $this->resolveLegacyUiAdapter();
         $this->mergeConfigFrom(__DIR__ . '/../config/moontrail.php', 'moontrail');
 
         $this->app->bind(DiffRendererContract::class, HtmlDiffRenderer::class);
@@ -140,6 +141,27 @@ final class MoonTrailServiceProvider extends ServiceProvider
                 __DIR__ . '/../resources/assets' => public_path('vendor/moontrail'),
             ], 'moontrail-assets');
         }
+    }
+
+    /**
+     * Configs published before the UI adapter split have no `ui_adapter` key.
+     * Back then MoonTrail always ran inside MoonShine, so keep that behaviour
+     * instead of silently falling back to the headless default, which drops
+     * the MoonShine views, routes and rollback controls.
+     */
+    private function resolveLegacyUiAdapter(): void
+    {
+        $appConfig = config('moontrail');
+
+        if (is_array($appConfig) && array_key_exists('ui_adapter', $appConfig)) {
+            return;
+        }
+
+        if (! class_exists(\MoonShine\Laravel\MoonShineAuth::class)) {
+            return;
+        }
+
+        config()->set('moontrail.ui_adapter', 'moonshine');
     }
 
     private function registerActivityLogger(): void

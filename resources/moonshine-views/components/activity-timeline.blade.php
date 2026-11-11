@@ -6,6 +6,7 @@
     /** @var bool $canRollback */
     /** @var bool $showRollbackHint */
     /** @var int|null $minVersionId */
+    /** @var int|null $currentVersionId */
     /** @var array<int, int> $changesCount */
 
     $dateFormat = config('moontrail.ui.date_format', 'd.m.Y H:i:s');
@@ -190,7 +191,7 @@
                                     </span>
                                 @endif
 
-                                @if($showRollback && $canRollback && $version->id !== $minVersionId)
+                                @if($showRollback && $canRollback && (int) $version->id !== $currentVersionId)
                                     <button type="button"
                                             @click="$dispatch('open-rollback-modal', { versionId: {{ $version->id }}, versionNum: {{ $version->version }}, versionAt: @js($version->created_at?->format($dateFormat)) })"
                                             aria-label="{{ __('moontrail::ui.rollback_to_version', ['version' => $version->version]) }}"
@@ -198,7 +199,7 @@
                                         <span aria-hidden="true">{!! \MoonShine\MoonTrail\Support\SvgIcons::rolledBack('w-3.5 h-3.5') !!}</span>
                                         {{ __('moontrail::ui.rollback_to_version', ['version' => $version->version]) }}
                                     </button>
-                                @elseif($showRollbackHint && $version->id !== $minVersionId)
+                                @elseif($showRollbackHint && (int) $version->id !== $currentVersionId)
                                     <span class="ms-al-rollback-denied inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/40 text-gray-400 dark:text-gray-500 cursor-not-allowed select-none"
                                           title="{{ __('moontrail::ui.rollback_denied_hint') }}"
                                           aria-label="{{ __('moontrail::ui.rollback_denied_hint') }}">
