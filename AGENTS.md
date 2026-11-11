@@ -28,7 +28,7 @@ the base Spatie package does not provide out of the box:
 
 ```
 Your Laravel App
- └── moonshine/moonshine ^4.8          (admin panel UI)
+ └── moonshine/moonshine ^4.8 || ^5.0   (optional admin panel UI; 5.x needs PHP 8.4)
       └── tikhomirov/moontrail (this package)
            └── spatie/laravel-activitylog ^4.7  (audit log engine)
 ```

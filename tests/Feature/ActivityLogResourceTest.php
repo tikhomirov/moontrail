@@ -217,9 +217,14 @@ it('renders Open button in relations only when matching resource is available', 
 // Filters and search
 // ---------------------------------------------------------------------------
 
-it('filters returns all required fields from TZ-03', function (): void {
+it('index page exposes the standard MoonShine filter fields', function (): void {
     $resource = app(MoonTrailResource::class);
-    $filters = $resource->getFilters();
+    $page = $resource->getIndexPage();
+
+    expect($page)->not->toBeNull()
+        ->and(method_exists($page, 'getFilters'))->toBeTrue();
+
+    $filters = $page->getFilters();
 
     $columns = $filters
         ->map(static fn (object $f): string => method_exists($f, 'getColumn') ? $f->getColumn() : '')
@@ -239,6 +244,12 @@ it('filters returns all required fields from TZ-03', function (): void {
             'date_from',
             'date_until',
         ]);
+
+    // MoonShine 4 still serves the filter form from the resource, which
+    // delegates to the index page. MoonShine 5 has no resource getFilters().
+    if (method_exists($resource, 'getFilters')) {
+        expect($resource->getFilters()->count())->toBe(8);
+    }
 });
 
 it('applies filters from direct query format', function (): void {

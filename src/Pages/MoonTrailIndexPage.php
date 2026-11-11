@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use MoonShine\Contracts\Core\DependencyInjection\CoreContract;
 use MoonShine\Contracts\UI\ComponentContract;
+use MoonShine\Contracts\UI\FieldContract;
 use MoonShine\Laravel\Pages\Crud\IndexPage;
 use MoonShine\MoonTrail\Contracts\ActivityQueryContract;
 use MoonShine\MoonTrail\Enums\ActivityEvent;
@@ -16,6 +17,9 @@ use MoonShine\MoonTrail\Support\ActivityLogFilterOptions;
 use MoonShine\MoonTrail\Support\ActivityLogFilterUrlBuilder;
 use MoonShine\MoonTrail\Support\SvgIcons;
 use MoonShine\UI\Components\FlexibleRender;
+use MoonShine\UI\Fields\Date;
+use MoonShine\UI\Fields\Select;
+use MoonShine\UI\Fields\Text;
 
 /**
  * Index page for the Activity Log resource.
@@ -36,6 +40,38 @@ final class MoonTrailIndexPage extends IndexPage
         private readonly ActivityQueryContract $activityQuery,
     ) {
         parent::__construct($core);
+    }
+
+    /**
+     * Fields for the standard MoonShine filter form.
+     *
+     * MoonShine 5 reads filters from the index page only. MoonShine 4 also
+     * uses the page definition when the page has any.
+     *
+     * @return iterable<int, FieldContract>
+     */
+    protected function filters(): iterable
+    {
+        $options = $this->filterOptions;
+
+        return [
+            Select::make((string) __('moontrail::ui.field_log'), 'log_name')
+                ->options($options->logNames())
+                ->nullable(),
+            Select::make((string) __('moontrail::ui.field_event'), 'event')
+                ->options($options->events())
+                ->nullable(),
+            Select::make((string) __('moontrail::ui.field_subject_type'), 'subject_type')
+                ->options($options->subjectTypes())
+                ->nullable(),
+            Text::make((string) __('moontrail::ui.field_subject_id'), 'subject_id'),
+            Select::make((string) __('moontrail::ui.field_causer_type'), 'causer_type')
+                ->options($options->causerTypes())
+                ->nullable(),
+            Text::make((string) __('moontrail::ui.field_causer_id'), 'causer_id'),
+            Date::make((string) __('moontrail::ui.filter_date_from'), 'date_from'),
+            Date::make((string) __('moontrail::ui.filter_date_until'), 'date_until'),
+        ];
     }
 
     /**

@@ -15,7 +15,7 @@
 <p align="center">
   <a href="https://php.net"><img src="https://img.shields.io/badge/PHP-8.2%2B-blue" alt="PHP 8.2+" /></a>
   <a href="https://laravel.com"><img src="https://img.shields.io/badge/Laravel-11%2B-red" alt="Laravel 11+" /></a>
-  <a href="https://moonshine-laravel.com"><img src="https://img.shields.io/badge/MoonShine-4.8%2B-purple" alt="MoonShine 4.8+" /></a>
+  <a href="https://moonshine-laravel.com"><img src="https://img.shields.io/badge/MoonShine-4.8%2B%20%7C%205.x-purple" alt="MoonShine 4.8+ или 5.x" /></a>
   <a href="https://phpstan.org/"><img src="https://img.shields.io/badge/PHPStan-level%209-brightgreen.svg?style=flat" alt="PHPStan Level 9" /></a>
   <a href="LICENSE.md"><img src="https://img.shields.io/badge/license-MIT-green" alt="MIT License" /></a>
 </p>
@@ -64,9 +64,9 @@ MoonShine даёт сильный UI для админки, а Spatie Activity L
 
 ## Требования
 
-- **PHP** 8.2+
+- **PHP** 8.2+ (для MoonShine 5 нужен PHP 8.4)
 - **Laravel** 11+
-- **MoonShine** 4.8+
+- **MoonShine** 4.8+ или 5.x, опционально
 - **spatie/laravel-activitylog** 4.7+ (ставится автоматически)
 - **Tailwind CSS** в host-приложении (нужен для стилей UI пакета)
 - **Alpine.js** в host-приложении (нужен для rollback-модалки и JSON expand/copy)

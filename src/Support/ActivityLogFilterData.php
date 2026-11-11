@@ -167,10 +167,14 @@ final readonly class ActivityLogFilterData
             return (string) $direct;
         }
 
-        $nested = $request->input('filters.' . $key);
+        // `filters[...]` comes from MoonTrail links, `filter[...]` from the
+        // standard MoonShine filter form.
+        foreach (['filters', 'filter'] as $group) {
+            $nested = $request->input($group . '.' . $key);
 
-        if (is_scalar($nested) && (string) $nested !== '') {
-            return (string) $nested;
+            if (is_scalar($nested) && (string) $nested !== '') {
+                return (string) $nested;
+            }
         }
 
         return null;
