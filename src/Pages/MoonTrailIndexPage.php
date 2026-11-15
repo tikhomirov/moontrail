@@ -15,6 +15,7 @@ use MoonShine\MoonTrail\Enums\ActivityEvent;
 use MoonShine\MoonTrail\Support\ActivityLogFilterData;
 use MoonShine\MoonTrail\Support\ActivityLogFilterOptions;
 use MoonShine\MoonTrail\Support\ActivityLogFilterUrlBuilder;
+use MoonShine\MoonTrail\Support\StylesheetAsset;
 use MoonShine\MoonTrail\Support\SvgIcons;
 use MoonShine\UI\Components\FlexibleRender;
 use MoonShine\UI\Fields\Date;
@@ -103,7 +104,7 @@ final class MoonTrailIndexPage extends IndexPage
 
     private function resolveStylesheetAssetUrl(): string
     {
-        return (string) asset('vendor/moontrail/moontrail.css');
+        return StylesheetAsset::url();
     }
 
     /**

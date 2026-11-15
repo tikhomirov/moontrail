@@ -8,6 +8,7 @@ use Illuminate\Contracts\Support\Renderable;
 use MoonShine\Contracts\Core\ResourceContract;
 use MoonShine\Contracts\UI\ComponentContract;
 use MoonShine\Laravel\Pages\Crud\DetailPage;
+use MoonShine\MoonTrail\Support\StylesheetAsset;
 use MoonShine\UI\Components\FlexibleRender;
 use MoonShine\UI\Components\Layout\Box;
 use Throwable;
@@ -57,6 +58,6 @@ final class MoonTrailDetailPage extends DetailPage
 
     private function resolveStylesheetAssetUrl(): string
     {
-        return asset('vendor/moontrail/moontrail.css');
+        return StylesheetAsset::url();
     }
 }
