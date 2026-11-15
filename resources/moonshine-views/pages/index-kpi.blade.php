@@ -6,7 +6,7 @@
 <div class="ms-al-kpi-grid grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-4">
     @foreach($cards as $card)
         @php
-            $activeClass = $card['isActive'] ? ' ms-al-kpi-card--active ring-2 ring-offset-1 dark:ring-offset-gray-900' : '';
+            $activeClass = $card['isActive'] ? ' ms-al-kpi-card--active' : '';
             $cursorClass = $card['href'] !== null ? ' cursor-pointer hover:border-gray-300 dark:hover:border-gray-600 transition-colors' : '';
         @endphp
         @if($card['href'] !== null)

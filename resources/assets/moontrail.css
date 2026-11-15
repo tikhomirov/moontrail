@@ -13,13 +13,14 @@
    ========================================================================== */
 
 :root {
-    /* Surface */
-    --ms-al-bg-card:       #ffffff;
-    --ms-al-bg-header:     #f8fafc;
-    --ms-al-bg-hover:      #f9fafb;
-    --ms-al-bg-input:      #f9fafb;
-    --ms-al-border:        #e5e7eb;
-    --ms-al-border-sub:    #f3f4f6;
+    /* Surface. Fallback values mirror the Mushrooms theme so the log page
+       keeps the same neutral zinc palette even without the host theme. */
+    --ms-al-bg-card:       var(--mushrooms-panel, #ffffff);
+    --ms-al-bg-header:     var(--mushrooms-surface-muted, #f4f4f5);
+    --ms-al-bg-hover:      var(--mushrooms-surface-muted, #f4f4f5);
+    --ms-al-bg-input:      var(--mushrooms-surface-muted, #f4f4f5);
+    --ms-al-border:        var(--mushrooms-line-strong, #d4d4d8);
+    --ms-al-border-sub:    var(--mushrooms-line, #e4e4e7);
     --ms-al-border-focus:  var(--ms-form-focus-border-color, #3b82f6);
     --ms-al-shadow:        0 1px 2px 0 rgba(0,0,0,0.05);
     --ms-al-shadow-md:     0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
@@ -28,10 +29,10 @@
     --ms-al-radius-xs:     0.375rem;
 
     /* Text */
-    --ms-al-text-primary:   #111827;
-    --ms-al-text-secondary: #374151;
-    --ms-al-text-muted:     #6b7280;
-    --ms-al-text-meta:      #9ca3af;
+    --ms-al-text-primary:   var(--mushrooms-ink, #09090b);
+    --ms-al-text-secondary: var(--mushrooms-muted, #52525b);
+    --ms-al-text-muted:     var(--mushrooms-subtle, #71717a);
+    --ms-al-text-meta:      var(--mushrooms-subtle, #71717a);
 
     /* Event palette — Created (emerald) */
     --ms-al-ev-c-bg:   #d1fae5;
@@ -100,19 +101,23 @@
     --ms-al-json-text:   #e6edf3;
 }
 
-/* Dark mode token overrides */
+/* Dark mode token overrides.
+   Neutrals match the Mushrooms/FamFi theme (zinc-like), not the default
+   blue-tinted Tailwind gray, so the log page sits flush with the rest of
+   the admin panel. Event colours keep their hue but use the same tint
+   weights as MoonShine badges. */
 .dark {
-    --ms-al-bg-card:    #111827;
-    --ms-al-bg-header:  #1f2937;
-    --ms-al-bg-hover:   rgba(255,255,255,.03);
-    --ms-al-bg-input:   #1c2333;
-    --ms-al-border:     #374151;
-    --ms-al-border-sub: #1f2937;
+    --ms-al-bg-card:    var(--mushrooms-panel, #18181b);
+    --ms-al-bg-header:  var(--mushrooms-surface-muted, #1f1f23);
+    --ms-al-bg-hover:   rgba(255,255,255,.04);
+    --ms-al-bg-input:   var(--mushrooms-surface-muted, #1f1f23);
+    --ms-al-border:     var(--mushrooms-line-strong, #3f3f46);
+    --ms-al-border-sub: var(--mushrooms-line, #27272a);
 
-    --ms-al-text-primary:   #f9fafb;
-    --ms-al-text-secondary: #d1d5db;
-    --ms-al-text-muted:     #9ca3af;
-    --ms-al-text-meta:      #6b7280;
+    --ms-al-text-primary:   var(--mushrooms-ink, #fafafa);
+    --ms-al-text-secondary: var(--mushrooms-muted, #a1a1aa);
+    --ms-al-text-muted:     var(--mushrooms-subtle, #71717a);
+    --ms-al-text-meta:      var(--mushrooms-subtle, #71717a);
 
     --ms-al-ev-c-bg:   rgba(6,78,59,.40);
     --ms-al-ev-c-text: #6ee7b7;
@@ -134,9 +139,9 @@
     --ms-al-ev-rb-text: #fdba74;
     --ms-al-ev-rb-ring: rgba(249,115,22,.35);
 
-    --ms-al-ev-x-bg:   #374151;
-    --ms-al-ev-x-text: #d1d5db;
-    --ms-al-ev-x-ring: rgba(107,114,128,.30);
+    --ms-al-ev-x-bg:   var(--mushrooms-surface-muted, #27272a);
+    --ms-al-ev-x-text: var(--mushrooms-muted, #a1a1aa);
+    --ms-al-ev-x-ring: rgba(161,161,170,.30);
 
     --ms-al-diff-added-old:          #9ca3af;
     --ms-al-diff-added-new:          #6ee7b7;
@@ -766,6 +771,20 @@
     box-shadow: var(--ms-al-shadow-md);
     color: inherit;
     text-decoration: none;
+}
+
+/* Active filter state. The blade adds Tailwind `ring-*` classes, but the admin
+   panel does not load host Tailwind, so selection used to be invisible. A
+   slightly raised surface plus a muted border reads as "selected" without
+   competing with the coloured event icons inside the cards. */
+.ms-al-kpi-card--active {
+    border-color: var(--ms-al-text-meta);
+    background-color: var(--ms-al-bg-hover);
+    box-shadow: var(--ms-al-shadow-md);
+}
+
+.ms-al-kpi-card--active .ms-al-kpi-value {
+    color: var(--ms-al-text-primary);
 }
 
 .ms-al-kpi-icon {
