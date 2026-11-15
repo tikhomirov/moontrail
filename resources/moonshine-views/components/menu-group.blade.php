@@ -14,26 +14,12 @@
         @click.outside="dropdown = false"
         data-dropdown-placement="bottom-start"
     @else
+        {{-- Open only when the current page is Logs (or default_open). Do not persist via localStorage:
+             that kept the group expanded on unrelated admin pages after visiting Logs once. --}}
         x-data="{
-            dropdown: (function() {
-                if ({{ $isActive ? 'true' : 'false' }}) {
-                    return true;
-                }
-
-                try {
-                    const stored = localStorage.getItem('moontrail_menu_open');
-                    if (stored !== null) {
-                        return stored === 'true';
-                    }
-                } catch (e) {}
-
-                return {{ $defaultOpen ? 'true' : 'false' }};
-            })(),
+            dropdown: {{ ($isActive || $defaultOpen) ? 'true' : 'false' }},
             toggle() {
                 this.dropdown = !this.dropdown;
-                try {
-                    localStorage.setItem('moontrail_menu_open', this.dropdown ? 'true' : 'false');
-                } catch (e) {}
                 $nextTick(() => {
                     if (this.dropdown && $refs.dropdownMenu) {
                         $refs.dropdownMenu.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
@@ -41,6 +27,7 @@
                 });
             }
         }"
+        x-init="try { localStorage.removeItem('moontrail_menu_open') } catch (e) {}"
     @endif
     :class="dropdown && 'menu-item--opened'"
     x-ref="dropdownMenu"
