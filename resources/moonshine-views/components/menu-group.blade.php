@@ -27,7 +27,7 @@
                 });
             }
         }"
-        x-init="try { localStorage.removeItem('moontrail_menu_open') } catch (e) {}"
+        x-init="(() => { try { localStorage.removeItem('moontrail_menu_open') } catch (e) {} })()"
     @endif
     :class="dropdown && 'menu-item--opened'"
     x-ref="dropdownMenu"
