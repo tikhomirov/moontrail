@@ -16,13 +16,18 @@
     @else
         x-data="{
             dropdown: (function() {
+                if ({{ $isActive ? 'true' : 'false' }}) {
+                    return true;
+                }
+
                 try {
                     const stored = localStorage.getItem('moontrail_menu_open');
                     if (stored !== null) {
                         return stored === 'true';
                     }
                 } catch (e) {}
-                return {{ $defaultOpen ? ($isActive ? 'true' : 'false') : 'false' }};
+
+                return {{ $defaultOpen ? 'true' : 'false' }};
             })(),
             toggle() {
                 this.dropdown = !this.dropdown;
@@ -48,8 +53,7 @@
         @else
             @click.prevent="dropdown = ! dropdown"
         @endif
-        class="menu-button"
-        :class="dropdown && '_is-active'"
+        class="menu-button{{ $isActive ? ' _is-active' : '' }}"
         type="button"
     >
         @if($icon)

@@ -70,7 +70,8 @@ final class MoonTrailMenuItem
                 static fn (): string => self::resourceUrl($resourceClass),
                 (string) __('moontrail::ui.menu_all'),
             )->whenActive(
-                static fn (string $path): bool => self::isActiveForSubjectType($path, null),
+                // MoonShine passes the menu item URL as $path — ignore it and check the request.
+                static fn (): bool => self::isActiveForSubjectType(null),
             );
         }
 
@@ -80,7 +81,7 @@ final class MoonTrailMenuItem
                 static fn (): string => self::resourceUrl($resourceClass, $modelClass),
                 $modelLabel,
             )->whenActive(
-                static fn (string $path): bool => self::isActiveForSubjectType($path, $modelClass),
+                static fn (): bool => self::isActiveForSubjectType($modelClass),
             );
         }
 
@@ -136,12 +137,20 @@ final class MoonTrailMenuItem
     }
 
     /**
+     * Whether the current request matches a MoonTrail menu filter.
+     *
+     * MoonShine's MenuItem::whenActive() passes the *menu item* URL path, not the
+     * current request path. Checking that argument would always match "moon-trail"
+     * and leave the "All" item active on every page. Always use the request instead.
+     *
      * @param class-string|null $subjectType
      */
-    private static function isActiveForSubjectType(string $path, ?string $subjectType): bool
+    private static function isActiveForSubjectType(?string $subjectType): bool
     {
+        $requestPath = request()->path();
+
         // MoonShine auto-generates kebab-case URI: "moon-trail-resource"
-        if (! str_contains($path, 'moon-trail')) {
+        if (! str_contains($requestPath, 'moon-trail')) {
             return false;
         }
 
@@ -150,7 +159,7 @@ final class MoonTrailMenuItem
         parse_str($query, $params);
 
         $currentFilter = $params[self::FILTER_PARAM]
-            ?? $params['filters'][self::FILTER_PARAM]
+            ?? (is_array($params['filters'] ?? null) ? ($params['filters'][self::FILTER_PARAM] ?? null) : null)
             ?? null;
 
         if ($subjectType === null) {

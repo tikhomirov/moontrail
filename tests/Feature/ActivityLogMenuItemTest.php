@@ -194,3 +194,79 @@ it('generates URLs and resolves active states for menu sub-items', function (): 
         expect($url)->toBeString();
     }
 });
+
+it('does not mark Logs menu active on unrelated admin pages', function (): void {
+    config()->set('moontrail.tracked_models', [TestPost::class]);
+    config()->set('moontrail.auto_track_models', []);
+    config()->set('moontrail.menu.enabled', true);
+    config()->set('moontrail.menu.show_children', true);
+    config()->set('moontrail.menu.show_all_item', true);
+    config()->set('moontrail.menu.exclude_models', []);
+
+    /** @var MenuGroup $group */
+    $group = MoonTrailMenuItem::make();
+    /** @var list<MenuItem> $items */
+    $items = array_values(iterator_to_array($group->getItems()));
+    $allItem = $items[0];
+    $modelItem = $items[1];
+
+    app()->instance('request', Illuminate\Http\Request::create(
+        '/admin/resource/conversion-dashboard-page/page',
+        'GET',
+    ));
+
+    expect($allItem->isActive())->toBeFalse()
+        ->and($modelItem->isActive())->toBeFalse()
+        ->and($group->isActive())->toBeFalse();
+});
+
+it('marks All item active only on MoonTrail pages without subject_type', function (): void {
+    config()->set('moontrail.tracked_models', [TestPost::class]);
+    config()->set('moontrail.auto_track_models', []);
+    config()->set('moontrail.menu.enabled', true);
+    config()->set('moontrail.menu.show_children', true);
+    config()->set('moontrail.menu.show_all_item', true);
+    config()->set('moontrail.menu.exclude_models', []);
+
+    /** @var MenuGroup $group */
+    $group = MoonTrailMenuItem::make();
+    /** @var list<MenuItem> $items */
+    $items = array_values(iterator_to_array($group->getItems()));
+    $allItem = $items[0];
+    $modelItem = $items[1];
+
+    app()->instance('request', Illuminate\Http\Request::create(
+        '/admin/resource/moon-trail-resource/index-page',
+        'GET',
+    ));
+
+    expect($allItem->isActive())->toBeTrue()
+        ->and($modelItem->isActive())->toBeFalse()
+        ->and($group->isActive())->toBeTrue();
+});
+
+it('marks model sub-item active when subject_type filter matches', function (): void {
+    config()->set('moontrail.tracked_models', [TestPost::class]);
+    config()->set('moontrail.auto_track_models', []);
+    config()->set('moontrail.menu.enabled', true);
+    config()->set('moontrail.menu.show_children', true);
+    config()->set('moontrail.menu.show_all_item', true);
+    config()->set('moontrail.menu.exclude_models', []);
+
+    /** @var MenuGroup $group */
+    $group = MoonTrailMenuItem::make();
+    /** @var list<MenuItem> $items */
+    $items = array_values(iterator_to_array($group->getItems()));
+    $allItem = $items[0];
+    $modelItem = $items[1];
+
+    app()->instance('request', Illuminate\Http\Request::create(
+        '/admin/resource/moon-trail-resource/index-page',
+        'GET',
+        ['subject_type' => TestPost::class],
+    ));
+
+    expect($allItem->isActive())->toBeFalse()
+        ->and($modelItem->isActive())->toBeTrue()
+        ->and($group->isActive())->toBeTrue();
+});
