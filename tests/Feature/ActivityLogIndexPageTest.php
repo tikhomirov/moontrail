@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\View;
 use MoonShine\Laravel\MoonShineAuth;
 use MoonShine\MoonTrail\Components\ActivityTimeline;
 use MoonShine\MoonTrail\Pages\MoonTrailIndexPage;
+use MoonShine\MoonTrail\Resources\MoonTrailResource;
 use MoonShine\MoonTrail\Tests\Fixtures\AllowRollbackPolicy;
 use MoonShine\MoonTrail\Tests\Fixtures\TestAdmin;
 use MoonShine\MoonTrail\Tests\Fixtures\TestPost;
@@ -274,4 +275,19 @@ it('renders active filter chip with localized remove label', function (): void {
     expect($html)
         ->toContain('aria-label="' . __('moontrail::ui.filter_remove') . '"')
         ->toContain('title="' . __('moontrail::ui.filter_remove') . '"');
+});
+
+it('topLayer wraps kpi, filters and chips in one space-elements container', function (): void {
+    $page = app(MoonTrailIndexPage::class);
+    $page->setResource(app(MoonTrailResource::class));
+    $layer = callProtected($page, 'topLayer');
+
+    expect($layer)->not->toBeEmpty();
+
+    $link = $layer[0];
+    $wrapper = $layer[1];
+
+    expect((string) $link->render())->toContain('rel="stylesheet"')
+        ->and($wrapper)->toBeInstanceOf(\MoonShine\UI\Components\Layout\Div::class)
+        ->and((string) $wrapper->getAttribute('class'))->toContain('space-elements');
 });

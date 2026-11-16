@@ -741,7 +741,6 @@
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 1rem;
-    margin-bottom: 1.5rem;
 }
 
 @media (min-width: 640px) {
@@ -1015,7 +1014,6 @@
     border-radius: var(--ms-al-radius);
     box-shadow: var(--ms-al-shadow);
     padding: 1.25rem;
-    margin-bottom: 1.5rem;
     transition: box-shadow 0.2s;
 }
 
