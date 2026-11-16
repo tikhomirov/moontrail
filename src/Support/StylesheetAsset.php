@@ -13,7 +13,7 @@ namespace MoonShine\MoonTrail\Support;
  */
 final class StylesheetAsset
 {
-    private const string RELATIVE_PATH = 'vendor/moontrail/moontrail.css';
+    private const RELATIVE_PATH = 'vendor/moontrail/moontrail.css';
 
     /**
      * Ссылка на таблицу стилей; при отсутствии файла возвращает URL без версии.
@@ -28,6 +28,6 @@ final class StylesheetAsset
             return $url;
         }
 
-        return $url.'?v='.$modifiedAt;
+        return $url . '?v=' . $modifiedAt;
     }
 }
