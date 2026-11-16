@@ -17,6 +17,7 @@ use MoonShine\MoonTrail\Support\ActivityLogFilterOptions;
 use MoonShine\MoonTrail\Support\ActivityLogFilterUrlBuilder;
 use MoonShine\MoonTrail\Support\StylesheetAsset;
 use MoonShine\MoonTrail\Support\SvgIcons;
+use MoonShine\MoonTrail\Support\WrapsPageComponentsInSpaceElements;
 use MoonShine\UI\Components\FlexibleRender;
 use MoonShine\UI\Fields\Date;
 use MoonShine\UI\Fields\Select;
@@ -31,6 +32,8 @@ use MoonShine\UI\Fields\Text;
  */
 final class MoonTrailIndexPage extends IndexPage
 {
+    use WrapsPageComponentsInSpaceElements;
+
     /**
      * @param ActivityQueryContract<Model> $activityQuery
      */
@@ -82,22 +85,23 @@ final class MoonTrailIndexPage extends IndexPage
     {
         $assetUrl = e($this->resolveStylesheetAssetUrl());
 
-        $kpiHtml = $this->renderKpiBlock();
-        $inlineFiltersHtml = $this->renderInlineFilters();
-        $chipsHtml = $this->renderActiveFilterChips();
-
-        $components = [
-            FlexibleRender::make("<link rel=\"stylesheet\" href=\"{$assetUrl}\">"),
-            FlexibleRender::make($kpiHtml),
-            FlexibleRender::make($inlineFiltersHtml),
+        $blocks = [
+            FlexibleRender::make($this->renderKpiBlock()),
+            FlexibleRender::make($this->renderInlineFilters()),
         ];
 
+        $chipsHtml = $this->renderActiveFilterChips();
+
         if ($chipsHtml !== '') {
-            $components[] = FlexibleRender::make($chipsHtml);
+            $blocks[] = FlexibleRender::make($chipsHtml);
         }
 
+        // Стили не визуальный блок. mb-6 на обёртке сохраняет зазор до кнопок индекса
+        // (их LineBreak остаётся снаружи, чтобы не сложить my-4 с space-elements).
+        // Заголовок страницы рисует лейаут, не topLayer.
         return [
-            ...$components,
+            FlexibleRender::make("<link rel=\"stylesheet\" href=\"{$assetUrl}\">"),
+            ...$this->wrapInSpaceElements($blocks, 'mb-6'),
             ...parent::topLayer(),
         ];
     }

@@ -3,7 +3,7 @@
  * @var array<int, array{label: string, value: string, modifier: string, icon: string, href: ?string, isActive: bool}> $cards
  */
 @endphp
-<div class="ms-al-kpi-grid grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-4">
+<div class="ms-al-kpi-grid grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
     @foreach($cards as $card)
         @php
             $activeClass = $card['isActive'] ? ' ms-al-kpi-card--active' : '';

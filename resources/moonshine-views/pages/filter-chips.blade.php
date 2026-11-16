@@ -2,7 +2,7 @@
 /** @var array<int, array{label: string, value: string, removeUrl: string}> $chips */
 /** @var string $clearAllUrl */
 @endphp
-<div class="ms-al-filter-chips flex flex-wrap items-center gap-2 mb-3">
+<div class="ms-al-filter-chips flex flex-wrap items-center gap-2">
     @foreach($chips as $chip)
         <span class="ms-al-filter-chip inline-flex items-center gap-1.5 pl-2.5 pr-1 py-1 text-xs font-medium rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-700">
             <span class="opacity-60">{{ $chip['label'] }}:</span>
