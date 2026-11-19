@@ -17,7 +17,13 @@ final readonly class ActivityFilterOptionsProvider implements ActivityFilterOpti
      */
     public function __construct(
         private ActivityQueryContract $query,
+        private ?string $logName = null,
     ) {}
+
+    public function scopedTo(string $logName): self
+    {
+        return new self($this->query, $logName);
+    }
 
     public function logNames(): array
     {
@@ -62,14 +68,14 @@ final readonly class ActivityFilterOptionsProvider implements ActivityFilterOpti
 
         if (! $this->isCacheEnabled()) {
             /** @var non-empty-string $column */
-            return $this->normalizeValues($this->query->distinctValues($column));
+            return $this->normalizeValues($this->query->distinctValues($column, $this->logName));
         }
 
         /** @var non-empty-string $column */
         return Cache::remember(
             key: $this->cacheKey($column),
             ttl: now()->addSeconds($this->cacheTtlSeconds()),
-            callback: fn (): array => $this->normalizeValues($this->query->distinctValues($column)),
+            callback: fn (): array => $this->normalizeValues($this->query->distinctValues($column, $this->logName)),
         );
     }
 
@@ -113,10 +119,11 @@ final readonly class ActivityFilterOptionsProvider implements ActivityFilterOpti
         $driver = MoonTrailConfig::activityDriver();
 
         return sprintf(
-            'moontrail.filter_options.%s.%s.%s',
+            'moontrail.filter_options.%s.%s.%s.%s',
             $driver,
             md5($this->query->modelClass()),
             $column,
+            $this->logName ?? 'all',
         );
     }
 }

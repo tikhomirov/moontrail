@@ -71,7 +71,7 @@ final class DatabaseActivityQuery implements ActivityQueryContract
         return MoonTrailActivity::class;
     }
 
-    public function distinctValues(string $column): array
+    public function distinctValues(string $column, ?string $logName = null): array
     {
         if (! in_array($column, ['log_name', 'event', 'subject_type', 'causer_type'], true)) {
             return [];
@@ -80,6 +80,10 @@ final class DatabaseActivityQuery implements ActivityQueryContract
         $query = MoonTrailActivity::query();
         $table = $query->getModel()->getTable();
         $this->warnDistinctValuesIfLarge($query->getModel(), $column);
+
+        if (is_string($logName) && $logName !== '') {
+            $query->where('log_name', $logName);
+        }
 
         /** @var list<string> $values */
         $values = $query
@@ -91,8 +95,14 @@ final class DatabaseActivityQuery implements ActivityQueryContract
             ->all();
 
         if ($column === 'subject_type' && Schema::hasColumn($table, 'model_type')) {
+            $legacyQuery = MoonTrailActivity::query();
+
+            if (is_string($logName) && $logName !== '') {
+                $legacyQuery->where('log_name', $logName);
+            }
+
             /** @var list<string> $legacy */
-            $legacy = MoonTrailActivity::query()
+            $legacy = $legacyQuery
                 ->distinct()
                 ->whereNotNull('model_type')
                 ->pluck('model_type')

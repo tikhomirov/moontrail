@@ -111,6 +111,18 @@
                     class="w-full py-1.5 px-2.5 text-xs rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 />
             </div>
+
+            {{-- Date Until --}}
+            <div>
+                <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
+                    {{ __('moontrail::ui.filter_date_until') }}
+                </label>
+                <input
+                    type="date"
+                    wire:model.live="dateUntil"
+                    class="w-full py-1.5 px-2.5 text-xs rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+            </div>
         </div>
 
         {{-- Active Filter Chips --}}

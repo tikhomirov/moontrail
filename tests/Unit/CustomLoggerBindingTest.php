@@ -49,7 +49,7 @@ it('uses manually bound custom logger and query in custom mode', function (): vo
             return MoonTrailActivity::class;
         }
 
-        public function distinctValues(string $column): array
+        public function distinctValues(string $column, ?string $logName = null): array
         {
             return [];
         }
@@ -89,7 +89,7 @@ it('does not require deprecated ui/model-backed query contracts in custom mode',
             return MoonTrailActivity::class;
         }
 
-        public function distinctValues(string $column): array
+        public function distinctValues(string $column, ?string $logName = null): array
         {
             return [];
         }
@@ -124,7 +124,7 @@ it('keeps deprecated compatibility binding for activity query ui contract', func
             return MoonTrailActivity::class;
         }
 
-        public function distinctValues(string $column): array
+        public function distinctValues(string $column, ?string $logName = null): array
         {
             return [];
         }

@@ -12,6 +12,7 @@ use MoonShine\MoonTrail\Adapters\Livewire\Components\ActivityIndex;
 use MoonShine\MoonTrail\Adapters\Livewire\Components\ActivityTimeline;
 use MoonShine\MoonTrail\Adapters\Livewire\Components\ActivityTimelineModal;
 use MoonShine\MoonTrail\Models\ModelVersion;
+use MoonShine\MoonTrail\MoonTrailObserver;
 use MoonShine\MoonTrail\Tests\Fixtures\AllowRollbackPolicy;
 use MoonShine\MoonTrail\Tests\Fixtures\TestAdmin;
 use MoonShine\MoonTrail\Tests\Fixtures\TestPost;
@@ -188,24 +189,33 @@ it('keeps an isolated log out of the general index and shows it on a locked tabl
     config()->set('moontrail.isolated_log_names', ['secrets']);
 
     $admin = TestAdmin::query()->create(['name' => 'Admin User', 'email' => 'admin@example.com']);
+    $post = MoonTrailObserver::withoutTracking(
+        fn (): TestPost => TestPost::query()->create(['name' => 'Secret device']),
+    );
 
     Activity::query()->create([
-        'log_name'    => 'default',
-        'description' => 'Ordinary row',
-        'event'       => 'created',
-        'properties'  => ['attributes' => ['name' => 'Ordinary']],
+        'log_name'     => 'default',
+        'description'  => 'Ordinary row',
+        'event'        => 'created',
+        'subject_type' => $admin->getMorphClass(),
+        'subject_id'   => $admin->getKey(),
+        'properties'   => ['attributes' => ['name' => 'Ordinary']],
     ]);
 
     Activity::query()->create([
-        'log_name'    => 'secrets',
-        'description' => 'Secret row',
-        'event'       => 'accessed',
-        'properties'  => ['attributes' => ['serial_num' => 'SN-1', 'login' => 'ada']],
+        'log_name'     => 'secrets',
+        'description'  => 'Secret row',
+        'event'        => 'accessed',
+        'subject_type' => $post->getMorphClass(),
+        'subject_id'   => $post->getKey(),
+        'properties'   => ['attributes' => ['serial_num' => 'SN-1', 'login' => 'ada']],
     ]);
 
     Livewire::actingAs($admin)
         ->test(ActivityIndex::class)
         ->assertSee('Ordinary row')
+        ->assertSee('TestAdmin')
+        ->assertSee('Date until')
         ->assertDontSee('Secret row')
         ->assertDontSee('secrets')
         ->set('logName', 'secrets')
@@ -229,7 +239,10 @@ it('keeps an isolated log out of the general index and shows it on a locked tabl
         ->assertSee('SN-1')
         ->assertSee('ada')
         ->assertSee('S/N')
+        ->assertSee('TestPost')
+        ->assertSee('Date until')
         ->assertDontSee('Ordinary row')
+        ->assertDontSee('TestAdmin')
         ->assertDontSee('All logs')
         ->set('logName', 'default')
         ->assertSet('logName', 'secrets')

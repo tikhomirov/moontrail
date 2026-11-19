@@ -148,7 +148,12 @@ final class ActivityIndex extends Component
     {
         /** @var ActivityQueryContract<Model> $activityQuery */
         $activityQuery = app(ActivityQueryContract::class);
-        $options = new ActivityLogFilterOptions(app(ActivityFilterOptionsProvider::class));
+        $provider = app(ActivityFilterOptionsProvider::class);
+
+        if ($this->onlyLogName !== '') {
+            $provider = $provider->scopedTo($this->onlyLogName);
+        }
+        $options = new ActivityLogFilterOptions($provider);
 
         $filters = array_filter([
             'search'       => $this->search !== '' ? $this->search : null,

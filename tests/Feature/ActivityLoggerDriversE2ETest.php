@@ -148,7 +148,7 @@ it('supports e2e flow in custom mode', function () use ($resetDriverBindings): v
             return TestCustomActivity::class;
         }
 
-        public function distinctValues(string $column): array
+        public function distinctValues(string $column, ?string $logName = null): array
         {
             return TestCustomActivity::query()
                 ->distinct()

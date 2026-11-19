@@ -70,7 +70,7 @@ final class SpatieActivityQuery implements ActivityQueryContract
         return Activity::class;
     }
 
-    public function distinctValues(string $column): array
+    public function distinctValues(string $column, ?string $logName = null): array
     {
         if (! in_array($column, ['log_name', 'event', 'subject_type', 'causer_type'], true)) {
             return [];
@@ -78,8 +78,14 @@ final class SpatieActivityQuery implements ActivityQueryContract
 
         $this->warnDistinctValuesIfLarge(Activity::query()->getModel(), $column);
 
+        $query = Activity::query();
+
+        if (is_string($logName) && $logName !== '') {
+            $query->where('log_name', $logName);
+        }
+
         /** @var list<string> $values */
-        $values = Activity::query()
+        $values = $query
             ->distinct()
             ->whereNotNull($column)
             ->pluck($column)

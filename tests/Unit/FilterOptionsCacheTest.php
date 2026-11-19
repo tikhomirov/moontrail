@@ -39,7 +39,7 @@ it('does not cache distinct filter values when cache is disabled', function (): 
             return MoonTrailActivity::class;
         }
 
-        public function distinctValues(string $column): array
+        public function distinctValues(string $column, ?string $logName = null): array
         {
             $this->distinctCalls++;
 
@@ -87,7 +87,7 @@ it('caches distinct filter values when cache is enabled', function (): void {
             return MoonTrailActivity::class;
         }
 
-        public function distinctValues(string $column): array
+        public function distinctValues(string $column, ?string $logName = null): array
         {
             $this->distinctCalls++;
 

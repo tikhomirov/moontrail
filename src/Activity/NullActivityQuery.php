@@ -49,7 +49,7 @@ final class NullActivityQuery implements ActivityQueryContract
         return MoonTrailActivity::class;
     }
 
-    public function distinctValues(string $column): array
+    public function distinctValues(string $column, ?string $logName = null): array
     {
         return [];
     }

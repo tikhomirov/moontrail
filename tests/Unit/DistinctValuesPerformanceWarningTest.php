@@ -37,7 +37,7 @@ it('loads filter options from database when strategy is database_distinct', func
             return MoonTrailActivity::class;
         }
 
-        public function distinctValues(string $column): array
+        public function distinctValues(string $column, ?string $logName = null): array
         {
             $this->distinctCalls++;
 
@@ -89,7 +89,7 @@ it('uses static filter options without running distinct query', function (): voi
             return MoonTrailActivity::class;
         }
 
-        public function distinctValues(string $column): array
+        public function distinctValues(string $column, ?string $logName = null): array
         {
             $this->distinctCalls++;
 

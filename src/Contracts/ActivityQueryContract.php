@@ -34,5 +34,5 @@ interface ActivityQueryContract
      * @param non-empty-string $column
      * @return list<string>
      */
-    public function distinctValues(string $column): array;
+    public function distinctValues(string $column, ?string $logName = null): array;
 }

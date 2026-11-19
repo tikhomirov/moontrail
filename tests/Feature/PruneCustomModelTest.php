@@ -66,7 +66,7 @@ beforeEach(function (): void {
             return TestCustomActivity::class;
         }
 
-        public function distinctValues(string $column): array
+        public function distinctValues(string $column, ?string $logName = null): array
         {
             return [];
         }

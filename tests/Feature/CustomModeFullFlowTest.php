@@ -85,7 +85,7 @@ beforeEach(function (): void {
             return TestCustomActivity::class;
         }
 
-        public function distinctValues(string $column): array
+        public function distinctValues(string $column, ?string $logName = null): array
         {
             /** @var list<string> $values */
             $values = TestCustomActivity::query()->distinct()->whereNotNull($column)->pluck($column)->filter(
@@ -214,7 +214,7 @@ it('throws explicit error on detail page when custom query returns non model-bac
             return TestCustomActivity::class;
         }
 
-        public function distinctValues(string $column): array
+        public function distinctValues(string $column, ?string $logName = null): array
         {
             return [];
         }
