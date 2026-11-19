@@ -5,6 +5,16 @@ declare(strict_types=1);
 use MoonShine\MoonTrail\Resources\MoonTrailResource;
 use MoonShine\MoonTrail\Support\MoonTrailConfig;
 
+it('keeps only non-empty strings from isolated log names', function (): void {
+    config()->set('moontrail.isolated_log_names', ['secrets', '', 12, 'audit']);
+
+    expect(MoonTrailConfig::isolatedLogNames())->toBe(['secrets', 'audit']);
+
+    config()->set('moontrail.isolated_log_names', 'secrets');
+
+    expect(MoonTrailConfig::isolatedLogNames())->toBe([]);
+});
+
 it('reads the documented activity logger driver', function (): void {
     config()->set('moontrail.activity_logger', 'database');
 

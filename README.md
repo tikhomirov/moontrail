@@ -625,6 +625,25 @@ return [
 ];
 ```
 
+### Isolated logs
+
+`isolated_log_names` lists `log_name` values that stay out of the general history, its log filter and the KPI totals. The rows remain in the same activity table. Mount the Livewire index with `onlyLogName` to show exactly one of those logs. `attributeColumns` replaces the log column with scalar values from `properties.attributes`.
+
+```php
+'isolated_log_names' => ['secrets'],
+```
+
+```blade
+<livewire:moontrail-index
+    :only-log-name="'secrets'"
+    :show-kpi="false"
+    :attribute-columns="[
+        ['key' => 'serial_num', 'label' => 'S/N'],
+        ['key' => 'login', 'label' => 'Login'],
+    ]"
+/>
+```
+
 ### Choosing Activity Logger
 
 MoonTrail supports multiple logging backends. Set the `activity_logger` option in `config/moontrail.php`:

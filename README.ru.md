@@ -400,6 +400,25 @@ return [
 ];
 ```
 
+### Отдельные журналы
+
+`isolated_log_names` перечисляет значения `log_name`, которые не попадают в общую историю, в фильтр журнала и в счётчики KPI. Строки остаются в той же таблице активности. Компонент Livewire с `onlyLogName` показывает ровно один такой журнал. `attributeColumns` заменяет колонку журнала на скалярные значения из `properties.attributes`.
+
+```php
+'isolated_log_names' => ['secrets'],
+```
+
+```blade
+<livewire:moontrail-index
+    :only-log-name="'secrets'"
+    :show-kpi="false"
+    :attribute-columns="[
+        ['key' => 'serial_num', 'label' => 'S/N'],
+        ['key' => 'login', 'label' => 'Login'],
+    ]"
+/>
+```
+
 ### Выбор логгера активности
 
 MoonTrail поддерживает несколько бэкендов для логирования. Установите опцию `activity_logger` в `config/moontrail.php`:

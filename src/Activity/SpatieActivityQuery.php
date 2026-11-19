@@ -45,7 +45,7 @@ final class SpatieActivityQuery implements ActivityQueryContract
     public function stats(): array
     {
         /** @var array<string, int> $eventCounts */
-        $eventCounts = Activity::query()
+        $eventCounts = (new ActivityLogQuery)->excludeIsolated(Activity::query())
             ->selectRaw('event, count(*) as cnt')
             ->groupBy('event')
             ->pluck('cnt', 'event')

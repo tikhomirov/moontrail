@@ -46,7 +46,7 @@ final class DatabaseActivityQuery implements ActivityQueryContract
     public function stats(): array
     {
         /** @var array<string, int> $eventCounts */
-        $eventCounts = MoonTrailActivity::query()
+        $eventCounts = (new ActivityLogQuery)->excludeIsolated(MoonTrailActivity::query())
             ->selectRaw('event, count(*) as cnt')
             ->groupBy('event')
             ->pluck('cnt', 'event')

@@ -67,6 +67,7 @@
             </div>
 
             {{-- Log Name --}}
+            @if($onlyLogName === '')
             <div>
                 <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
                     {{ __('moontrail::ui.field_log') }}
@@ -81,6 +82,7 @@
                     @endforeach
                 </select>
             </div>
+            @endif
 
             {{-- Subject Type --}}
             <div>
@@ -116,7 +118,7 @@
             $activeChips = array_filter([
                 'search'       => $search !== '' ? __('moontrail::ui.search') . ': "' . $search . '"' : null,
                 'event'        => $event !== '' ? __('moontrail::ui.field_event') . ': ' . ($eventOptions[$event] ?? $event) : null,
-                'logName'      => $logName !== '' ? __('moontrail::ui.field_log') . ': ' . ($logNameOptions[$logName] ?? $logName) : null,
+                'logName'      => $onlyLogName === '' && $logName !== '' ? __('moontrail::ui.field_log') . ': ' . ($logNameOptions[$logName] ?? $logName) : null,
                 'subjectType'  => $subjectType !== '' ? __('moontrail::ui.field_subject') . ': ' . ($subjectTypeOptions[$subjectType] ?? class_basename($subjectType)) : null,
                 'dateFrom'     => $dateFrom !== '' ? __('moontrail::ui.filter_date_from') . ': ' . $dateFrom : null,
                 'dateUntil'    => $dateUntil !== '' ? __('moontrail::ui.filter_date_until') . ': ' . $dateUntil : null,
@@ -166,7 +168,13 @@
                         <th class="py-3 px-4">{{ __('moontrail::ui.field_event') }}</th>
                         <th class="py-3 px-4">{{ __('moontrail::ui.field_subject') }}</th>
                         <th class="py-3 px-4">{{ __('moontrail::ui.field_causer') }}</th>
-                        <th class="py-3 px-4">{{ __('moontrail::ui.field_log') }}</th>
+                        @if($attributeColumns === [])
+                            <th class="py-3 px-4">{{ __('moontrail::ui.field_log') }}</th>
+                        @else
+                            @foreach($attributeColumns as $column)
+                                <th class="py-3 px-4">{{ $column['label'] }}</th>
+                            @endforeach
+                        @endif
                         <th class="py-3 px-4">{{ __('moontrail::ui.field_description') }}</th>
                         <th class="py-3 px-4 text-right">{{ __('moontrail::ui.actions') }}</th>
                     </tr>
@@ -208,6 +216,7 @@
                                     <span class="text-slate-400 italic">{{ __('moontrail::ui.system') }}</span>
                                 @endif
                             </td>
+                            @if($attributeColumns === [])
                             <td class="py-3 px-4 whitespace-nowrap">
                                 @if(!empty($activity->log_name))
                                     <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-mono bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300">
@@ -217,6 +226,11 @@
                                     <span class="text-slate-400">—</span>
                                 @endif
                             </td>
+                            @else
+                                @foreach($attributeColumns as $column)
+                                    <td class="py-3 px-4">{{ $attributeText($activity, $column['key']) }}</td>
+                                @endforeach
+                            @endif
                             <td class="py-3 px-4 max-w-xs truncate" title="{{ $activity->description }}">
                                 {{ $activity->description ?? '—' }}
                             </td>
@@ -265,7 +279,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="8" class="py-12 text-center">
+                            <td colspan="{{ $tableColumnCount }}" class="py-12 text-center">
                                 <svg class="w-12 h-12 text-slate-300 dark:text-slate-600 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                 </svg>

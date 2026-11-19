@@ -40,6 +40,8 @@ final readonly class ActivityLogFilterData
         public ?string $dateFrom = null,
         public ?string $dateUntil = null,
         public ?string $search = null,
+        /** Dedicated table. A general filter cannot open an isolated log. */
+        public bool $lockedLog = false,
     ) {}
 
     public static function fromRequestStrict(Request $request): self
@@ -94,6 +96,7 @@ final readonly class ActivityLogFilterData
             dateFrom: $value('date_from'),
             dateUntil: $value('date_until'),
             search: $value('search') ?? $value('query'),
+            lockedLog: ($filters['locked_log'] ?? false) === true,
         );
     }
 

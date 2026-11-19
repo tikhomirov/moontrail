@@ -18,10 +18,18 @@ final readonly class ActivityLogFilterOptions
      */
     public function logNames(): array
     {
-        return $this->buildOptions(
+        $options = $this->buildOptions(
             $this->provider->logNames(),
             false,
         );
+
+        $isolated = array_flip(MoonTrailConfig::isolatedLogNames());
+
+        if ($isolated === []) {
+            return $options;
+        }
+
+        return array_diff_key($options, $isolated);
     }
 
     /**

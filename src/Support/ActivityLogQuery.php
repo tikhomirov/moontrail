@@ -23,8 +23,12 @@ final class ActivityLogQuery
      */
     public function apply(Builder $builder, ActivityLogFilterData $filters): Builder
     {
-        if ($filters->logName !== null) {
-            $builder->where('log_name', $filters->logName);
+        $logName = $this->visibleLogName($filters);
+
+        if ($logName !== null) {
+            $builder->where('log_name', $logName);
+        } else {
+            $builder = $this->excludeIsolated($builder);
         }
 
         if ($filters->event !== null) {
@@ -98,6 +102,25 @@ final class ActivityLogQuery
     }
 
     /**
+     * Drops logs listed in moontrail.isolated_log_names.
+     *
+     * @template TModel of Model
+     *
+     * @param Builder<TModel> $builder
+     * @return Builder<TModel>
+     */
+    public function excludeIsolated(Builder $builder): Builder
+    {
+        $names = MoonTrailConfig::isolatedLogNames();
+
+        if ($names !== []) {
+            $builder->whereNotIn('log_name', $names);
+        }
+
+        return $builder;
+    }
+
+    /**
      * @template TModel of Model
      *
      * @param Builder<TModel> $builder
@@ -107,6 +130,23 @@ final class ActivityLogQuery
         $table = $builder->getModel()->getTable();
 
         return Schema::hasColumn($table, $column);
+    }
+
+    private function visibleLogName(ActivityLogFilterData $filters): ?string
+    {
+        if ($filters->logName === null) {
+            return null;
+        }
+
+        if ($filters->lockedLog) {
+            return $filters->logName;
+        }
+
+        if (in_array($filters->logName, MoonTrailConfig::isolatedLogNames(), true)) {
+            return null;
+        }
+
+        return $filters->logName;
     }
 
     private function parseDate(?string $raw): ?Carbon

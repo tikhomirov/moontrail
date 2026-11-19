@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\View;
 use Livewire\Livewire;
+use MoonShine\MoonTrail\Activity\SpatieActivityQuery;
 use MoonShine\MoonTrail\Adapters\Livewire\Components\ActivityDetailModal;
 use MoonShine\MoonTrail\Adapters\Livewire\Components\ActivityDiffModal;
 use MoonShine\MoonTrail\Adapters\Livewire\Components\ActivityIndex;
@@ -181,4 +182,60 @@ it('prompts rollback and cancels in activity timeline', function (): void {
         ->assertSee((string) __('moontrail::ui.rollback_confirm_title'))
         ->call('cancelRollback')
         ->assertSet('confirmingRollback', false);
+});
+
+it('keeps an isolated log out of the general index and shows it on a locked table', function (): void {
+    config()->set('moontrail.isolated_log_names', ['secrets']);
+
+    $admin = TestAdmin::query()->create(['name' => 'Admin User', 'email' => 'admin@example.com']);
+
+    Activity::query()->create([
+        'log_name'    => 'default',
+        'description' => 'Ordinary row',
+        'event'       => 'created',
+        'properties'  => ['attributes' => ['name' => 'Ordinary']],
+    ]);
+
+    Activity::query()->create([
+        'log_name'    => 'secrets',
+        'description' => 'Secret row',
+        'event'       => 'accessed',
+        'properties'  => ['attributes' => ['serial_num' => 'SN-1', 'login' => 'ada']],
+    ]);
+
+    Livewire::actingAs($admin)
+        ->test(ActivityIndex::class)
+        ->assertSee('Ordinary row')
+        ->assertDontSee('Secret row')
+        ->assertDontSee('secrets')
+        ->set('logName', 'secrets')
+        ->assertDontSee('Secret row')
+        ->assertSet('logName', '');
+
+    expect(app(SpatieActivityQuery::class)->stats()['total'])->toBe(1)
+        ->and(app(SpatieActivityQuery::class)->paginate(['log_name' => 'secrets'])->pluck('description')->all())->not->toContain('Secret row')
+        ->and(app(SpatieActivityQuery::class)->paginate(['log_name' => 'secrets', 'locked_log' => true])->pluck('description')->all())->toContain('Secret row');
+
+    Livewire::actingAs($admin)
+        ->test(ActivityIndex::class, [
+            'onlyLogName'      => 'secrets',
+            'showKpi'          => false,
+            'attributeColumns' => [
+                ['key' => 'serial_num', 'label' => 'S/N'],
+                ['key' => 'login', 'label' => 'Login'],
+            ],
+        ])
+        ->assertSee('Secret row')
+        ->assertSee('SN-1')
+        ->assertSee('ada')
+        ->assertSee('S/N')
+        ->assertDontSee('Ordinary row')
+        ->assertDontSee('All logs')
+        ->set('logName', 'default')
+        ->assertSet('logName', 'secrets')
+        ->assertDontSee('Ordinary row')
+        ->call('resetFilters')
+        ->assertSet('logName', 'secrets')
+        ->call('removeFilter', 'logName')
+        ->assertSet('logName', 'secrets');
 });

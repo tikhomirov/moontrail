@@ -22,6 +22,9 @@ final class ActivityIndex extends Component
 {
     use WithPagination;
 
+    /** id, date, event, subject, causer, description, actions. The log column is extra. */
+    private const FIXED_COLUMN_COUNT = 7;
+
     #[Url(as: 'search')]
     public string $search = '';
 
@@ -43,9 +46,27 @@ final class ActivityIndex extends Component
     #[Locked]
     public bool $showKpi = true;
 
-    public function mount(bool $showKpi = true): void
+    /** Log this table cannot leave. Empty means the general history. */
+    #[Locked]
+    public string $onlyLogName = '';
+
+    /**
+     * Columns read from properties.attributes. They replace the log column.
+     *
+     * @var list<array{key: string, label: string}>
+     */
+    #[Locked]
+    public array $attributeColumns = [];
+
+    /**
+     * @param list<mixed> $attributeColumns
+     */
+    public function mount(bool $showKpi = true, string $onlyLogName = '', array $attributeColumns = []): void
     {
         $this->showKpi = $showKpi;
+        $this->onlyLogName = $onlyLogName;
+        $this->attributeColumns = $this->normalizeColumns($attributeColumns);
+        $this->keepLogWithinBounds();
     }
 
     public function updatingSearch(): void
@@ -61,6 +82,11 @@ final class ActivityIndex extends Component
     public function updatingLogName(): void
     {
         $this->resetPage();
+    }
+
+    public function updatedLogName(): void
+    {
+        $this->keepLogWithinBounds();
     }
 
     public function updatingSubjectType(): void
@@ -86,12 +112,17 @@ final class ActivityIndex extends Component
 
     public function resetFilters(): void
     {
-        $this->reset(['search', 'event', 'logName', 'subjectType', 'dateFrom', 'dateUntil']);
+        $this->reset(['search', 'event', 'subjectType', 'dateFrom', 'dateUntil']);
+        $this->logName = $this->onlyLogName;
         $this->resetPage();
     }
 
     public function removeFilter(string $key): void
     {
+        if ($key === 'logName' && $this->onlyLogName !== '') {
+            return;
+        }
+
         if (in_array($key, ['search', 'event', 'logName', 'subjectType', 'dateFrom', 'dateUntil'], true)) {
             $this->{$key} = '';
             $this->resetPage();
@@ -127,11 +158,16 @@ final class ActivityIndex extends Component
             'date_from'    => $this->dateFrom !== '' ? $this->dateFrom : null,
             'date_until'   => $this->dateUntil !== '' ? $this->dateUntil : null,
         ]);
+
+        if ($this->onlyLogName !== '') {
+            $filters['locked_log'] = true;
+        }
+
         $filters['page'] = $this->getPage();
 
         /** @var LengthAwarePaginator<int, Model> $activities */
         $activities = $activityQuery->paginate($filters);
-        $stats = $this->showKpi ? $activityQuery->stats() : [];
+        $stats = $this->showKpi && $this->onlyLogName === '' ? $activityQuery->stats() : [];
 
         $kpiCards = $this->buildKpiCards($stats);
 
@@ -142,7 +178,44 @@ final class ActivityIndex extends Component
             'eventOptions'       => $options->events(),
             'subjectTypeOptions' => $options->subjectTypes(),
             'dateFormat'         => MoonTrailConfig::uiDateFormat(),
+            'tableColumnCount'   => $this->tableColumnCount(),
+            'attributeText'      => fn (Model $activity, string $key): string => $this->attributeText($activity, $key),
         ]);
+    }
+
+    private function attributeText(Model $activity, string $key): string
+    {
+        $value = data_get($activity, 'properties.attributes.' . $key);
+
+        if (! is_scalar($value)) {
+            return '—';
+        }
+
+        if ((string) $value === '') {
+            return '—';
+        }
+
+        return (string) $value;
+    }
+
+    private function tableColumnCount(): int
+    {
+        $middleColumns = $this->attributeColumns === [] ? 1 : count($this->attributeColumns);
+
+        return self::FIXED_COLUMN_COUNT + $middleColumns;
+    }
+
+    private function keepLogWithinBounds(): void
+    {
+        if ($this->onlyLogName !== '') {
+            $this->logName = $this->onlyLogName;
+
+            return;
+        }
+
+        if (in_array($this->logName, MoonTrailConfig::isolatedLogNames(), true)) {
+            $this->logName = '';
+        }
     }
 
     /**
@@ -199,5 +272,43 @@ final class ActivityIndex extends Component
                 'isActive' => false,
             ],
         ];
+    }
+
+    /**
+     * @param list<mixed> $columns
+     * @return list<array{key: string, label: string}>
+     */
+    private function normalizeColumns(array $columns): array
+    {
+        $normalized = [];
+
+        foreach ($columns as $column) {
+            if (! is_array($column)) {
+                continue;
+            }
+
+            $key = $column['key'] ?? null;
+            $label = $column['label'] ?? null;
+
+            if (! is_string($key)) {
+                continue;
+            }
+
+            if ($key === '') {
+                continue;
+            }
+
+            if (! is_string($label)) {
+                continue;
+            }
+
+            if ($label === '') {
+                continue;
+            }
+
+            $normalized[] = ['key' => $key, 'label' => $label];
+        }
+
+        return $normalized;
     }
 }

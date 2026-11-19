@@ -24,6 +24,18 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Isolated log names
+    |--------------------------------------------------------------------------
+    |
+    | These log_name values stay out of the general history: the index, its
+    | log filter and the KPI counts. Mount the Livewire index with
+    | onlyLogName to show exactly one of them.
+    |
+    */
+    'isolated_log_names' => [],
+
+    /*
+    |--------------------------------------------------------------------------
     | Activity Model (custom mode)
     |--------------------------------------------------------------------------
     |

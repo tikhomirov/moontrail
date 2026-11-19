@@ -32,6 +32,23 @@ final class MoonTrailConfig
         return is_string($driver) && $driver !== '' ? $driver : 'auto';
     }
 
+    /**
+     * @return list<string>
+     */
+    public static function isolatedLogNames(): array
+    {
+        $names = config('moontrail.isolated_log_names', []);
+
+        if (! is_array($names)) {
+            return [];
+        }
+
+        return array_values(array_filter(
+            $names,
+            static fn (mixed $name): bool => is_string($name) && $name !== '',
+        ));
+    }
+
     // -------------------------------------------------------------------------
     // Tracking > Versions
     // -------------------------------------------------------------------------
